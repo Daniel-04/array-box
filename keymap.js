@@ -106,7 +106,7 @@ const aplKeymap = {
     'a': '⍺', 'A': '',
     's': '⌈', 'S': '',
     'd': '⌊', 'D': '',
-    'f': '_', 'F': '',
+    'f': '_', 'F': '⍛',  // Behind operator (Dyalog 18.0+)
     'g': '∇', 'G': '',
     'h': '∆', 'H': '',
     'j': '∘', 'J': '⍤',
@@ -301,22 +301,43 @@ function createKeyboardHandler(inputElement, language) {
 }
 
 /**
- * Insert text at cursor position in an input/textarea
+ * Insert text at cursor position in an input/textarea or contenteditable element
  */
 function insertText(element, text) {
-    const start = element.selectionStart;
-    const end = element.selectionEnd;
-    const value = element.value;
-    
-    element.value = value.substring(0, start) + text + value.substring(end);
-    
-    // Move cursor after inserted text
-    const newPos = start + text.length;
-    element.selectionStart = newPos;
-    element.selectionEnd = newPos;
-    
-    // Trigger input event for any listeners
-    element.dispatchEvent(new Event('input', { bubbles: true }));
+    // Check if it's a contenteditable element
+    if (element.contentEditable === 'true') {
+        const sel = window.getSelection();
+        if (sel.rangeCount > 0) {
+            const range = sel.getRangeAt(0);
+            range.deleteContents();
+            const textNode = document.createTextNode(text);
+            range.insertNode(textNode);
+            
+            // Move cursor after inserted text
+            range.setStartAfter(textNode);
+            range.setEndAfter(textNode);
+            sel.removeAllRanges();
+            sel.addRange(range);
+            
+            // Trigger input event for any listeners
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+        }
+    } else {
+        // Original code for input/textarea elements
+        const start = element.selectionStart;
+        const end = element.selectionEnd;
+        const value = element.value;
+        
+        element.value = value.substring(0, start) + text + value.substring(end);
+        
+        // Move cursor after inserted text
+        const newPos = start + text.length;
+        element.selectionStart = newPos;
+        element.selectionEnd = newPos;
+        
+        // Trigger input event for any listeners
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+    }
 }
 
 /**
