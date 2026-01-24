@@ -17,6 +17,10 @@
             font-family: 'J';
             src: url('fonts/Apl385.ttf') format('truetype');
         }
+        @font-face {
+            font-family: 'APL';
+            src: url('fonts/Apl385.ttf') format('truetype');
+        }
 
         * {
             margin: 0;
@@ -151,6 +155,10 @@
             font-family: 'J', 'Courier New', monospace;
         }
 
+        .code-input.apl {
+            font-family: 'APL', 'Courier New', monospace;
+        }
+
         .output {
             position: absolute;
             top: 100%;
@@ -197,6 +205,10 @@
                 <div class="dropdown-item" data-lang="j">
                     <img src="assets/j_logo.png" alt="J">
                     <span>J</span>
+                </div>
+                <div class="dropdown-item" data-lang="apl">
+                    <img src="assets/apl.png" alt="APL">
+                    <span>APL</span>
                 </div>
             </div>
         </div>
@@ -311,10 +323,48 @@
                         };
                     }
                 }
+            },
+            apl: {
+                name: 'APL',
+                logo: 'assets/apl.png',
+                fontClass: 'apl',
+                evaluate: async (code) => {
+                    try {
+                        // Connect to local APL server
+                        const response = await fetch('http://localhost:8081/eval', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ code: code })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        return { 
+                            success: data.success !== false, 
+                            output: data.output || data.result || data.error || '' 
+                        };
+                    } catch (error) {
+                        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                            return { 
+                                success: false, 
+                                output: 'Cannot connect to local APL server. Please make sure the APL server is running on http://localhost:8081' 
+                            };
+                        }
+                        return { 
+                            success: false, 
+                            output: error.message || String(error) 
+                        };
+                    }
+                }
             }
         };
 
-        const languageOrder = ['bqn', 'uiua', 'j'];
+        const languageOrder = ['bqn', 'uiua', 'j', 'apl'];
         let currentLanguage = 'bqn';
 
         // DOM elements
