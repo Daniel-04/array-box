@@ -1,1 +1,9 @@
 .cursor/
+
+# Rust build artifacts
+uiua-wasm/target/
+uiua-wasm/Cargo.lock
+
+# Keep wasm/ directory (contains built WASM files for distribution)
+# But ignore the gitignore that wasm-pack generates
+wasm/.gitignore

@@ -59,6 +59,20 @@ const servers = {
         startTime: null,
         executable: 'JavaScript'
     },
+    uiua: {
+        name: 'Uiua (client)',
+        script: null,  // Runs in browser via WASM
+        port: null,
+        color: ansi.yellow,
+        symbol: 'UIA',
+        process: null,
+        status: 'browser',  // Always running in browser
+        requests: 0,
+        errors: 0,
+        lastRequest: null,
+        startTime: null,
+        executable: 'WASM'
+    },
     j: {
         name: 'J Server',
         script: 'j-server.js',

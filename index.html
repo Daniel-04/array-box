@@ -328,23 +328,46 @@
 
 
     <!-- Uiua WASM Loader -->
-    <script>
-        let uiuaModule = null;
+    <script type="module">
+        // Load Uiua WASM module
+        import initUiua, { eval_uiua, format_uiua, uiua_version } from './wasm/uiua_wasm.js';
+        
         let uiuaReady = false;
+        let uiuaLoadError = null;
         
         async function loadUiua() {
             if (uiuaReady) return true;
+            if (uiuaLoadError) return false;
+            
             try {
-                // Try loading from jsDelivr CDN (if available)
-                // Note: This is a placeholder - actual WASM file location may vary
-                // For now, we'll use a fetch-based approach to the official pad
+                await initUiua();
                 uiuaReady = true;
+                console.log('Uiua WASM loaded, version:', uiua_version());
                 return true;
             } catch (error) {
                 console.warn('Uiua WASM loading failed:', error);
+                uiuaLoadError = error;
                 return false;
             }
         }
+        
+        // Expose to global scope for use in main script
+        window.uiuaWasm = {
+            load: loadUiua,
+            isReady: () => uiuaReady,
+            getError: () => uiuaLoadError,
+            eval: (code) => {
+                if (!uiuaReady) return null;
+                const result = eval_uiua(code);
+                return JSON.parse(result);
+            },
+            format: (code) => {
+                if (!uiuaReady) return null;
+                const result = format_uiua(code);
+                return JSON.parse(result);
+            },
+            version: () => uiuaReady ? uiua_version() : null
+        };
         
         // Pre-load Uiua when page loads
         loadUiua().catch(() => {});
@@ -560,6 +583,8 @@
         }
         
         // Helper to escape HTML
+        // Note: We don't convert spaces to &nbsp; because CSS white-space: pre-wrap
+        // handles space preservation, and &nbsp; becomes U+00A0 which breaks Uiua
         function escapeHtml(text) {
             return text
                 .replace(/&/g, '&amp;')
@@ -567,7 +592,6 @@
                 .replace(/>/g, '&gt;')
                 .replace(/"/g, '&quot;')
                 .replace(/'/g, '&#039;')
-                .replace(/ /g, '&nbsp;')
                 .replace(/\n/g, '<br>');
         }
 
@@ -608,18 +632,54 @@
                 logo: 'assets/uiua.png',
                 fontClass: 'uiua',
                 evaluate: async (code) => {
-                    // Uiua requires a WASM build to run in the browser
-                    // The official pad at uiua.org/pad uses a compiled WASM module
-                    // For this implementation, you would need to:
-                    // 1. Build Uiua WASM from the source (see https://github.com/uiua-lang/uiua)
-                    // 2. Load the WASM file and instantiate it
-                    // 3. Call the appropriate WASM functions to execute code
+                    const startTime = performance.now();
                     
-                    // For now, provide a helpful message
-                    return { 
-                        success: false, 
-                        output: 'Uiua execution requires a WASM build.\n\nTo use Uiua:\n1. Visit https://www.uiua.org/pad for the official online editor\n2. Or build Uiua WASM from source and integrate it here\n\nFor now, please use BQN or J which are fully functional.' 
-                    };
+                    // Wait for WASM to load if not ready
+                    if (!window.uiuaWasm || !window.uiuaWasm.isReady()) {
+                        if (window.uiuaWasm) {
+                            const loaded = await window.uiuaWasm.load();
+                            if (!loaded) {
+                                const error = window.uiuaWasm.getError();
+                                return { 
+                                    success: false, 
+                                    output: `Failed to load Uiua WASM: ${error?.message || 'Unknown error'}\n\nPlease ensure the wasm/ directory contains the built WASM files.`
+                                };
+                            }
+                        } else {
+                            return { 
+                                success: false, 
+                                output: 'Uiua WASM module not available.\n\nRun: cd uiua-wasm && ./build.sh'
+                            };
+                        }
+                    }
+                    
+                    try {
+                        const result = window.uiuaWasm.eval(code);
+                        const duration = Math.round(performance.now() - startTime);
+                        
+                        // Log to server manager (fire and forget)
+                        fetch('http://localhost:8082/log', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                language: 'uiua',
+                                code: code,
+                                success: result.success,
+                                duration: duration
+                            })
+                        }).catch(() => {}); // Ignore errors if server not running
+                        
+                        return { 
+                            success: result.success, 
+                            output: result.output || '',
+                            formatted: result.formatted || null
+                        };
+                    } catch (error) {
+                        return { 
+                            success: false, 
+                            output: `Uiua execution error: ${error.message || String(error)}`
+                        };
+                    }
                 }
             },
             j: {
@@ -767,7 +827,9 @@
 
         // Get plain text from contenteditable div
         function getInputText() {
-            return codeInput.textContent || '';
+            // Normalize non-breaking spaces (U+00A0) to regular spaces
+            // These can come from &nbsp; in HTML or copy-paste
+            return (codeInput.textContent || '').replace(/\u00A0/g, ' ');
         }
         
         // Set cursor position in contenteditable div
@@ -844,8 +906,19 @@
             const langConfig = languages[currentLanguage];
             const result = await langConfig.evaluate(code);
             
+            // If formatted code is returned (Uiua), replace input with it
+            if (result.formatted && result.formatted.trim() !== code) {
+                setInputText(result.formatted.trim());
+            }
+            
             output.textContent = result.output;
             output.className = `output show ${langConfig.fontClass} ${result.success ? '' : 'error'}`;
+        }
+        
+        // Set the input text and apply syntax highlighting
+        function setInputText(text) {
+            codeInput.textContent = text;
+            applySyntaxHighlighting();
         }
 
         function hideOutput() {
