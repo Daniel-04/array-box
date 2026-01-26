@@ -128,6 +128,34 @@ export const syntaxRules = {
         subscripts: '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₔₕₖₗₘₙₚₛₜ',
         // Numbers pattern
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+    },
+    kap: {
+        // Functions (blue) - scalar and structural functions
+        functions: [
+            // Scalar functions
+            '+', '-', '×', '÷', '|', '⋆', '⍟', '=', '≠', '<', '>', '≤', '≥',
+            '∧', '∨', '⍲', '⍱', '~', '√', '⌊', '⌈', '!',
+            // Structural functions
+            '⍴', '⍳', '⊢', '⊣', '⌷', '⊂', '⊃', ',', '⍪', '⍮', '↑', '↓',
+            '?', '⌽', '⊖', '⍉', '∊', '⍷', '⍋', '⍒', '⍕', '⍎', '%',
+            '⊆', '⊇', '⫇', '⍸', '∪', '⊤', '⊥', '∩', '⌸', '⌹', '…',
+            // Reduce/replicate
+            '/', '⌿',
+            // Other
+            '≡', '≢', '→', '←', '⇐', '∇', 'λ', '⍞', '≬'
+        ],
+        // 1-modifiers (green) - operators/adverbs
+        monadic: [
+            '¨', '⍨', '\\', '⍀', '⍤', '∵', '∥', '˝', '⍰'
+        ],
+        // 2-modifiers (yellow) - compositional operators
+        dyadic: [
+            '∘', '⍛', '⍥', '⍢', '«', '»', '∙', '⌻', '⍣'
+        ],
+        // Reduce/replicate can be either function or operator depending on context
+        // We'll treat / and ⌿ as functions since they're more commonly used that way
+        // Numbers pattern (Kap uses ¯ for negative)
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
     }
 };
 

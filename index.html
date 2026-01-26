@@ -163,6 +163,10 @@
             font-family: 'APL', 'Courier New', monospace;
         }
 
+        .code-input.kap {
+            font-family: 'APL', 'Courier New', monospace;
+        }
+
         .output {
             position: absolute;
             top: 100%;
@@ -197,6 +201,10 @@
         }
 
         .output.apl {
+            font-family: 'APL', 'Courier New', monospace;
+        }
+
+        .output.kap {
             font-family: 'APL', 'Courier New', monospace;
         }
 
@@ -247,6 +255,10 @@
                 <div class="dropdown-item" data-lang="apl">
                     <img src="assets/apl.png" alt="APL">
                     <span>APL</span>
+                </div>
+                <div class="dropdown-item" data-lang="kap">
+                    <img src="assets/kap.png" alt="Kap">
+                    <span>Kap</span>
                 </div>
             </div>
         </div>
@@ -482,10 +494,48 @@
                         };
                     }
                 }
+            },
+            kap: {
+                name: 'Kap',
+                logo: 'assets/kap.png',
+                fontClass: 'kap',
+                evaluate: async (code) => {
+                    try {
+                        // Connect to local Kap server
+                        const response = await fetch('http://localhost:8083/eval', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({ code: code })
+                        });
+                        
+                        if (!response.ok) {
+                            throw new Error(`Server error: ${response.status}`);
+                        }
+                        
+                        const data = await response.json();
+                        return { 
+                            success: data.success !== false, 
+                            output: data.output || data.result || data.error || '' 
+                        };
+                    } catch (error) {
+                        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                            return { 
+                                success: false, 
+                                output: 'Cannot connect to local Kap server. Please make sure the Kap server is running on http://localhost:8083\n\nRun: node kap-server.cjs' 
+                            };
+                        }
+                        return { 
+                            success: false, 
+                            output: error.message || String(error) 
+                        };
+                    }
+                }
             }
         };
 
-        const languageOrder = ['bqn', 'uiua', 'j', 'apl'];
+        const languageOrder = ['bqn', 'uiua', 'j', 'apl', 'kap'];
         let currentLanguage = 'apl';
         let currentKeyboardCleanup = null;
 
@@ -538,9 +588,11 @@
                 currentKeyboardCleanup = null;
             }
             
-            // BQN uses \ prefix, APL uses ` prefix
-            if (lang === 'bqn' || lang === 'apl') {
-                currentKeyboardCleanup = createKeyboardHandler(codeInput, lang);
+            // BQN uses \ prefix, APL and Kap use ` prefix
+            if (lang === 'bqn' || lang === 'apl' || lang === 'kap') {
+                // Kap uses the same keymap as APL (backtick prefix)
+                const keymapLang = lang === 'kap' ? 'apl' : lang;
+                currentKeyboardCleanup = createKeyboardHandler(codeInput, keymapLang);
             }
             
             // Re-apply syntax highlighting for new language

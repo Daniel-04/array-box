@@ -73,6 +73,20 @@ const servers = {
         startTime: null,
         executable: 'WASM'
     },
+    kap: {
+        name: 'Kap Server',
+        script: 'kap-server.cjs',
+        port: 8083,
+        color: ansi.blue,
+        symbol: 'KAP',
+        process: null,
+        status: 'stopped',
+        requests: 0,
+        errors: 0,
+        lastRequest: null,
+        startTime: null,
+        executable: null
+    },
     j: {
         name: 'J Server',
         script: 'j-server.cjs',
@@ -107,7 +121,7 @@ const servers = {
 const LOG_SERVER_PORT = 8082;
 
 // Request log (circular buffer)
-const MAX_LOG_ENTRIES = 15;
+const MAX_LOG_ENTRIES = 10;
 const requestLog = [];
 
 // Dashboard state
@@ -201,41 +215,63 @@ function renderDashboard() {
     output += ansi.bold + ansi.cyan + '   │  ' + ansi.yellow + '█▀█ █▀▄ █▀▄ █▀█ ░█░' + ansi.white + '   █▄█ █▄█ █░█' + ansi.cyan + '                  │' + ansi.reset + '\n';
     output += ansi.bold + ansi.cyan + '   ╰─────────────────────────────────────────────────────╯' + ansi.reset + '\n';
     
-    // Uptime
-    output += ansi.dim + `  Manager uptime: ${formatUptime(now - startTime)}` + ansi.reset + '\n\n';
-    
-    // Server status boxes
-    output += ansi.bold + '  SERVER STATUS' + ansi.reset + '\n';
+    // Server status boxes - 3 per row
+    output += ansi.bold + '  SERVER STATUS' + ansi.reset + ansi.dim + `  (uptime: ${formatUptime(now - startTime)})` + ansi.reset + '\n';
     output += '  ' + drawLine('─', Math.min(width - 4, 76)) + '\n';
     
-    for (const [key, server] of Object.entries(servers)) {
-        const statusColor = server.status === 'running' ? ansi.green : 
-                           server.status === 'starting' ? ansi.yellow :
-                           server.status === 'browser' ? ansi.green : ansi.red;
-        const statusIcon = server.status === 'running' ? '●' : 
-                          server.status === 'starting' ? '◐' :
-                          server.status === 'browser' ? '◈' : '○';
+    const serverEntries = Object.entries(servers);
+    const colWidth = 24;
+    
+    for (let i = 0; i < serverEntries.length; i += 3) {
+        const row = serverEntries.slice(i, i + 3);
         
-        const uptime = server.startTime ? formatUptime(now - server.startTime) : '-';
-        const lastReq = server.lastRequest ? formatTime(server.lastRequest) : 'none';
-        
-        output += `  ${server.color}${server.symbol} ${server.name}${ansi.reset}\n`;
-        output += `    ${statusColor}${statusIcon} ${server.status.toUpperCase()}${ansi.reset}`;
-        
-        // Show port for server-based languages, or "in-browser" for client-side
-        if (server.port) {
-            output += `  │  Port: ${ansi.bold}${server.port}${ansi.reset}`;
+        // Line 1: Name with symbol
+        let line1 = '  ';
+        for (const [key, server] of row) {
+            const nameStr = `${server.symbol} ${server.name}`;
+            line1 += `${server.color}${nameStr.padEnd(colWidth)}${ansi.reset}`;
         }
-        output += `  │  Requests: ${ansi.cyan}${server.requests}${ansi.reset}`;
-        if (server.errors > 0) {
-            output += `  │  Errors: ${ansi.red}${server.errors}${ansi.reset}`;
-        }
-        output += '\n';
+        output += line1 + '\n';
         
-        if (server.executable) {
-            output += `    ${ansi.dim}Executable: ${server.executable}${ansi.reset}\n`;
+        // Line 2: Status icon and status text
+        let line2 = '  ';
+        for (const [key, server] of row) {
+            const statusColor = server.status === 'running' ? ansi.green : 
+                               server.status === 'starting' ? ansi.yellow :
+                               server.status === 'browser' ? ansi.green : ansi.red;
+            const statusIcon = server.status === 'running' ? '●' : 
+                              server.status === 'starting' ? '◐' :
+                              server.status === 'browser' ? '◈' : '○';
+            const statusStr = `${statusIcon} ${server.status.toUpperCase()}`;
+            line2 += `${statusColor}${statusStr.padEnd(colWidth)}${ansi.reset}`;
         }
-        output += '\n';
+        output += line2 + '\n';
+        
+        // Line 3: Port or type
+        let line3 = '  ';
+        for (const [key, server] of row) {
+            let info = '';
+            if (server.port) {
+                info = `Port: ${server.port}`;
+            } else {
+                info = server.executable || '';
+            }
+            line3 += `${ansi.dim}${info.padEnd(colWidth)}${ansi.reset}`;
+        }
+        output += line3 + '\n';
+        
+        // Line 4: Requests count
+        let line4 = '  ';
+        for (const [key, server] of row) {
+            let reqStr = `Req: ${ansi.cyan}${server.requests}${ansi.reset}`;
+            if (server.errors > 0) {
+                reqStr += ` ${ansi.red}Err: ${server.errors}${ansi.reset}`;
+            }
+            // Pad without ANSI codes
+            const visibleLen = `Req: ${server.requests}` + (server.errors > 0 ? ` Err: ${server.errors}` : '');
+            line4 += reqStr + ' '.repeat(Math.max(0, colWidth - visibleLen.length));
+        }
+        output += line4 + '\n\n';
     }
     
     // Request log
@@ -567,6 +603,39 @@ async function main() {
     });
     aplProc.stderr.on('data', () => {});
     aplProc.on('close', () => { servers.apl.status = 'stopped'; servers.apl.process = null; renderDashboard(); });
+    
+    // Start Kap server
+    const kapInternalPort = 8183;
+    const kapExternalPort = 8083;
+    servers.kap.port = kapExternalPort;
+    const kapScriptPath = path.join(__dirname, 'kap-server.cjs');
+    const kapProc = spawn('node', [kapScriptPath, String(kapInternalPort)], {
+        stdio: ['ignore', 'pipe', 'pipe'],
+        cwd: __dirname
+    });
+    servers.kap.process = kapProc;
+    servers.kap.status = 'starting';
+    
+    kapProc.stdout.on('data', (data) => {
+        const text = data.toString();
+        const execMatch = text.match(/Using Kap executable: (.+)/);
+        if (execMatch) servers.kap.executable = execMatch[1].trim();
+        
+        const portMatch = text.match(/Server running on http:\/\/localhost:(\d+)/);
+        if (portMatch) {
+            servers.kap.actualPort = parseInt(portMatch[1]);
+            servers.kap.status = 'running';
+            servers.kap.startTime = Date.now();
+            
+            // Create Kap proxy immediately when server is ready
+            if (!servers.kap.proxyActive && !servers.kap.proxyError) {
+                createLoggerProxy('kap', kapInternalPort, kapExternalPort);
+            }
+            renderDashboard();
+        }
+    });
+    kapProc.stderr.on('data', () => {});
+    kapProc.on('close', () => { servers.kap.status = 'stopped'; servers.kap.process = null; renderDashboard(); });
     
     // Create log server for client-side languages (BQN)
     const http = require('http');

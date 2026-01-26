@@ -2,11 +2,11 @@
 
 <img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/be0041c8-3edd-4364-9090-c008fc6ec76a" />
 
-A code editor and runner for array programming languages: **BQN**, **APL**, **J**, and **Uiua**.
+A code editor and runner for array programming languages: **BQN**, **APL**, **J**, **Uiua**, and **Kap**.
 
 ## Features
 
-- Syntax highlighting for BQN, APL, J, and Uiua
+- Syntax highlighting for BQN, APL, J, Uiua, and Kap
 - Keyboard mappings for typing special characters (BQN: `\` prefix, APL: `` ` `` prefix)
 - Light and dark themes (toggle with `Ctrl+D`)
 - Code execution with `Ctrl+Enter`
