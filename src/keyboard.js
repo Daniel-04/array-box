@@ -255,6 +255,7 @@ export class ArrayKeyboard {
      * @param {boolean} options.enabled - Whether keyboard is enabled (default: true)
      * @param {string} options.displayMode - 'keyboard' or 'category' (default: 'keyboard')
      * @param {Object} options.glyphCategories - For category mode: { categoryName: { glyphs: [], label: '', syntaxClass: '' }, ... }
+     * @param {string} options.categoryTitle - Custom title for category view (default: '{language} Glyphs')
      */
     constructor(options = {}) {
         this.keymap = options.keymap || {};
@@ -268,6 +269,7 @@ export class ArrayKeyboard {
         this.enabled = options.enabled !== false; // Default to true
         this.displayMode = options.displayMode || 'keyboard';
         this.glyphCategories = options.glyphCategories || null;
+        this.categoryTitle = options.categoryTitle || null;
         
         this.overlay = null;
         this.styleElement = null;
@@ -340,7 +342,7 @@ export class ArrayKeyboard {
         const title = document.createElement('span');
         title.className = 'array-keyboard-title';
         if (this.displayMode === 'category') {
-            title.textContent = `${this.language} Glyphs`;
+            title.textContent = this.categoryTitle || `${this.language} Glyphs`;
         } else {
             title.textContent = `${this.language} Keyboard (prefix: ${this.prefixKey})`;
         }

@@ -193,8 +193,6 @@ export const syntaxRules = {
 
 /**
  * Escape HTML special characters
- * Note: We don't convert spaces to &nbsp; because CSS white-space: pre-wrap
- * handles space preservation, and &nbsp; becomes U+00A0 which breaks Uiua
  * @param {string} text - Text to escape
  * @returns {string} Escaped HTML
  */
@@ -204,8 +202,7 @@ export function escapeHtml(text) {
         .replace(/</g, '&lt;')
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-        .replace(/\n/g, '<br>');
+        .replace(/'/g, '&#039;');
 }
 
 /**

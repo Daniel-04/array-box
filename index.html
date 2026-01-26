@@ -429,6 +429,7 @@
                 fontFamily: "'JetBrains Mono', monospace",
                 syntaxRules: syntaxRules.j,
                 displayMode: 'category',
+                categoryTitle: 'J Primitives',
                 glyphCategories: {
                     functions: {
                         glyphs: jGlyphs.functions,
@@ -515,6 +516,7 @@
             visualKeyboard.syntaxRules = config.syntaxRules;
             visualKeyboard.displayMode = config.displayMode || 'keyboard';
             visualKeyboard.glyphCategories = config.glyphCategories || null;
+            visualKeyboard.categoryTitle = config.categoryTitle || null;
             
             if (needsRecreate) {
                 // Recreate the overlay for new display mode or different category content
@@ -805,11 +807,10 @@
             hideOutput();
         }
 
-        // Get plain text from contenteditable div
+        // Get plain text from contenteditable div (single line only)
         function getInputText() {
             // Normalize non-breaking spaces (U+00A0) to regular spaces
-            // These can come from &nbsp; in HTML or copy-paste
-            return (codeInput.textContent || '').replace(/\u00A0/g, ' ');
+            return (codeInput.textContent || '').replace(/\u00A0/g, ' ').replace(/\n/g, '');
         }
         
         // Set cursor position in contenteditable div
@@ -817,7 +818,6 @@
             const range = document.createRange();
             const sel = window.getSelection();
             
-            // Find the text node and offset
             let currentPos = 0;
             let targetNode = null;
             let targetOffset = 0;
@@ -938,8 +938,8 @@
 
         // Keyboard shortcuts
         codeInput.addEventListener('keydown', (e) => {
-            // Ctrl+Enter to evaluate
-            if (e.ctrlKey && e.key === 'Enter') {
+            // Enter to evaluate
+            if (e.key === 'Enter') {
                 e.preventDefault();
                 evaluateCode();
             }
