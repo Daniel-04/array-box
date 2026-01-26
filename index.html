@@ -574,11 +574,86 @@
                 evaluate: (code) => {
                     const startTime = performance.now();
                     let result;
+                    
+                    // Helper to check if value is a single character
+                    const isChar = (c) => typeof c === 'string' && c.length === 1;
+                    
+                    // Helper to check if value is a BQN character array (string)
+                    const isCharArray = (arr) => Array.isArray(arr) && arr.length > 0 &&
+                        arr.every(isChar);
+                    
+                    // Recursively find all character arrays (strings) in a nested structure
+                    const findCharArrays = (val) => {
+                        if (isCharArray(val)) return [val.join('')];
+                        if (Array.isArray(val)) {
+                            return val.flatMap(findCharArrays);
+                        }
+                        return [];
+                    };
+                    
+                    // Check if this looks like a BQN error (has position info + error message)
+                    const isBqnError = (val) => {
+                        if (!Array.isArray(val) || val.length < 2) return false;
+                        // BQN errors have structure like [posInfo, errorMsg] where errorMsg is char array
+                        const strings = findCharArrays(val);
+                        // If there's a string that looks like an error message, it's probably an error
+                        return strings.some(s => s.includes(':') && s.length > 5);
+                    };
+                    
+                    // Helper to format BQN output, handling character arrays as strings
+                    const formatBqnOutput = (val) => {
+                        if (typeof val === 'string') return val;
+                        if (isCharArray(val)) return val.join('');
+                        
+                        // For arrays, first try fmt() then check if result needs cleanup
+                        const fmtResult = fmt(val);
+                        const fmtStr = String(fmtResult);
+                        
+                        // If fmt output has box formatting with a quoted error message, extract it
+                        if (fmtStr.includes('┌') || fmtStr.includes('╵') || fmtStr.includes('·')) {
+                            const match = fmtStr.match(/"([^"]+)"/);
+                            if (match && match[1].includes(':')) {
+                                // It's an error message - return just the message
+                                return match[1];
+                            }
+                        }
+                        
+                        return fmtStr;
+                    };
+                    
+                    // Extract error message from BQN formatted output (box drawing)
+                    const extractFromBoxFormat = (str) => {
+                        // Look for quoted string in box format: "error message"
+                        const match = str.match(/"([^"]+)"/);
+                        if (match) return match[1];
+                        return str;
+                    };
+                    
                     try {
                         const output = bqn(code);
-                        result = { success: true, output: fmt(output) };
+                        result = { success: true, output: formatBqnOutput(output) };
                     } catch (error) {
-                        result = { success: false, output: error.message || String(error) };
+                        // BQN errors may have message as array or pre-formatted string
+                        let errMsg = error.message || String(error);
+                        if (Array.isArray(error.message)) {
+                            errMsg = formatBqnOutput(error.message);
+                        } else if (typeof errMsg === 'string') {
+                            // Check if it's box-formatted output (has ┌ or ╵ characters)
+                            if (errMsg.includes('┌') || errMsg.includes('╵')) {
+                                errMsg = extractFromBoxFormat(errMsg);
+                            }
+                            // Check if it looks like comma-separated chars (e.g., "0,0,↕,𝕩,...")
+                            else {
+                                const parts = errMsg.split(',');
+                                if (parts.length > 5 && parts.slice(2).every(p => p.length <= 2)) {
+                                    const charStart = parts.findIndex(p => p.length === 1 && !/^\d+$/.test(p));
+                                    if (charStart !== -1) {
+                                        errMsg = parts.slice(charStart).join('');
+                                    }
+                                }
+                            }
+                        }
+                        result = { success: false, output: errMsg };
                     }
                     const duration = Math.round(performance.now() - startTime);
                     
