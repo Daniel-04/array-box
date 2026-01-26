@@ -36,6 +36,7 @@
             align-items: center;
             max-width: 500px;
             width: 100%;
+            transition: transform 0.2s ease-out;
         }
 
         .language-selector {
@@ -216,10 +217,17 @@
             color: var(--error-color);
         }
 
-        .bug-report {
+        .bug-report-container {
             position: fixed;
             bottom: 16px;
             right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bug-report {
+            font-family: 'JetBrains Mono', monospace;
             font-size: 14px;
             color: var(--border-hover);
             text-decoration: none;
@@ -228,6 +236,27 @@
         }
 
         .bug-report:hover {
+            opacity: 1;
+            color: var(--text-color);
+        }
+
+        .bug-report-close {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: var(--border-hover);
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0;
+            transition: opacity 0.2s;
+            padding: 0;
+        }
+
+        .bug-report-container:hover .bug-report-close {
+            opacity: 0.6;
+        }
+
+        .bug-report-close:hover {
             opacity: 1;
             color: var(--text-color);
         }
@@ -267,7 +296,7 @@
                 class="code-input apl" 
                 id="codeInput" 
                 contenteditable="true"
-                data-placeholder="Have fun! 🙂"
+                data-placeholder="Have fun! 🥳"
                 spellcheck="false"
                 tabindex="1"
             ></div>
@@ -275,7 +304,10 @@
         </div>
     </div>
 
-    <a href="https://github.com/codereport/array-box/issues" target="_blank" class="bug-report">Report 🐛</a>
+    <div class="bug-report-container" id="bugReportContainer">
+        <button class="bug-report-close" onclick="document.getElementById('bugReportContainer').style.display='none'" title="Hide">×</button>
+        <a href="https://github.com/codereport/array-box/issues" target="_blank" class="bug-report">Report 🐞</a>
+    </div>
 
     <!-- BQN JavaScript implementation -->
     <script src="https://cdn.jsdelivr.net/gh/mlochbaum/BQN@master/docs/bqn.js"></script>
@@ -394,7 +426,7 @@
             },
             j: {
                 language: 'J',
-                fontFamily: "'J', 'Courier New', monospace",
+                fontFamily: "'JetBrains Mono', monospace",
                 syntaxRules: syntaxRules.j,
                 displayMode: 'category',
                 glyphCategories: {
@@ -706,6 +738,15 @@
         const dropdown = document.getElementById('dropdown');
         const codeInput = document.getElementById('codeInput');
         const output = document.getElementById('output');
+        const container = document.querySelector('.container');
+        
+        // Space to focus input when text box is not selected
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' && document.activeElement !== codeInput) {
+                e.preventDefault();
+                codeInput.focus();
+            }
+        });
 
         // Language selector functionality
         languageButton.addEventListener('click', (e) => {
@@ -875,6 +916,13 @@
             
             output.textContent = result.output;
             output.className = `output show ${langConfig.fontClass} ${result.success ? '' : 'error'}`;
+            
+            // Move container up by half the output height to keep input+output centered
+            requestAnimationFrame(() => {
+                const outputHeight = output.offsetHeight;
+                const margin = 14; // margin-top of output
+                container.style.transform = `translateY(-${(outputHeight + margin) / 2}px)`;
+            });
         }
         
         // Set the input text and apply syntax highlighting
@@ -885,6 +933,7 @@
 
         function hideOutput() {
             output.classList.remove('show');
+            container.style.transform = '';
         }
 
         // Keyboard shortcuts
@@ -909,9 +958,8 @@
             }
         });
 
-        // Handle input changes - apply syntax highlighting and hide output
+        // Handle input changes - apply syntax highlighting (output persists until next eval)
         codeInput.addEventListener('input', () => {
-            hideOutput();
             // Debounced highlighting will be applied automatically
             applySyntaxHighlighting();
         }, { passive: true });
