@@ -17,9 +17,7 @@ const path = require('path');
 const BASE_URL = 'https://mlochbaum.github.io/BQN/help';
 const HELP_INDEX_URL = `${BASE_URL}/index.html`;
 
-// Output paths
-const OUTPUT_DIR = path.join(__dirname, '..', 'docs');
-const OUTPUT_FILE = path.join(OUTPUT_DIR, 'bqn-docs.json');
+// Output path
 const JS_OUTPUT_FILE = path.join(__dirname, '..', 'src', 'bqn-docs.js');
 
 /**
@@ -213,6 +211,13 @@ function generateJsModule(data) {
  * Generated: ${data._meta.scrapedAt}
  * 
  * Run \`node scripts/scrape-bqn-docs.cjs\` to update from upstream docs.
+ * 
+ * LICENSE ATTRIBUTION:
+ * The documentation content in this file is derived from the BQN project.
+ * Copyright (c) 2020, Marshall Lochbaum
+ * Repository: https://github.com/mlochbaum/BQN
+ * License: ISC License
+ * See THIRD_PARTY_LICENSES.md for full license text.
  */
 
 `;
@@ -271,11 +276,6 @@ export default bqnGlyphDocs;
 async function scrapeBqnDocs() {
     console.log('BQN Help Documentation Scraper');
     console.log('==============================\n');
-    
-    // Ensure output directory exists
-    if (!fs.existsSync(OUTPUT_DIR)) {
-        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    }
     
     // Fetch help index
     console.log(`Fetching ${HELP_INDEX_URL}...`);
@@ -340,14 +340,10 @@ async function scrapeBqnDocs() {
         primitives: docs,
     };
     
-    // Write JSON output
-    fs.writeFileSync(OUTPUT_FILE, JSON.stringify(output, null, 2));
-    console.log(`\nWrote ${Object.keys(docs).length} primitives to ${OUTPUT_FILE}`);
-    
     // Generate JavaScript module
     const jsContent = generateJsModule(output);
     fs.writeFileSync(JS_OUTPUT_FILE, jsContent);
-    console.log(`Wrote JavaScript module to ${JS_OUTPUT_FILE}`);
+    console.log(`\nWrote ${Object.keys(docs).length} primitives to ${JS_OUTPUT_FILE}`);
     
     // Print summary
     console.log('\nSummary:');

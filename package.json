@@ -5,7 +5,9 @@
   "type": "module",
   "main": "./src/keymap.js",
   "scripts": {
-    "scrape:bqn": "node scripts/scrape-bqn-docs.cjs"
+    "scrape:bqn": "node scripts/scrape-bqn-docs.cjs",
+    "scrape:uiua": "node scripts/scrape-uiua-docs.cjs",
+    "scrape:all": "node scripts/scrape-bqn-docs.cjs && node scripts/scrape-uiua-docs.cjs"
   },
   "exports": {
     ".": {
@@ -45,15 +47,21 @@
       "import": "./src/bqn-docs.js",
       "default": "./src/bqn-docs.js"
     },
+    "./uiua-docs": {
+      "import": "./src/uiua-docs.js",
+      "default": "./src/uiua-docs.js"
+    },
+    "./uiua-docs.js": {
+      "import": "./src/uiua-docs.js",
+      "default": "./src/uiua-docs.js"
+    },
     "./fonts/*": "./fonts/*",
-    "./assets/*": "./assets/*",
-    "./docs/*": "./docs/*"
+    "./assets/*": "./assets/*"
   },
   "files": [
     "src/",
     "fonts/",
-    "assets/",
-    "docs/"
+    "assets/"
   ],
   "keywords": [
     "bqn",

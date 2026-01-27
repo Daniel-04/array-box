@@ -21,8 +21,9 @@
  *   keyboard.toggleNames(); // Toggle leader line labels (press ? when visible)
  */
 
-// Re-export BQN documentation for hover tooltips
+// Re-export documentation for hover tooltips
 export { bqnGlyphDocs, bqnDocsMeta, getBqnHoverContent } from './bqn-docs.js';
+export { uiuaGlyphDocs, uiuaDocsMeta, getUiuaHoverContent } from './uiua-docs.js';
 
 // Glyph names for BQN (monadic/dyadic names)
 // Based on official BQN documentation (https://mlochbaum.github.io/BQN/doc/primitive.html)
@@ -1280,6 +1281,16 @@ const defaultStyles = `
     border-radius: 3px;
 }
 
+.array-keyboard-tooltip-sig {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: #60a5fa;
+    margin-left: 8px;
+    background: #1e3a5f;
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
 .array-keyboard-tooltip-desc {
     font-family: 'JetBrains Mono', monospace;
     font-size: 12px;
@@ -1955,6 +1966,11 @@ export class ArrayKeyboard {
         
         // Type badge
         html += `<span class="array-keyboard-tooltip-type">${doc.type}</span>`;
+        
+        // Signature (args → outputs) for Uiua
+        if (doc.signature) {
+            html += `<span class="array-keyboard-tooltip-sig">${this._escapeHtml(doc.signature)}</span>`;
+        }
         html += '</div>';
         
         // Description
