@@ -405,6 +405,177 @@ export const kapGlyphNames = {
     ';': 'separator',
 };
 
+// Glyph names for J (monadic/dyadic names)
+// Based on official J documentation (https://code.jsoftware.com/wiki/NuVoc)
+export const jGlyphNames = {
+    // Verbs - Single character
+    '=': 'self-classify / equal',
+    '<': 'box / lesser',
+    '>': 'open / greater',
+    '+': 'conjugate / plus',
+    '*': 'signum / times',
+    '-': 'negate / minus',
+    '%': 'reciprocal / divide',
+    '^': 'exponential / power',
+    '$': 'shape of / shape',
+    '~': 'reflex / passive',
+    '|': 'magnitude / residue',
+    ',': 'ravel / append',
+    ';': 'raze / link',
+    '#': 'tally / copy',
+    '{': 'catalogue / from',
+    '}': 'item amend / amend',
+    '[': 'same / left',
+    ']': 'same / right',
+    '"': 'rank',
+    '?': 'roll / deal',
+    '!': 'factorial / out of',
+    
+    // Verb digraphs - Floor/Ceiling/Comparisons
+    '<.': 'floor / min',
+    '>.': 'ceiling / max',
+    '<:': 'decrement / ≤',
+    '>:': 'increment / ≥',
+    
+    // Verb digraphs - Arithmetic extensions
+    '+.': 'real/imag / gcd (or)',
+    '+:': 'double / not-or',
+    '*.': 'length/angle / lcm (and)',
+    '*:': 'square / not-and',
+    '-.': 'not / less',
+    '-:': 'halve / match',
+    '%.': 'matrix inverse / matrix divide',
+    '%:': 'square root / root',
+    
+    // Verb digraphs - Power/Log/Shape
+    '^.': 'natural log / logarithm',
+    '$.': 'sparse',
+    '$:': 'self-reference',
+    
+    // Verb digraphs - Structural
+    '|.': 'reverse / rotate',
+    '|:': 'transpose / rearrange axes',
+    '#.': 'base two / base',
+    '#:': 'antibase two / antibase',
+    '~.': 'nub',
+    '~:': 'nub sieve / not-equal',
+    
+    // Verb digraphs - Selection
+    '{.': 'head / take',
+    '}.': 'behead / drop',
+    '{:': 'tail',
+    '}:': 'curtail',
+    '{::': 'map / fetch',
+    
+    // Verb digraphs - Ravel/Append
+    ',.': 'ravel items / stitch',
+    ',:': 'itemize / laminate',
+    ';.': 'cut',
+    ';:': 'words / seq. machine',
+    
+    // Verb digraphs - Format/Execute
+    '".': 'do / numbers',
+    '":': 'default format / format',
+    
+    // Verb digraphs - Random
+    '?.': 'roll (fixed seed)',
+    
+    // Named primitive verbs
+    'i.': 'integers / index of',
+    'i:': 'steps / index of last',
+    'j.': 'imaginary / complex',
+    'o.': 'pi times / circle function',
+    'p.': 'roots / polynomial',
+    'p..': 'poly derivative / poly integral',
+    'p:': 'primes',
+    'q:': 'prime factors / prime exponents',
+    'r.': 'angle / polar',
+    'A.': 'anagram index / anagram',
+    'C.': 'cycle-direct / permute',
+    'e.': 'raze in / member (in)',
+    'E.': 'find matches',
+    'I.': 'indices / interval index',
+    'L.': 'level of',
+    's:': 'symbol',
+    'u:': 'unicode',
+    'x:': 'extended precision',
+    
+    // Adverbs (1-modifiers)
+    '/': 'insert / table',
+    '\\': 'prefix / infix',
+    '/.': 'oblique / key',
+    '\\.': 'suffix / outfix',
+    '/:': 'grade up / sort up',
+    '\\:': 'grade down / sort down',
+    'b.': 'boolean / bitwise',
+    'f.': 'fix',
+    'M.': 'memo',
+    
+    // Conjunctions (2-modifiers)
+    '@': 'atop',
+    '&': 'bond / compose',
+    '`': 'tie (gerund)',
+    ':': 'definition',
+    '.': 'determinant / dot product',
+    '@.': 'agenda / agent',
+    '@:': 'at',
+    '&.': 'under (dual)',
+    '&:': 'appose',
+    '&.:': 'under',
+    '`:': 'evoke gerund',
+    ':.': 'obverse',
+    '::': 'adverse',
+    '^:': 'power of verb',
+    '!.': 'fit (customize)',
+    '!:': 'foreign',
+    'd.': 'derivative',
+    'D.': 'derivative / secant',
+    'D:': 'secant slope',
+    'F.': 'fold',
+    'F:': 'fold',
+    'F..': 'fold',
+    'F.:': 'fold',
+    'F:.': 'fold',
+    'F::': 'fold',
+    'H.': 'hypergeometric',
+    'L:': 'level at',
+    'm.': 'modular arithmetic',
+    'S:': 'spread',
+    'T.': 'weighted taylor / taylor',
+    'Z:': 'fold status / terminate fold',
+    't.': 'run as task',
+    
+    // Constants/Special
+    '_': 'negative / infinity',
+    '__': 'negative infinity',
+    '_.': 'indeterminate',
+    '_:': 'constant infinity',
+    'a.': 'alphabet',
+    'a:': 'ace (boxed empty)',
+    
+    // Assignment
+    '=.': 'is (local)',
+    '=:': 'is (global)',
+    
+    // Comment
+    'NB.': 'comment',
+    
+    // Constant functions
+    '0:': 'constant 0',
+    '1:': 'constant 1',
+    '2:': 'constant 2',
+    '3:': 'constant 3',
+    '4:': 'constant 4',
+    '5:': 'constant 5',
+    '6:': 'constant 6',
+    '7:': 'constant 7',
+    '8:': 'constant 8',
+    '9:': 'constant 9',
+    '_1:': 'constant -1',
+    '_2:': 'constant -2',
+    '_9:': 'constant -9',
+};
+
 // Glyph names for Uiua (single name per primitive)
 export const uiuaGlyphNames = {
     // Arguments - Manipulate function arguments
@@ -778,7 +949,7 @@ const defaultStyles = `
 
 /* Category view styles */
 .array-keyboard-overlay.category-view {
-    width: 620px;
+    width: 695px;
     max-width: 95vw;
 }
 
@@ -828,7 +999,6 @@ const defaultStyles = `
     flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 12px;
-    max-width: 570px;
 }
 
 .array-keyboard-legend {

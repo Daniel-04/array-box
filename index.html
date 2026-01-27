@@ -383,7 +383,7 @@
         // Import from modular files
         import { createKeyboardHandler, bqnKeymap, aplKeymap, kapKeymap, uiuaGlyphs, jGlyphs } from './src/keymap.js?v=12';
         import { syntaxRules, highlightCode, escapeHtml } from './src/syntax.js?v=12';
-        import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames } from './src/keyboard.js?v=12';
+        import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames, jGlyphNames } from './src/keyboard.js?v=12';
         
         // Keyboard configurations for each language
         const keyboardConfigs = {
@@ -491,6 +491,10 @@
                 displayMode: 'category',
                 compactCategories: true,  // All glyphs inline with legend at bottom
                 categoryTitle: 'J Primitives',
+                glyphNames: jGlyphNames,
+                docLinks: {
+                    primitives: 'https://code.jsoftware.com/wiki/NuVoc'
+                },
                 glyphCategories: {
                     functions: {
                         glyphs: jGlyphs.functions,
