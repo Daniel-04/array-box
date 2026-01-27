@@ -149,7 +149,7 @@ export const syntaxRules = {
             '⌅', '°', '⌝',
             '⧋', '◇'
         ],
-        // 2-modifiers (orange) - take 2+ function arguments
+        // 2-modifiers (pink) - take 2+ function arguments
         // Matches uiuaGlyphs.dyadicModifiers from keymap.js (popup source of truth)
         modifier: [
             '⊃', '⊓', '⍜', '⍢', '⬚', '⨬'

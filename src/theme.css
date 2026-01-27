@@ -45,7 +45,7 @@
     --syntax-function: #8BE9FD;       /* Cyan - dyadic functions */
     --syntax-monadic: #50FA7B;        /* Green - monadic functions */
     --syntax-dyadic: #F1FA8C;         /* Yellow - 2-modifiers */
-    --syntax-modifier: #FFB86C;       /* Orange (Dracula orange) - 1-modifiers */
+    --syntax-modifier: #FF79C6;       /* Pink (Dracula pink) - 2-modifiers */
     --syntax-number: #BD93F9;         /* Purple (Dracula purple) */
     --syntax-comment: #6272A4;        /* Dracula comment grey */
     --syntax-default: #F8F8F2;        /* Foreground (Dracula foreground) */
