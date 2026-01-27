@@ -732,6 +732,15 @@ const defaultStyles = `
     font-size: 14px;
     color: #e5e7eb;
     opacity: 0.8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.array-keyboard-logo {
+    height: 24px;
+    width: auto;
+    object-fit: contain;
 }
 
 .array-keyboard-hint {
@@ -772,6 +781,11 @@ const defaultStyles = `
     border-color: #10B981;
 }
 
+.array-keyboard-glyph.search-match {
+    background: rgba(16, 185, 129, 0.2);
+    border-color: #10B981;
+}
+
 .array-keyboard-key.space {
     width: 280px;
 }
@@ -779,7 +793,7 @@ const defaultStyles = `
 .array-keyboard-symbol {
     font-size: 20px;
     line-height: 1;
-    color: #8BE9FD;
+    color: var(--syntax-function, #8BE9FD);
 }
 
 .array-keyboard-symbol.empty {
@@ -792,7 +806,7 @@ const defaultStyles = `
     top: 3px;
     left: 4px;
     line-height: 1;
-    color: #FFB86C;
+    color: var(--syntax-modifier, #FFB86C);
 }
 
 .array-keyboard-shift-symbol.empty {
@@ -883,47 +897,47 @@ const defaultStyles = `
     font-size: 9px;
 }
 
-/* Syntax highlighting colors */
+/* Syntax highlighting colors - use CSS variables with fallbacks for standalone use */
 .array-keyboard-symbol.syntax-function,
 .array-keyboard-shift-symbol.syntax-function,
 .array-keyboard-quadrant-glyph.syntax-function {
-    color: #8BE9FD;
+    color: var(--syntax-function, #8BE9FD);
 }
 
 .array-keyboard-symbol.syntax-monadic,
 .array-keyboard-shift-symbol.syntax-monadic,
 .array-keyboard-quadrant-glyph.syntax-monadic {
-    color: #50FA7B;
+    color: var(--syntax-monadic, #50FA7B);
 }
 
 .array-keyboard-symbol.syntax-dyadic,
 .array-keyboard-shift-symbol.syntax-dyadic,
 .array-keyboard-quadrant-glyph.syntax-dyadic {
-    color: #F1FA8C;
+    color: var(--syntax-dyadic, #F1FA8C);
 }
 
 .array-keyboard-symbol.syntax-modifier,
 .array-keyboard-shift-symbol.syntax-modifier,
 .array-keyboard-quadrant-glyph.syntax-modifier {
-    color: #FFB86C;
+    color: var(--syntax-modifier, #FFB86C);
 }
 
 .array-keyboard-symbol.syntax-number,
 .array-keyboard-shift-symbol.syntax-number,
 .array-keyboard-quadrant-glyph.syntax-number {
-    color: #BD93F9;
+    color: var(--syntax-number, #BD93F9);
 }
 
 .array-keyboard-symbol.syntax-comment,
 .array-keyboard-shift-symbol.syntax-comment,
 .array-keyboard-quadrant-glyph.syntax-comment {
-    color: #6272A4;
+    color: var(--syntax-comment, #6272A4);
 }
 
 .array-keyboard-symbol.syntax-default,
 .array-keyboard-shift-symbol.syntax-default,
 .array-keyboard-quadrant-glyph.syntax-default {
-    color: #F8F8F2;
+    color: var(--syntax-default, #F8F8F2);
 }
 
 /* Category view styles */
@@ -954,13 +968,13 @@ const defaultStyles = `
     border-bottom: 1px solid #4b5563;
 }
 
-.array-keyboard-category-title.syntax-function { color: #8BE9FD; }
-.array-keyboard-category-title.syntax-monadic { color: #50FA7B; }
-.array-keyboard-category-title.syntax-dyadic { color: #F1FA8C; }
-.array-keyboard-category-title.syntax-modifier { color: #FFB86C; }
-.array-keyboard-category-title.syntax-number { color: #BD93F9; }
-.array-keyboard-category-title.syntax-comment { color: #6272A4; }
-.array-keyboard-category-title.syntax-default { color: #9CA3AF; }
+.array-keyboard-category-title.syntax-function { color: var(--syntax-function, #8BE9FD); }
+.array-keyboard-category-title.syntax-monadic { color: var(--syntax-monadic, #50FA7B); }
+.array-keyboard-category-title.syntax-dyadic { color: var(--syntax-dyadic, #F1FA8C); }
+.array-keyboard-category-title.syntax-modifier { color: var(--syntax-modifier, #FFB86C); }
+.array-keyboard-category-title.syntax-number { color: var(--syntax-number, #BD93F9); }
+.array-keyboard-category-title.syntax-comment { color: var(--syntax-comment, #6272A4); }
+.array-keyboard-category-title.syntax-default { color: var(--syntax-default, #9CA3AF); }
 
 .array-keyboard-glyph-grid {
     display: flex;
@@ -1002,14 +1016,14 @@ const defaultStyles = `
     flex-shrink: 0;
 }
 
-.array-keyboard-legend-dot.syntax-function { background-color: #8BE9FD; }
-.array-keyboard-legend-dot.syntax-monadic { background-color: #50FA7B; }
-.array-keyboard-legend-dot.syntax-dyadic { background-color: #F1FA8C; }
-.array-keyboard-legend-dot.syntax-modifier { background-color: #FFB86C; }
-.array-keyboard-legend-dot.syntax-number { background-color: #BD93F9; }
-.array-keyboard-legend-dot.syntax-comment { background-color: #6272A4; }
-.array-keyboard-legend-dot.syntax-default { background-color: #9CA3AF; }
-.array-keyboard-legend-dot.syntax-stack { background-color: #F8F8F2; }
+.array-keyboard-legend-dot.syntax-function { background-color: var(--syntax-function, #8BE9FD); }
+.array-keyboard-legend-dot.syntax-monadic { background-color: var(--syntax-monadic, #50FA7B); }
+.array-keyboard-legend-dot.syntax-dyadic { background-color: var(--syntax-dyadic, #F1FA8C); }
+.array-keyboard-legend-dot.syntax-modifier { background-color: var(--syntax-modifier, #FFB86C); }
+.array-keyboard-legend-dot.syntax-number { background-color: var(--syntax-number, #BD93F9); }
+.array-keyboard-legend-dot.syntax-comment { background-color: var(--syntax-comment, #6272A4); }
+.array-keyboard-legend-dot.syntax-default { background-color: var(--syntax-default, #9CA3AF); }
+.array-keyboard-legend-dot.syntax-stack { background-color: var(--syntax-default, #F8F8F2); }
 
 .array-keyboard-legend-text {
     font-family: 'JetBrains Mono', monospace;
@@ -1041,14 +1055,14 @@ const defaultStyles = `
     border-color: #6b7280;
 }
 
-.array-keyboard-glyph.syntax-function { color: #8BE9FD; }
-.array-keyboard-glyph.syntax-monadic { color: #50FA7B; }
-.array-keyboard-glyph.syntax-dyadic { color: #F1FA8C; }
-.array-keyboard-glyph.syntax-modifier { color: #FFB86C; }
-.array-keyboard-glyph.syntax-number { color: #BD93F9; }
-.array-keyboard-glyph.syntax-comment { color: #6272A4; }
-.array-keyboard-glyph.syntax-default { color: #F8F8F2; }
-.array-keyboard-glyph.syntax-stack { color: #F8F8F2; }
+.array-keyboard-glyph.syntax-function { color: var(--syntax-function, #8BE9FD); }
+.array-keyboard-glyph.syntax-monadic { color: var(--syntax-monadic, #50FA7B); }
+.array-keyboard-glyph.syntax-dyadic { color: var(--syntax-dyadic, #F1FA8C); }
+.array-keyboard-glyph.syntax-modifier { color: var(--syntax-modifier, #FFB86C); }
+.array-keyboard-glyph.syntax-number { color: var(--syntax-number, #BD93F9); }
+.array-keyboard-glyph.syntax-comment { color: var(--syntax-comment, #6272A4); }
+.array-keyboard-glyph.syntax-default { color: var(--syntax-default, #F8F8F2); }
+.array-keyboard-glyph.syntax-stack { color: var(--syntax-default, #F8F8F2); }
 
 /* Solid border with filled background for array functions */
 .array-keyboard-glyph.array-glyph {
@@ -1096,14 +1110,14 @@ const defaultStyles = `
     pointer-events: none;
 }
 
-.array-keyboard-name-label.syntax-function { color: #8BE9FD; border-color: #8BE9FD40; }
-.array-keyboard-name-label.syntax-monadic { color: #50FA7B; border-color: #50FA7B40; }
-.array-keyboard-name-label.syntax-dyadic { color: #F1FA8C; border-color: #F1FA8C40; }
-.array-keyboard-name-label.syntax-modifier { color: #FFB86C; border-color: #FFB86C40; }
-.array-keyboard-name-label.syntax-number { color: #BD93F9; border-color: #BD93F940; }
-.array-keyboard-name-label.syntax-comment { color: #6272A4; border-color: #6272A440; }
-.array-keyboard-name-label.syntax-default { color: #e5e7eb; border-color: #e5e7eb40; }
-.array-keyboard-name-label.syntax-stack { color: #F8F8F2; border-color: #F8F8F240; }
+.array-keyboard-name-label.syntax-function { color: var(--syntax-function, #8BE9FD); border-color: color-mix(in srgb, var(--syntax-function, #8BE9FD) 25%, transparent); }
+.array-keyboard-name-label.syntax-monadic { color: var(--syntax-monadic, #50FA7B); border-color: color-mix(in srgb, var(--syntax-monadic, #50FA7B) 25%, transparent); }
+.array-keyboard-name-label.syntax-dyadic { color: var(--syntax-dyadic, #F1FA8C); border-color: color-mix(in srgb, var(--syntax-dyadic, #F1FA8C) 25%, transparent); }
+.array-keyboard-name-label.syntax-modifier { color: var(--syntax-modifier, #FFB86C); border-color: color-mix(in srgb, var(--syntax-modifier, #FFB86C) 25%, transparent); }
+.array-keyboard-name-label.syntax-number { color: var(--syntax-number, #BD93F9); border-color: color-mix(in srgb, var(--syntax-number, #BD93F9) 25%, transparent); }
+.array-keyboard-name-label.syntax-comment { color: var(--syntax-comment, #6272A4); border-color: color-mix(in srgb, var(--syntax-comment, #6272A4) 25%, transparent); }
+.array-keyboard-name-label.syntax-default { color: var(--syntax-default, #e5e7eb); border-color: color-mix(in srgb, var(--syntax-default, #e5e7eb) 25%, transparent); }
+.array-keyboard-name-label.syntax-stack { color: var(--syntax-default, #F8F8F2); border-color: color-mix(in srgb, var(--syntax-default, #F8F8F2) 25%, transparent); }
 
 /* Hint for names toggle */
 .array-keyboard-names-hint {
@@ -1149,7 +1163,7 @@ const defaultStyles = `
 }
 
 .array-keyboard-search-input:focus {
-    border-color: #8BE9FD;
+    border-color: var(--syntax-function, #8BE9FD);
 }
 
 .array-keyboard-search-input::placeholder {
@@ -1177,7 +1191,7 @@ const defaultStyles = `
 }
 
 .array-keyboard-doc-links a {
-    color: #8BE9FD;
+    color: var(--syntax-function, #8BE9FD);
     text-decoration: none;
     transition: opacity 0.2s;
 }
@@ -1212,6 +1226,7 @@ export class ArrayKeyboard {
      * @param {Object} options.glyphNames - Glyph to name mapping for leader line labels { '⍺': 'alpha', ... }
      * @param {Object} options.docLinks - Documentation links { layout: 'url', primitives: 'url', syntax: 'url' }
      * @param {boolean} options.compactCategories - For category mode: show all glyphs inline with legend at bottom (default: false)
+     * @param {string} options.logoPath - Path to logo image to display instead of text title (optional)
      */
     constructor(options = {}) {
         this.keymap = options.keymap || {};
@@ -1229,6 +1244,7 @@ export class ArrayKeyboard {
         this.glyphNames = options.glyphNames || null;
         this.docLinks = options.docLinks || null;
         this.compactCategories = options.compactCategories || false;
+        this.logoPath = options.logoPath || null;
         
         this.overlay = null;
         this.namesOverlay = null;
@@ -1346,12 +1362,31 @@ export class ArrayKeyboard {
         const header = document.createElement('div');
         header.className = 'array-keyboard-header';
         
-        const title = document.createElement('span');
-        title.className = 'array-keyboard-title';
-        if (this.displayMode === 'category') {
-            title.textContent = this.categoryTitle || `${this.language} Glyphs`;
+        // Title: use logo + text if logoPath provided, otherwise text only
+        const titleElement = document.createElement('span');
+        titleElement.className = 'array-keyboard-title';
+        
+        if (this.logoPath) {
+            const logo = document.createElement('img');
+            logo.className = 'array-keyboard-logo';
+            logo.src = this.logoPath;
+            logo.alt = this.language;
+            titleElement.appendChild(logo);
+            
+            // Add descriptive text after logo
+            const textSpan = document.createElement('span');
+            if (this.displayMode === 'category') {
+                textSpan.textContent = this.categoryTitle ? this.categoryTitle.replace(this.language, '').trim() : 'Glyphs';
+            } else {
+                textSpan.textContent = `Keyboard (prefix: ${this.prefixKey})`;
+            }
+            titleElement.appendChild(textSpan);
         } else {
-            title.textContent = `${this.language} Keyboard (prefix: ${this.prefixKey})`;
+            if (this.displayMode === 'category') {
+                titleElement.textContent = this.categoryTitle || `${this.language} Glyphs`;
+            } else {
+                titleElement.textContent = `${this.language} Keyboard (prefix: ${this.prefixKey})`;
+            }
         }
         
         const hintContainer = document.createElement('span');
@@ -1366,7 +1401,7 @@ export class ArrayKeyboard {
             hintContainer.appendChild(namesHint);
         }
         
-        header.appendChild(title);
+        header.appendChild(titleElement);
         header.appendChild(hintContainer);
         this.overlay.appendChild(header);
         
@@ -1737,7 +1772,7 @@ export class ArrayKeyboard {
         this.namesOverlay.innerHTML = '';
         
         // Clear previous search highlights
-        this.overlay.querySelectorAll('.array-keyboard-key.search-match').forEach(el => {
+        this.overlay.querySelectorAll('.array-keyboard-key.search-match, .array-keyboard-glyph.search-match').forEach(el => {
             el.classList.remove('search-match');
         });
         
@@ -2301,8 +2336,8 @@ export class ArrayKeyboard {
         this.namesVisible = false;
         this.hideSearch();
         
-        // Clear search highlights from keys
-        this.overlay.querySelectorAll('.array-keyboard-key.search-match').forEach(el => {
+        // Clear search highlights from keys and glyphs
+        this.overlay.querySelectorAll('.array-keyboard-key.search-match, .array-keyboard-glyph.search-match').forEach(el => {
             el.classList.remove('search-match');
         });
     }

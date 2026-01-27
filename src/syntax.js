@@ -130,24 +130,29 @@ export const syntaxRules = {
         // Monadic functions (green) - take 1 array argument
         monadic: [
             '¬', '±', '√', '○', '⌵', '⌈', '⌊', '⧻', '△', '⇡', '⊢', '⇌', 
-            '♭', '¤', '⊚', '⊛', '◴', '⍏', '⍖', '⊝', 'ℂ', '⁅', '°',
-            '⍉', '⋯', '⍜', '⍘', '⬚', '⚙', '◌', '⸮',
-            '∩', '⍣', '⊓', '⊙', '⋅', '⬛'
+            '♭', '¤', '⊚', '⊛', '◴', '⍏', '⍖', '⊝', 'ℂ', '⁅',
+            '⍉', '⋯', '⍘', '⚙', '⸮', '⬛'
         ],
         // Dyadic functions (blue) - take 2 array arguments
         functions: [
             '+', '-', '×', '÷', '◿', 'ⁿ', 'ₙ', '=', '≠', '<', '>', '≤', '≥',
-            '↧', '↥', '∠', '∧', '∨', '⊻', '⊼', '⊽', '⊂', '⊏', '⊡', '↯', '☇',
-            '↙', '↘', '↻', '⊗', '∈', '⊟', '▽', '◫', '▩', '⊞', '⊃', '⍥',
-            '⊜', '⊕', '⬚', '⤸', '⤙', '◠'
+            '↧', '↥', '∠', '∨', '⊻', '⊼', '⊽', '⊂', '⊏', '⊡', '↯', '☇',
+            '↙', '↘', '↻', '⊗', '∈', '⊟', '▽', '◫', '▩', '⤸', '◠',
+            '≍', '⌕', '⦷', '⨂', '⊥'
         ],
-        // 1-modifiers (orange) - take 1 function argument
-        modifier: [
-            '/', '\\', '∵', '≡', '⍢', '◡', '⚂', '⋕', '`', '¨'
-        ],
-        // 2-modifiers (yellow) - take 2+ function arguments
+        // 1-modifiers (yellow) - take 1 function argument
+        // Matches uiuaGlyphs.monadicModifiers from keymap.js (popup source of truth)
         dyadic: [
-            '⊃', '⊓', '⊩', '⊔', '◇', '◰', '∘', '⊸', '⟜', '⊙', '⋅', '⍣'
+            '˙', '˜', '⊙', '⋅', '⟜', '⊸', '⤙', '⤚', '◡', '∩',
+            '≡', '⍚', '⊞', '⧅', '⧈', '⊕', '⊜',
+            '/', '∧', '\\', '⍥',
+            '⌅', '°', '⌝',
+            '⧋', '◇'
+        ],
+        // 2-modifiers (orange) - take 2+ function arguments
+        // Matches uiuaGlyphs.dyadicModifiers from keymap.js (popup source of truth)
+        modifier: [
+            '⊃', '⊓', '⍜', '⍢', '⬚', '⨬'
         ],
         // Constants/number literals (purple)
         constants: [
@@ -349,9 +354,45 @@ export function highlightCode(text, language) {
     }).join('');
 }
 
+/**
+ * Get syntax class for a single symbol
+ * This is the single source of truth for syntax classification
+ * @param {string} symbol - Single character to classify
+ * @param {string} language - Language identifier ('bqn', 'apl', 'j', 'uiua', 'kap')
+ * @returns {string} CSS class name (e.g., 'syntax-function', 'syntax-monadic', etc.)
+ */
+export function getSyntaxClass(symbol, language) {
+    if (!symbol) return 'syntax-default';
+    
+    const rules = syntaxRules[language];
+    if (!rules) return 'syntax-default';
+    
+    if (rules.comments && rules.comments.includes(symbol)) {
+        return 'syntax-comment';
+    }
+    if (rules.constants && rules.constants.includes(symbol)) {
+        return 'syntax-number';
+    }
+    if (rules.functions && rules.functions.includes(symbol)) {
+        return 'syntax-function';
+    }
+    if (rules.monadic && rules.monadic.includes(symbol)) {
+        return 'syntax-monadic';
+    }
+    if (rules.dyadic && rules.dyadic.includes(symbol)) {
+        return 'syntax-dyadic';
+    }
+    if (rules.modifier && rules.modifier.includes(symbol)) {
+        return 'syntax-modifier';
+    }
+    
+    return 'syntax-default';
+}
+
 // Default export for convenience
 export default {
     syntaxRules,
     highlightCode,
-    escapeHtml
+    escapeHtml,
+    getSyntaxClass
 };

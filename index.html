@@ -190,11 +190,12 @@
             border-radius: 8px;
             font-family: 'Courier New', monospace;
             font-size: 24px;
-            white-space: pre-wrap;
+            white-space: pre;
             word-wrap: break-word;
             display: none;
             max-height: 525px;
             overflow-y: auto;
+            overflow-x: hidden;
             color: var(--text-color);
             line-height: 1.5;
         }
@@ -395,6 +396,7 @@
                 syntaxRules: syntaxRules.bqn,
                 displayMode: 'keyboard',
                 glyphNames: bqnGlyphNames,
+                logoPath: 'assets/bqn.svg',
                 docLinks: {
                     layout: 'https://mlochbaum.github.io/BQN/keymap.html',
                     primitives: 'https://mlochbaum.github.io/BQN/doc/primitive.html',
@@ -409,6 +411,7 @@
                 syntaxRules: syntaxRules.apl,
                 displayMode: 'keyboard',
                 glyphNames: aplGlyphNames,
+                logoPath: 'assets/apl.png',
                 docLinks: {
                     layout: 'https://dfns.dyalog.com/n_keyboards.htm',
                     primitives: 'https://aplwiki.com/wiki/Dyalog_APL',
@@ -423,6 +426,7 @@
                 syntaxRules: syntaxRules.kap,
                 displayMode: 'keyboard',
                 glyphNames: kapGlyphNames,
+                logoPath: 'assets/kap.png',
                 docLinks: {
                     layout: 'https://kapdemo.dhsdevelopments.com/clientweb2/',
                     primitives: 'https://kapdemo.dhsdevelopments.com/reference.html',
@@ -436,6 +440,7 @@
                 displayMode: 'category',
                 compactCategories: true,  // All glyphs inline with legend at bottom
                 glyphNames: uiuaGlyphNames,  // Enable leader line labels
+                logoPath: 'assets/uiua.png',
                 docLinks: {
                     primitives: 'https://www.uiua.org/docs#functions'
                 },
@@ -492,6 +497,7 @@
                 compactCategories: true,  // All glyphs inline with legend at bottom
                 categoryTitle: 'J Primitives',
                 glyphNames: jGlyphNames,
+                logoPath: 'assets/j_logo.png',
                 docLinks: {
                     primitives: 'https://code.jsoftware.com/wiki/NuVoc'
                 },
@@ -563,13 +569,14 @@
                 return;
             }
             
-            // Check if display mode, language, glyphNames, or docLinks changed - need to recreate overlay
+            // Check if display mode, language, glyphNames, docLinks, or logoPath changed - need to recreate overlay
             const modeChanged = visualKeyboard.displayMode !== (config.displayMode || 'keyboard');
             const languageChanged = visualKeyboard.language !== config.language;
             const glyphNamesChanged = visualKeyboard.glyphNames !== (config.glyphNames || null);
             const docLinksChanged = JSON.stringify(visualKeyboard.docLinks) !== JSON.stringify(config.docLinks || null);
             const compactChanged = visualKeyboard.compactCategories !== (config.compactCategories || false);
-            const needsRecreate = modeChanged || languageChanged || glyphNamesChanged || docLinksChanged || compactChanged;
+            const logoChanged = visualKeyboard.logoPath !== (config.logoPath || null);
+            const needsRecreate = modeChanged || languageChanged || glyphNamesChanged || docLinksChanged || compactChanged || logoChanged;
             
             visualKeyboard.enable();
             visualKeyboard.keymap = config.keymap || {};
@@ -583,6 +590,7 @@
             visualKeyboard.glyphNames = config.glyphNames || null;
             visualKeyboard.docLinks = config.docLinks || null;
             visualKeyboard.compactCategories = config.compactCategories || false;
+            visualKeyboard.logoPath = config.logoPath || null;
             
             if (needsRecreate) {
                 // Recreate the overlay for new display mode, language, or glyphNames
@@ -1070,8 +1078,20 @@
             output.textContent = result.output;
             output.className = `output show ${langConfig.fontClass} ${result.success ? '' : 'error'}`;
             
-            // Move container up by half the output height to keep input+output centered
+            // Dynamically adjust font size to fit content, then center
             requestAnimationFrame(() => {
+                // Reset to default font size
+                let fontSize = 24;
+                const minFontSize = 10;
+                output.style.fontSize = `${fontSize}px`;
+                
+                // Reduce font size until content fits or we hit minimum
+                while (output.scrollWidth > output.clientWidth && fontSize > minFontSize) {
+                    fontSize -= 1;
+                    output.style.fontSize = `${fontSize}px`;
+                }
+                
+                // Move container up by half the output height to keep input+output centered
                 const outputHeight = output.offsetHeight;
                 const margin = 14; // margin-top of output
                 container.style.transform = `translateY(-${(outputHeight + margin) / 2}px)`;
@@ -1140,7 +1160,8 @@
             fontFamily: aplConfig.fontFamily,
             syntaxRules: aplConfig.syntaxRules,
             glyphNames: aplConfig.glyphNames,
-            docLinks: aplConfig.docLinks
+            docLinks: aplConfig.docLinks,
+            logoPath: aplConfig.logoPath
         });
         
         // Apply initial syntax highlighting
