@@ -14,13 +14,10 @@ ArrayBox
 - Set up a statistics aggregator (one public website is up)
   - number of submissions by language
   - % of correct submissions by language
-- add docs (if you get down to one function, or if you just click the key)
-  - apl and kap
+- fix: small jitter when key navigating
 
 Later:
 - Multiline edit
 - Multi lang solve (get multiple bars)
 - Match on names across languages
-
-Bugs:
-- get better J docs
+- add non-keyboard character set for APL, BQN, Kap

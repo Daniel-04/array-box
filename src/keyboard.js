@@ -1318,6 +1318,17 @@ const defaultStyles = `
     border-radius: 5px;
 }
 
+.array-keyboard-tooltip-indicator {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    font-variant-ligatures: none;
+    color: #60a5fa;
+    margin-left: 8px;
+    background: #1e3a5f;
+    padding: 3px 8px;
+    border-radius: 4px;
+}
+
 .array-keyboard-tooltip-sig {
     font-family: 'JetBrains Mono', monospace;
     font-size: 18px;
@@ -1462,6 +1473,7 @@ export class ArrayKeyboard {
         this.navRow = null;
         this.navCol = null;
         this.navActive = false;
+        this.navGlyphIndex = 0; // Index of glyph within current key (for Shift cycling)
         
         this._injectStyles();
         this._createWrapper();
@@ -2030,8 +2042,9 @@ export class ArrayKeyboard {
      * @param {string} glyph - The glyph character
      * @param {HTMLElement} targetEl - The element being hovered
      * @param {string|null} filterSection - Optional: 'monad' or 'dyad' to show only that section
+     * @param {string|null} glyphIndicator - Optional: indicator like "(1/2)" for cycling through glyphs
      */
-    _showTooltip(glyph, targetEl, filterSection = null) {
+    _showTooltip(glyph, targetEl, filterSection = null, glyphIndicator = null) {
         if (!this.tooltip || !this.glyphDocs) return;
         
         const doc = this.glyphDocs[glyph];
@@ -2043,8 +2056,8 @@ export class ArrayKeyboard {
             this.tooltipTimeout = null;
         }
         
-        // Track current glyph (with filter for uniqueness)
-        const tooltipKey = glyph + (filterSection || '');
+        // Track current glyph (with filter and indicator for uniqueness)
+        const tooltipKey = glyph + (filterSection || '') + (glyphIndicator || '');
         
         // Skip if already showing this exact tooltip
         if (this.currentTooltipGlyph === tooltipKey && this.tooltip.classList.contains('show')) {
@@ -2058,6 +2071,11 @@ export class ArrayKeyboard {
         // Glyph with syntax coloring and language font
         const syntaxClass = this._getSyntaxClass(glyph);
         html += `<span class="array-keyboard-tooltip-glyph ${syntaxClass}" style="font-family: ${this.fontFamily}">${glyph}</span>`;
+        
+        // Glyph indicator (for shift cycling)
+        if (glyphIndicator) {
+            html += `<span class="array-keyboard-tooltip-indicator">${glyphIndicator}</span>`;
+        }
         
         // Type badge
         html += `<span class="array-keyboard-tooltip-type">${doc.type}</span>`;
@@ -3037,6 +3055,15 @@ export class ArrayKeyboard {
                 return;
             }
             
+            // Shift key: cycle through glyphs on current key (only in keyboard mode during nav)
+            if (e.key === 'Shift' && this.navActive && this.displayMode === 'keyboard' && 
+                !this.searchVisible && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                this._cycleNavGlyph();
+                return;
+            }
+            
             // ESC to close (search first, then names, then nav, then keyboard)
             if (e.key === 'Escape') {
                 e.preventDefault();
@@ -3082,6 +3109,7 @@ export class ArrayKeyboard {
             // Start at a sensible default position (first row, middle key)
             this.navRow = 0;
             this.navCol = Math.floor(rows[0].querySelectorAll('.array-keyboard-key').length / 2);
+            this.navGlyphIndex = 0;
             this.navActive = true;
             this._updateNavSelection();
             return;
@@ -3117,6 +3145,7 @@ export class ArrayKeyboard {
         if (newRow !== this.navRow || newCol !== this.navCol) {
             this.navRow = newRow;
             this.navCol = newCol;
+            this.navGlyphIndex = 0; // Reset glyph index when moving to new key
             this._updateNavSelection();
         }
     }
@@ -3290,38 +3319,88 @@ export class ArrayKeyboard {
     }
     
     /**
-     * Show tooltip for the currently navigated key
+     * Get all glyphs on a key element
      * @param {HTMLElement} keyEl - The key element
+     * @returns {Array<{glyph: string, element: HTMLElement}>} Array of glyph info
      */
-    _showNavTooltip(keyEl) {
-        // Find glyphs in the key (try main symbol first, then shifted)
+    _getKeyGlyphs(keyEl) {
+        const glyphs = [];
+        
         const symbolEl = keyEl.querySelector('.array-keyboard-symbol');
         const shiftSymbolEl = keyEl.querySelector('.array-keyboard-shift-symbol');
         const quadrantGlyphs = keyEl.querySelectorAll('.array-keyboard-quadrant-glyph');
         
-        let glyph = null;
-        let targetEl = null;
-        
-        // Priority: main symbol > shifted symbol > first quadrant glyph
+        // Main symbol first
         if (symbolEl && symbolEl.textContent.trim()) {
-            glyph = symbolEl.textContent.trim();
-            targetEl = symbolEl;
-        } else if (shiftSymbolEl && shiftSymbolEl.textContent.trim()) {
-            glyph = shiftSymbolEl.textContent.trim();
-            targetEl = shiftSymbolEl;
-        } else if (quadrantGlyphs.length > 0) {
-            // Find first non-empty quadrant glyph
-            for (const qg of quadrantGlyphs) {
-                if (qg.textContent.trim()) {
-                    glyph = qg.textContent.trim();
-                    targetEl = qg;
-                    break;
+            glyphs.push({ glyph: symbolEl.textContent.trim(), element: symbolEl });
+        }
+        
+        // Then shifted symbol
+        if (shiftSymbolEl && shiftSymbolEl.textContent.trim()) {
+            glyphs.push({ glyph: shiftSymbolEl.textContent.trim(), element: shiftSymbolEl });
+        }
+        
+        // Then quadrant glyphs
+        for (const qg of quadrantGlyphs) {
+            if (qg.textContent.trim()) {
+                const g = qg.textContent.trim();
+                // Don't add duplicates
+                if (!glyphs.some(item => item.glyph === g)) {
+                    glyphs.push({ glyph: g, element: qg });
                 }
             }
         }
         
+        return glyphs;
+    }
+    
+    /**
+     * Cycle through glyphs on the currently selected key
+     */
+    _cycleNavGlyph() {
+        if (!this.overlay || !this.navActive) return;
+        
+        const rows = this.overlay.querySelectorAll('.array-keyboard-row');
+        if (this.navRow === null || this.navRow >= rows.length) return;
+        
+        const rowKeys = rows[this.navRow].querySelectorAll('.array-keyboard-key');
+        if (this.navCol >= rowKeys.length) return;
+        
+        const keyEl = rowKeys[this.navCol];
+        const glyphs = this._getKeyGlyphs(keyEl);
+        
+        if (glyphs.length <= 1) return; // Nothing to cycle
+        
+        // Cycle to next glyph
+        this.navGlyphIndex = (this.navGlyphIndex + 1) % glyphs.length;
+        
+        // Update tooltip
+        this._showNavTooltip(keyEl);
+    }
+    
+    /**
+     * Show tooltip for the currently navigated key
+     * @param {HTMLElement} keyEl - The key element
+     */
+    _showNavTooltip(keyEl) {
+        const glyphs = this._getKeyGlyphs(keyEl);
+        
+        if (glyphs.length === 0) {
+            this._hideTooltip();
+            return;
+        }
+        
+        // Clamp navGlyphIndex to valid range
+        if (this.navGlyphIndex >= glyphs.length) {
+            this.navGlyphIndex = 0;
+        }
+        
+        const { glyph, element: targetEl } = glyphs[this.navGlyphIndex];
+        
         if (glyph && targetEl && this.glyphDocs && this.glyphDocs[glyph]) {
-            this._showTooltip(glyph, targetEl);
+            // Show which glyph we're on if there are multiple
+            const glyphIndicator = glyphs.length > 1 ? `${this.navGlyphIndex + 1}/${glyphs.length}` : null;
+            this._showTooltip(glyph, targetEl, null, glyphIndicator);
         } else {
             this._hideTooltip();
         }
@@ -3334,6 +3413,7 @@ export class ArrayKeyboard {
         this.navActive = false;
         this.navRow = null;
         this.navCol = null;
+        this.navGlyphIndex = 0;
         
         if (this.overlay) {
             this.overlay.querySelectorAll('.nav-selected').forEach(el => {
