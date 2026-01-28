@@ -1139,6 +1139,125 @@ const defaultStyles = `
     opacity: 0.7;
 }
 
+/* TinyAPL 6-quadrant layout for keys with ASCII primitives
+ * Layout: 3 columns × 2 rows
+ * ┌─────────────────────────────────┐
+ * │ symS     symPS    symPPS       │  <- TOP: shifted ASCII, prefix1+shift, prefix2+shift
+ * │ sym      symP     symPP        │  <- BOTTOM: ASCII, prefix1, prefix2
+ * └─────────────────────────────────┘
+ */
+.array-keyboard-key.hexquadrant-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    padding: 0px;
+    gap: 0;
+}
+
+.array-keyboard-hexquadrant-glyph {
+    display: flex;
+    font-size: 26px;
+    line-height: 1;
+}
+
+/* Top-left: shifted ASCII (symS) */
+.array-keyboard-hexquadrant-glyph.top-left {
+    grid-column: 1;
+    grid-row: 1;
+    align-items: flex-start;
+    justify-content: flex-start;
+    padding-top: 8px;
+    padding-left: 10px;
+}
+
+/* Top-center: prefix1+shift (symPS) */
+.array-keyboard-hexquadrant-glyph.top-center {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: flex-start;
+    justify-content: center;
+    padding-top: 8px;
+}
+
+/* Top-right: prefix2+shift (symPPS) */
+.array-keyboard-hexquadrant-glyph.top-right {
+    grid-column: 3;
+    grid-row: 1;
+    align-items: flex-start;
+    justify-content: flex-end;
+    padding-top: 8px;
+    padding-right: 10px;
+}
+
+/* Bottom-left: ASCII (sym) */
+.array-keyboard-hexquadrant-glyph.bottom-left {
+    grid-column: 1;
+    grid-row: 2;
+    align-items: flex-end;
+    justify-content: flex-start;
+    padding-bottom: 4px;
+    padding-left: 10px;
+}
+
+/* Bottom-center: prefix1 (symP) */
+.array-keyboard-hexquadrant-glyph.bottom-center {
+    grid-column: 2;
+    grid-row: 2;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 4px;
+}
+
+/* Bottom-right: prefix2 (symPP) */
+.array-keyboard-hexquadrant-glyph.bottom-right {
+    grid-column: 3;
+    grid-row: 2;
+    align-items: flex-end;
+    justify-content: flex-end;
+    padding-bottom: 4px;
+    padding-right: 10px;
+}
+
+/* TinyAPL label for 6-quadrant layout - centered at bottom */
+.array-keyboard-key.hexquadrant-layout .array-keyboard-label.tinyapl-label {
+    position: absolute;
+    bottom: 2px;
+    right: 50%;
+    transform: translateX(50%);
+    font-size: 11px;
+    color: #6b7280;
+    opacity: 0.7;
+}
+
+/* Syntax highlighting for 6-quadrant glyphs */
+.array-keyboard-hexquadrant-glyph.syntax-function {
+    color: var(--syntax-function, #8BE9FD);
+}
+
+.array-keyboard-hexquadrant-glyph.syntax-monadic {
+    color: var(--syntax-monadic, #50FA7B);
+}
+
+.array-keyboard-hexquadrant-glyph.syntax-dyadic {
+    color: var(--syntax-dyadic, #F1FA8C);
+}
+
+.array-keyboard-hexquadrant-glyph.syntax-modifier {
+    color: var(--syntax-modifier, #FF79C6);
+}
+
+.array-keyboard-hexquadrant-glyph.syntax-number {
+    color: var(--syntax-number, #BD93F9);
+}
+
+.array-keyboard-hexquadrant-glyph.syntax-comment {
+    color: var(--syntax-comment, #6272a4);
+}
+
+.array-keyboard-hexquadrant-glyph.syntax-default {
+    color: var(--syntax-default, #F8F8F2);
+}
+
 /* Syntax highlighting colors - use CSS variables with fallbacks for standalone use */
 .array-keyboard-symbol.syntax-function,
 .array-keyboard-shift-symbol.syntax-function,
@@ -2095,15 +2214,21 @@ export class ArrayKeyboard {
     }
     
     /**
-     * Create TinyAPL keyboard view with 4-glyph layout (double-prefix system)
+     * Create TinyAPL keyboard view with 4-glyph or 6-glyph layout (double-prefix system)
      * 
      * TinyAPL uses: prefix1 + key, prefix1 + shift+key, prefix2 + key, prefix2 + shift+key
      * 
-     * Layout for each key:
+     * Standard 4-quadrant layout (for keys without ASCII primitives):
      * ┌─────────────────────┐
      * │ symPS     symPPS   │  <- TOP ROW: shifted values (prefix1 left, prefix2 right)
      * │ symP      symPP    │  <- BOTTOM ROW: unshifted values
      * └─────────────────────┘
+     * 
+     * 6-quadrant layout (for keys where sym or symS is an ASCII primitive):
+     * ┌─────────────────────────────────┐
+     * │ symS     symPS    symPPS       │  <- TOP: shifted ASCII, prefix1+shift, prefix2+shift
+     * │ sym      symP     symPP        │  <- BOTTOM: ASCII, prefix1, prefix2
+     * └─────────────────────────────────┘
      */
     _createTinyaplKeyboardView() {
         const rowsContainer = document.createElement('div');
@@ -2152,8 +2277,58 @@ export class ArrayKeyboard {
                 // Check if this key has any prefix glyphs
                 const hasAnyGlyph = keyData.symP || keyData.symPS || keyData.symPP || keyData.symPPS;
                 
-                if (hasAnyGlyph) {
-                    // Use quadrant layout showing all 4 prefix levels
+                // Check if the base ASCII characters are primitives (for 6-quadrant layout)
+                const symIsPrimitive = this._isPrimitive(keyData.sym);
+                const symSIsPrimitive = this._isPrimitive(keyData.symS);
+                const hasAsciiPrimitive = symIsPrimitive || symSIsPrimitive;
+                
+                if (hasAsciiPrimitive && hasAnyGlyph) {
+                    // Use 6-quadrant layout for keys with ASCII primitives
+                    keyDiv.classList.add('hexquadrant-layout');
+                    
+                    const glyphs = [];
+                    
+                    // TOP ROW: shifted ASCII, prefix1+shift, prefix2+shift
+                    if (symSIsPrimitive) {
+                        glyphs.push({ char: keyData.symS, position: 'top-left', type: 'ascii-shifted' });
+                    }
+                    if (keyData.symPS) {
+                        glyphs.push({ char: keyData.symPS, position: 'top-center', type: 'prefix1-shifted' });
+                    }
+                    if (keyData.symPPS) {
+                        glyphs.push({ char: keyData.symPPS, position: 'top-right', type: 'prefix2-shifted' });
+                    }
+                    
+                    // BOTTOM ROW: ASCII, prefix1, prefix2
+                    if (symIsPrimitive) {
+                        glyphs.push({ char: keyData.sym, position: 'bottom-left', type: 'ascii' });
+                    }
+                    if (keyData.symP) {
+                        glyphs.push({ char: keyData.symP, position: 'bottom-center', type: 'prefix1' });
+                    }
+                    if (keyData.symPP) {
+                        glyphs.push({ char: keyData.symPP, position: 'bottom-right', type: 'prefix2' });
+                    }
+                    
+                    // Create glyph elements
+                    glyphs.forEach(g => {
+                        const span = document.createElement('span');
+                        const syntaxClass = this._getSyntaxClass(g.char);
+                        span.className = `array-keyboard-hexquadrant-glyph ${syntaxClass} ${g.position}`;
+                        span.style.fontFamily = this.fontFamily;
+                        span.textContent = g.char;
+                        span.dataset.type = g.type;
+                        this._addHoverHandlers(span, g.char);
+                        keyDiv.appendChild(span);
+                    });
+                    
+                    // Add key label (smaller, positioned at bottom center)
+                    const labelSpan = document.createElement('span');
+                    labelSpan.className = 'array-keyboard-label tinyapl-label';
+                    labelSpan.textContent = displayLabel;
+                    keyDiv.appendChild(labelSpan);
+                } else if (hasAnyGlyph) {
+                    // Use standard 4-quadrant layout showing prefix levels
                     keyDiv.classList.add('quadrant-layout');
                     
                     const glyphs = [];
@@ -2632,8 +2807,8 @@ export class ArrayKeyboard {
                     const symbolEl = keyEl.querySelector('.array-keyboard-symbol');
                     const shiftSymbolEl = keyEl.querySelector('.array-keyboard-shift-symbol');
                     
-                    // Check for quadrant layout elements
-                    const quadrantGlyphs = keyEl.querySelectorAll('.array-keyboard-quadrant-glyph');
+                    // Check for quadrant layout elements (4-quadrant and 6-quadrant)
+                    const quadrantGlyphs = keyEl.querySelectorAll('.array-keyboard-quadrant-glyph, .array-keyboard-hexquadrant-glyph');
                     
                     if (symbolEl) {
                         const glyph = symbolEl.textContent.trim();
@@ -2668,14 +2843,15 @@ export class ArrayKeyboard {
                         }
                     }
                     
-                    // Process quadrant glyphs
+                    // Process quadrant glyphs (4-quadrant and 6-quadrant)
                     quadrantGlyphs.forEach(quadEl => {
                         const glyph = quadEl.textContent.trim();
                         if (glyph && this.glyphNames[glyph]) {
                             const name = this.glyphNames[glyph];
                             if (matchesFilter(name, keyEl)) {
-                                // Determine if shifted based on position class
+                                // Determine if shifted based on position class (top row = shifted)
                                 const isShifted = quadEl.classList.contains('top-left') || 
+                                                  quadEl.classList.contains('top-center') ||
                                                   quadEl.classList.contains('top-right');
                                 glyphElements.push({ 
                                     el: quadEl, 
@@ -3691,7 +3867,7 @@ export class ArrayKeyboard {
         
         const symbolEl = keyEl.querySelector('.array-keyboard-symbol');
         const shiftSymbolEl = keyEl.querySelector('.array-keyboard-shift-symbol');
-        const quadrantGlyphs = keyEl.querySelectorAll('.array-keyboard-quadrant-glyph');
+        const quadrantGlyphs = keyEl.querySelectorAll('.array-keyboard-quadrant-glyph, .array-keyboard-hexquadrant-glyph');
         
         // Main symbol first
         if (symbolEl && symbolEl.textContent.trim()) {
