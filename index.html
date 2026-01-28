@@ -271,6 +271,24 @@
             opacity: 1;
             color: var(--text-color);
         }
+
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            color: var(--text-color);
+            opacity: 0.6;
+            pointer-events: none;
+            transition: opacity 0.5s ease-out;
+            z-index: 100;
+        }
+
+        .keyboard-hint.hidden {
+            opacity: 0;
+        }
     </style>
 </head>
 <body>
@@ -319,6 +337,7 @@
         </div>
     </div>
 
+    <div class="keyboard-hint" id="keyboardHint">ctrl + k for keyboard / docs</div>
     <div class="bug-report-container" id="bugReportContainer">
         <button class="bug-report-close" onclick="document.getElementById('bugReportContainer').style.display='none'" title="Hide">×</button>
         <a href="https://github.com/codereport/array-box/issues" target="_blank" class="bug-report">Report 🐞</a>
@@ -1171,6 +1190,16 @@
         
         // Apply initial syntax highlighting
         applySyntaxHighlighting();
+        
+        // Show keyboard hint for 10 seconds
+        const keyboardHint = document.getElementById('keyboardHint');
+        setTimeout(() => {
+            keyboardHint.classList.add('hidden');
+            // Remove from DOM after fade out completes
+            setTimeout(() => {
+                keyboardHint.remove();
+            }, 500);
+        }, 10000);
     </script>
 </body>
 </html>

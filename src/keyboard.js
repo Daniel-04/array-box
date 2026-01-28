@@ -2909,6 +2909,13 @@ export class ArrayKeyboard {
             
             // Don't intercept if search input is focused
             if (this.searchInput && document.activeElement === this.searchInput) {
+                // Ctrl+K to hide everything (keyboard, search, names, tooltip)
+                if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    this.hide();
+                    return;
+                }
                 // ESC to close search
                 if (e.key === 'Escape') {
                     e.preventDefault();
@@ -2934,6 +2941,14 @@ export class ArrayKeyboard {
             
             // Only handle remaining shortcuts if keyboard is visible
             if (!this.isVisible()) return;
+            
+            // Ctrl+K to hide everything (keyboard, search, names, tooltip)
+            if (e.ctrlKey && (e.key === 'k' || e.key === 'K')) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.hide();
+                return;
+            }
             
             // 's' to toggle search (also shows names if not visible)
             if ((e.key === 's' || e.key === 'S') && this.glyphNames && !e.ctrlKey && !e.altKey && !e.metaKey) {
