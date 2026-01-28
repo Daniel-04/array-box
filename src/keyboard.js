@@ -2199,6 +2199,8 @@ export class ArrayKeyboard {
         element.style.cursor = 'help';
         
         element.addEventListener('mouseenter', () => {
+            // Don't show hover tooltip when search is active
+            if (this.searchVisible) return;
             this._showTooltip(glyph, element);
         });
         
@@ -2967,6 +2969,10 @@ export class ArrayKeyboard {
                     this.hideSearch();
                     return;
                 }
+                // Stop space from triggering external handlers (like focusing code editor)
+                if (e.key === ' ') {
+                    e.stopPropagation();
+                }
                 // Let other keys go through to the search input
                 return;
             }
@@ -2995,6 +3001,21 @@ export class ArrayKeyboard {
                 e.preventDefault();
                 e.stopPropagation();
                 this.showSearch(e.key);
+                return;
+            }
+            
+            // Space key: if search is visible, focus search input and let space through
+            // Otherwise prevent it from affecting hidden elements
+            if (e.key === ' ' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                if (this.searchVisible && this.searchInput) {
+                    // Focus search input and let space be typed there
+                    this.searchInput.focus();
+                    // Don't prevent - let the space go through to the now-focused input
+                    return;
+                }
+                // Prevent space from affecting hidden code editor
+                e.preventDefault();
+                e.stopPropagation();
                 return;
             }
             

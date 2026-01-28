@@ -1,0 +1,34 @@
+- Add TinyAPL
+- Add k6
+
+- 🎯 word prefix complete
+
+Leetgolf
+- make your own shareable problem
+- Solver mode (although maybe just add a problem to LeetGolf.com)
+- contest
+
+ArrayBox
+- Set up a statistics aggregator (one public website is up)
+  - number of submissions by language
+  - % of correct submissions by language
+- add docs (if you get down to one function, or if you just click the key)
+  - apl and kap
+- once docs are up - key navigation
+
+Later:
+- Multiline edit
+- Multi lang solve (get multiple bars)
+- Match on names across languages
+
+- add help or ctrl + k for keyboard / docs
+
+Bugs:
+-typing space during name search
+
+- Remove from BQN ⍳⍎⍕→↙↖
+- s should start searching without names
+
+- remove box / logo / result when showing keyboard
+- missing BQN docs (repeat, other modifiers - etc)
+- hide label when hover bubble is up
