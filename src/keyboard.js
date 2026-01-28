@@ -704,7 +704,7 @@ const defaultStyles = `
     display: none;
     align-items: center;
     justify-content: center;
-    gap: 24px;
+    gap: 42px;
     z-index: 10000;
     pointer-events: none;
     max-width: 95vw;
@@ -718,10 +718,10 @@ const defaultStyles = `
 
 .array-keyboard-overlay {
     background: #1f2937;
-    border: 2px solid #4b5563;
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    border: 3px solid #4b5563;
+    border-radius: 21px;
+    padding: 28px;
+    box-shadow: 0 14px 56px rgba(0, 0, 0, 0.4);
     max-width: 95vw;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     pointer-events: auto;
@@ -731,36 +731,37 @@ const defaultStyles = `
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #4b5563;
+    margin-bottom: 21px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #4b5563;
 }
 
 .array-keyboard-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
+    font-size: 24px;
+    font-variant-ligatures: none;
     color: #e5e7eb;
     opacity: 0.8;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 14px;
 }
 
 .array-keyboard-logo {
-    height: 24px;
+    height: 42px;
     width: auto;
     object-fit: contain;
 }
 
 .array-keyboard-title-link {
-    font-size: 12px;
+    font-size: 21px;
     color: var(--syntax-function, #8BE9FD);
     text-decoration: none;
     opacity: 0.6;
     transition: opacity 0.2s;
-    margin-left: -2px;
+    margin-left: -4px;
     position: relative;
-    top: -6px;
+    top: -11px;
 }
 
 .array-keyboard-title-link:hover {
@@ -769,24 +770,25 @@ const defaultStyles = `
 
 .array-keyboard-hint {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 21px;
+    font-variant-ligatures: none;
     color: #6b7280;
 }
 
 .array-keyboard-row {
     display: flex;
-    gap: 4px;
-    margin-bottom: 4px;
+    gap: 7px;
+    margin-bottom: 7px;
     justify-content: center;
     position: relative;
 }
 
 .array-keyboard-key {
-    width: 48px;
-    height: 48px;
+    width: 84px;
+    height: 84px;
     background: #1f2937;
-    border: 1px solid #4b5563;
-    border-radius: 6px;
+    border: 2px solid #4b5563;
+    border-radius: 11px;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -811,11 +813,11 @@ const defaultStyles = `
 }
 
 .array-keyboard-key.space {
-    width: 280px;
+    width: 490px;
 }
 
 .array-keyboard-symbol {
-    font-size: 20px;
+    font-size: 35px;
     line-height: 1;
     color: var(--syntax-function, #8BE9FD);
 }
@@ -825,10 +827,10 @@ const defaultStyles = `
 }
 
 .array-keyboard-shift-symbol {
-    font-size: 12px;
+    font-size: 21px;
     position: absolute;
-    top: 3px;
-    left: 4px;
+    top: 5px;
+    left: 7px;
     line-height: 1;
     color: var(--syntax-modifier, #FFB86C);
 }
@@ -839,11 +841,12 @@ const defaultStyles = `
 
 .array-keyboard-label {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
+    font-size: 16px;
+    font-variant-ligatures: none;
     color: #6b7280;
     position: absolute;
-    bottom: 3px;
-    right: 4px;
+    bottom: 5px;
+    right: 7px;
 }
 
 /* Quadrant layout for symbol/number keys with ASCII primitives
@@ -863,7 +866,7 @@ const defaultStyles = `
 
 .array-keyboard-quadrant-glyph {
     display: flex;
-    font-size: 17px;
+    font-size: 30px;
     line-height: 1;
 }
 
@@ -879,8 +882,8 @@ const defaultStyles = `
     grid-row: 1;
     align-items: flex-start;
     justify-content: flex-start;
-    padding-top: 6px;      /* increase = move down */
-    padding-left: 11px;     /* increase = move right */
+    padding-top: 11px;      /* increase = move down */
+    padding-left: 19px;     /* increase = move right */
 }
 
 /* Top-right: shifted ASCII primitive (starts at top-right corner) */
@@ -889,8 +892,8 @@ const defaultStyles = `
     grid-row: 1;
     align-items: flex-start;
     justify-content: flex-end;
-    padding-top: 6px;      /* increase = move down */
-    padding-right: 9px;    /* increase = move left */
+    padding-top: 11px;      /* increase = move down */
+    padding-right: 16px;    /* increase = move left */
 }
 
 /* Bottom-left: unshifted prefix symbol (starts at bottom-left corner) */
@@ -899,8 +902,8 @@ const defaultStyles = `
     grid-row: 2;
     align-items: flex-end;
     justify-content: flex-start;
-    padding-bottom: 2px;   /* increase = move up */
-    padding-left: 11px;     /* increase = move right */
+    padding-bottom: 4px;   /* increase = move up */
+    padding-left: 19px;     /* increase = move right */
 }
 
 /* Bottom-right: unshifted ASCII primitive (starts at bottom-right corner) */
@@ -909,16 +912,16 @@ const defaultStyles = `
     grid-row: 2;
     align-items: flex-end;
     justify-content: flex-end;
-    padding-bottom: 2px;   /* increase = move up */
-    padding-right: 9px;    /* increase = move left */
+    padding-bottom: 4px;   /* increase = move up */
+    padding-right: 16px;    /* increase = move left */
 }
 
 /* Key label in quadrant layout - positioned in bottom-right area */
 .array-keyboard-key.quadrant-layout .array-keyboard-label {
     position: absolute;
-    bottom: 4px;
-    right: 5px;
-    font-size: 9px;
+    bottom: 7px;
+    right: 9px;
+    font-size: 16px;
 }
 
 /* Syntax highlighting colors - use CSS variables with fallbacks for standalone use */
@@ -966,7 +969,7 @@ const defaultStyles = `
 
 /* Category view styles */
 .array-keyboard-overlay.category-view {
-    width: 695px;
+    width: 1216px;
     max-width: 95vw;
 }
 
@@ -976,7 +979,7 @@ const defaultStyles = `
 }
 
 .array-keyboard-category {
-    margin-bottom: 16px;
+    margin-bottom: 28px;
 }
 
 .array-keyboard-category:last-child {
@@ -985,11 +988,12 @@ const defaultStyles = `
 
 .array-keyboard-category-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 21px;
     font-weight: 600;
-    margin-bottom: 8px;
-    padding-bottom: 4px;
-    border-bottom: 1px solid #4b5563;
+    font-variant-ligatures: none;
+    margin-bottom: 14px;
+    padding-bottom: 7px;
+    border-bottom: 2px solid #4b5563;
 }
 
 .array-keyboard-category-title.syntax-function { color: var(--syntax-function, #8BE9FD); }
@@ -1003,7 +1007,7 @@ const defaultStyles = `
 .array-keyboard-glyph-grid {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 11px;
 }
 
 /* Compact category view */
@@ -1014,28 +1018,28 @@ const defaultStyles = `
 .array-keyboard-compact-glyphs {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 12px;
+    gap: 11px;
+    margin-bottom: 21px;
 }
 
 .array-keyboard-legend {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
-    gap: 12px;
-    padding-top: 8px;
-    border-top: 1px solid #4b5563;
+    gap: 21px;
+    padding-top: 14px;
+    border-top: 2px solid #4b5563;
 }
 
 .array-keyboard-legend-item {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 7px;
 }
 
 .array-keyboard-legend-dot {
-    width: 8px;
-    height: 8px;
+    width: 14px;
+    height: 14px;
     border-radius: 50%;
     flex-shrink: 0;
 }
@@ -1051,27 +1055,28 @@ const defaultStyles = `
 
 .array-keyboard-legend-text {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 18px;
+    font-variant-ligatures: none;
     color: #9CA3AF;
 }
 
 .array-keyboard-glyph {
-    width: 38px;
-    height: 32px;
+    width: 67px;
+    height: 56px;
     background: #1f2937;
-    border: 1px solid #4b5563;
-    border-radius: 4px;
+    border: 2px solid #4b5563;
+    border-radius: 7px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    font-size: 32px;
     padding: 0;
     transition: background-color 0.15s, border-color 0.15s;
 }
 
 /* Smaller font for trigraphs (3+ chars like NB.) to fit in fixed-width box */
 .array-keyboard-glyph.trigraph {
-    font-size: 13px;
+    font-size: 23px;
 }
 
 .array-keyboard-glyph:hover {
@@ -1117,7 +1122,9 @@ const defaultStyles = `
 
 .array-keyboard-leader-line {
     stroke: #6b7280;
-    stroke-width: 1;
+    stroke-width: 2;  // Scaled 1.75x from 1 (rounded to 2 for better visibility)
+    stroke-linecap: round;
+    stroke-linejoin: round;
     fill: none;
     opacity: 0.6;
 }
@@ -1125,11 +1132,12 @@ const defaultStyles = `
 .array-keyboard-name-label {
     position: absolute;
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
-    padding: 2px 6px;
-    border-radius: 3px;
+    font-size: 19px;
+    font-variant-ligatures: none;
+    padding: 4px 11px;
+    border-radius: 5px;
     background: #374151;
-    border: 1px solid #4b5563;
+    border: 2px solid #4b5563;
     white-space: nowrap;
     pointer-events: none;
 }
@@ -1146,23 +1154,24 @@ const defaultStyles = `
 /* Hint for names toggle */
 .array-keyboard-names-hint {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 19px;
+    font-variant-ligatures: none;
     color: #9CA3AF;
-    margin-left: 12px;
+    margin-left: 21px;
 }
 
 .array-keyboard-names-hint kbd {
     background: #374151;
-    border: 1px solid #4b5563;
-    border-radius: 3px;
-    padding: 1px 4px;
-    font-size: 10px;
+    border: 2px solid #4b5563;
+    border-radius: 5px;
+    padding: 2px 7px;
+    font-size: 18px;
 }
 
 /* Search input for filtering names */
 .array-keyboard-search-container {
     position: fixed;
-    bottom: 20px;
+    bottom: 35px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 10002;
@@ -1175,13 +1184,14 @@ const defaultStyles = `
 
 .array-keyboard-search-input {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
-    padding: 8px 16px;
-    border: 2px solid #4b5563;
-    border-radius: 8px;
+    font-size: 24px;
+    font-variant-ligatures: none;
+    padding: 14px 28px;
+    border: 3px solid #4b5563;
+    border-radius: 14px;
     background: #1f2937;
     color: #e5e7eb;
-    width: 300px;
+    width: 525px;
     outline: none;
     transition: border-color 0.2s;
 }
@@ -1196,15 +1206,17 @@ const defaultStyles = `
 
 .array-keyboard-search-hint {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 19px;
+    font-variant-ligatures: none;
     color: #6b7280;
     text-align: center;
-    margin-top: 4px;
+    margin-top: 7px;
 }
 
 .array-keyboard-doc-links {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 18px;
+    font-variant-ligatures: none;
     color: #6b7280;
     opacity: 0.5;
     position: absolute;
@@ -1227,26 +1239,27 @@ const defaultStyles = `
 
 .array-keyboard-doc-links .separator {
     color: #4b5563;
-    margin: 0 6px;
+    margin: 0 11px;
 }
 
 /* Hover tooltip styles */
 .array-keyboard-tooltip {
     background: #1f2937;
-    border: 1px solid #4b5563;
-    border-radius: 8px;
-    padding: 12px 14px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
-    width: 320px;
-    max-width: 320px;
-    max-height: 60vh;
+    border: 2px solid #4b5563;
+    border-radius: 14px;
+    padding: 21px 24px;
+    box-shadow: 0 7px 35px rgba(0, 0, 0, 0.5);
+    width: 560px;
+    max-width: 560px;
+    max-height: 90vh;
     overflow-y: auto;
     pointer-events: auto;
     opacity: 0;
     visibility: hidden;
-    transform: translateX(20px);
+    transform: translateX(35px);
     transition: opacity 0.2s ease-out, visibility 0.2s ease-out, transform 0.25s ease-out;
     font-family: 'JetBrains Mono', monospace;
+    font-variant-ligatures: none;
     flex-shrink: 0;
     display: none;
 }
@@ -1261,103 +1274,111 @@ const defaultStyles = `
 .array-keyboard-tooltip-header {
     display: flex;
     align-items: baseline;
-    gap: 10px;
-    margin-bottom: 8px;
-    padding-bottom: 6px;
-    border-bottom: 1px solid #374151;
+    gap: 18px;
+    margin-bottom: 14px;
+    padding-bottom: 11px;
+    border-bottom: 2px solid #374151;
 }
 
 .array-keyboard-tooltip-glyph {
-    font-size: 28px;
+    font-size: 49px;
     line-height: 1;
 }
 
 .array-keyboard-tooltip-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 14px;
+    font-size: 24px;
     font-weight: 600;
+    font-variant-ligatures: none;
     color: #e5e7eb;
 }
 
 .array-keyboard-tooltip-type {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 9px;
+    font-size: 16px;
+    font-variant-ligatures: none;
     color: #9ca3af;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
+    letter-spacing: 0.9px;
     margin-left: auto;
     background: #374151;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 4px 11px;
+    border-radius: 5px;
 }
 
 .array-keyboard-tooltip-sig {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 18px;
+    font-variant-ligatures: none;
     color: #60a5fa;
-    margin-left: 8px;
+    margin-left: 14px;
     background: #1e3a5f;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 4px 11px;
+    border-radius: 5px;
 }
 
 .array-keyboard-tooltip-desc {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 12px;
+    font-size: 21px;
+    font-variant-ligatures: none;
     color: #d1d5db;
     line-height: 1.6;
-    margin-bottom: 10px;
+    margin-bottom: 18px;
 }
 
 .array-keyboard-tooltip-title-line {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 23px;
     font-weight: 600;
+    font-variant-ligatures: none;
     color: #e5e7eb;
-    margin-bottom: 6px;
+    margin-bottom: 11px;
 }
 
 .array-keyboard-tooltip-section {
-    margin-bottom: 10px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #374151;
+    margin-bottom: 18px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #374151;
 }
 
 .array-keyboard-tooltip-section:last-of-type {
     border-bottom: none;
-    margin-bottom: 6px;
+    margin-bottom: 11px;
     padding-bottom: 0;
 }
 
 .array-keyboard-tooltip-section-title {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 13px;
+    font-size: 23px;
     font-weight: 600;
+    font-variant-ligatures: none;
     color: #60a5fa;
-    margin-bottom: 4px;
+    margin-bottom: 7px;
 }
 
 .array-keyboard-tooltip-section-desc {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 11px;
+    font-size: 19px;
+    font-variant-ligatures: none;
     color: #d1d5db;
     line-height: 1.5;
 }
 
 .array-keyboard-tooltip-example {
-    font-size: 12px;
+    font-size: 21px;
     color: #e5e7eb;
     background: #111827;
-    padding: 10px;
-    border-radius: 4px;
+    padding: 18px;
+    border-radius: 7px;
     white-space: pre-wrap;
     overflow-x: auto;
-    margin-bottom: 8px;
+    margin-bottom: 14px;
 }
 
 .array-keyboard-tooltip-link {
     font-family: 'JetBrains Mono', monospace;
-    font-size: 10px;
+    font-size: 18px;
+    font-variant-ligatures: none;
     color: var(--syntax-function, #8BE9FD);
     text-decoration: none;
     opacity: 0.7;
@@ -2319,8 +2340,8 @@ export class ArrayKeyboard {
         
         // Calculate dynamic font size based on number of results
         // Fewer results = larger font for better readability
-        const baseFontSize = 11;
-        const maxFontSize = 18;
+        const baseFontSize = 19.25;  // Scaled 1.75x from 11
+        const maxFontSize = 31.5;    // Scaled 1.75x from 18
         const maxResultsForScaling = 20; // Start scaling when below this many results
         
         let dynamicFontSize = baseFontSize;
@@ -2332,9 +2353,9 @@ export class ArrayKeyboard {
         
         // Get overlay bounds for positioning
         const overlayRect = this.overlay.getBoundingClientRect();
-        const margin = 25;
+        const margin = 43.75;  // Scaled 1.75x from 25
         // Scale label height proportionally with font size
-        const baseLabelHeight = 20;
+        const baseLabelHeight = 35;  // Scaled 1.75x from 20
         const labelHeight = baseLabelHeight * (dynamicFontSize / baseFontSize);
         
         // Determine which side each glyph's label should go to
@@ -2349,7 +2370,7 @@ export class ArrayKeyboard {
             // Estimate label width based on name length (will be measured after creation)
             // Scale with dynamic font size
             const fontScale = dynamicFontSize / baseFontSize;
-            const estimatedLabelWidth = (item.name.length * 7 + 12) * fontScale;
+            const estimatedLabelWidth = (item.name.length * 12.25 + 21) * fontScale;  // Scaled 1.75x from 7 and 12
             
             let side;
             
@@ -2491,10 +2512,10 @@ export class ArrayKeyboard {
         const positionHorizontalLabels = (labelGroup, isTop) => {
             if (labelGroup.length === 0) return;
             
-            const availableWidth = overlayRect.width + 300;
-            const startX = overlayRect.left - 150;
-            const minSpacing = 6;
-            const tierHeight = labelHeight + 8;
+            const availableWidth = overlayRect.width + 525;  // Scaled 1.75x from 300
+            const startX = overlayRect.left - 262.5;  // Scaled 1.75x from 150
+            const minSpacing = 10.5;  // Scaled 1.75x from 6
+            const tierHeight = labelHeight + 14;  // Scaled 1.75x from 8
             
             // Calculate total width needed (including spacing)
             let totalWidth = 0;
@@ -2637,13 +2658,13 @@ export class ArrayKeyboard {
             const baseX = isLeft ? overlayRect.left - margin : overlayRect.right + margin;
             
             // Use fixed spacing regardless of label count
-            const fixedSpacing = labelHeight + 8;
+            const fixedSpacing = labelHeight + 14;  // Scaled 1.75x from 8
             const totalHeight = (labelGroup.length - 1) * fixedSpacing;
             // Center vertically but shift up a bit
-            const groupStartY = overlayRect.top + (overlayRect.height - totalHeight) / 2 - 10;
+            const groupStartY = overlayRect.top + (overlayRect.height - totalHeight) / 2 - 17.5;  // Scaled 1.75x from 10
             
-            const startY = overlayRect.top - 30;
-            const maxY = overlayRect.bottom + 30;
+            const startY = overlayRect.top - 52.5;  // Scaled 1.75x from 30
+            const maxY = overlayRect.bottom + 52.5;  // Scaled 1.75x from 30
             
             labelGroup.forEach((item, i) => {
                 item.labelY = groupStartY + i * fixedSpacing;
@@ -2688,9 +2709,9 @@ export class ArrayKeyboard {
             // Apply dynamic font size based on number of results
             if (dynamicFontSize !== baseFontSize) {
                 label.style.fontSize = `${dynamicFontSize}px`;
-                // Scale padding proportionally
+                // Scale padding proportionally (base values match CSS: 4px 11px, scaled from 2px 6px)
                 const paddingScale = dynamicFontSize / baseFontSize;
-                label.style.padding = `${2 * paddingScale}px ${6 * paddingScale}px`;
+                label.style.padding = `${4 * paddingScale}px ${11 * paddingScale}px`;
             }
             
             // For horizontal labels, use the pre-calculated labelX
@@ -2739,28 +2760,32 @@ export class ArrayKeyboard {
             const labelCenterX = item.labelX + actualWidth / 2;
             const labelCenterY = item.labelY + labelHeight / 2;
             
+            // Control point distances scaled 1.75x
+            const verticalCurve = 52.5;  // Scaled from 30
+            const horizontalCurve = 70;   // Scaled from 40
+            
             switch (item.side) {
                 case 'top':
                     endX = labelCenterX;
                     endY = item.labelY + labelHeight;
-                    d = `M ${startX} ${startY} C ${startX} ${startY - 30}, ${endX} ${endY + 30}, ${endX} ${endY}`;
+                    d = `M ${startX} ${startY} C ${startX} ${startY - verticalCurve}, ${endX} ${endY + verticalCurve}, ${endX} ${endY}`;
                     break;
                 case 'bottom':
                     endX = labelCenterX;
                     endY = item.labelY;
-                    d = `M ${startX} ${startY} C ${startX} ${startY + 30}, ${endX} ${endY - 30}, ${endX} ${endY}`;
+                    d = `M ${startX} ${startY} C ${startX} ${startY + verticalCurve}, ${endX} ${endY - verticalCurve}, ${endX} ${endY}`;
                     break;
                 case 'left':
                     // Connect to right edge of label
                     endX = item.labelX + actualWidth;
                     endY = labelCenterY;
-                    d = `M ${startX} ${startY} C ${startX - 40} ${startY}, ${endX + 40} ${endY}, ${endX} ${endY}`;
+                    d = `M ${startX} ${startY} C ${startX - horizontalCurve} ${startY}, ${endX + horizontalCurve} ${endY}, ${endX} ${endY}`;
                     break;
                 case 'right':
                     // Connect to left edge of label
                     endX = item.labelX;
                     endY = labelCenterY;
-                    d = `M ${startX} ${startY} C ${startX + 40} ${startY}, ${endX - 40} ${endY}, ${endX} ${endY}`;
+                    d = `M ${startX} ${startY} C ${startX + horizontalCurve} ${startY}, ${endX - horizontalCurve} ${endY}, ${endX} ${endY}`;
                     break;
             }
             

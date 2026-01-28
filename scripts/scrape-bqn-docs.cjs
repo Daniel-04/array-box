@@ -116,8 +116,84 @@ function parseHelpIndex(html) {
 }
 
 /**
+ * Extract description and example from a content section
+ */
+function extractContentFromSection(sectionContent) {
+    // Remove the "→full documentation" links for description extraction
+    let sectionClean = sectionContent
+        .replace(/<a[^>]*class="fulldoc"[^>]*>[\s\S]*?<\/a>/gi, '')
+        .replace(/<a[^>]*>→full documentation<\/a>/gi, '')
+        .replace(/→full documentation/gi, '');
+    
+    // Remove pre blocks for description extraction (but keep original for examples)
+    const sectionForDesc = sectionClean.replace(/<pre[^>]*>[\s\S]*?<\/pre>/gi, '');
+    
+    // Extract paragraphs for description
+    const paragraphs = sectionForDesc.match(/<p[^>]*>([\s\S]*?)<\/p>/gi) || [];
+    const descParts = [];
+    
+    for (const p of paragraphs) {
+        let text = stripHtml(p);
+        text = text.replace(/\s+/g, ' ').trim();
+        
+        // Skip very short or navigation text
+        if (text.length < 10) continue;
+        if (text.includes('github') && text.length < 50) continue;
+        if (text.match(/^↗️?$/)) continue;
+        
+        descParts.push(text);
+    }
+    
+    // Also extract list items if no good paragraphs found (handles pages like Under)
+    if (descParts.length === 0 || descParts.every(d => d.length < 30)) {
+        const listItems = sectionForDesc.match(/<li[^>]*>([\s\S]*?)<\/li>/gi) || [];
+        const listParts = [];
+        
+        for (const li of listItems) {
+            let text = stripHtml(li);
+            text = text.replace(/\s+/g, ' ').trim();
+            if (text.length >= 5) {
+                listParts.push(text);
+            }
+        }
+        
+        if (listParts.length > 0) {
+            // Combine list items as a description
+            const listDesc = listParts.slice(0, 4).join('. ');
+            if (listDesc.length > descParts.join(' ').length) {
+                descParts.length = 0; // Clear existing short descriptions
+                descParts.push(listDesc);
+            }
+        }
+    }
+    
+    // Join description parts (usually 1-2 sentences)
+    let description = descParts.slice(0, 3).join(' ');
+    if (description.length > 400) {
+        description = description.substring(0, 397) + '...';
+    }
+    
+    // Extract first code example from this section
+    let example = '';
+    const preMatch = sectionContent.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+    if (preMatch) {
+        let code = stripHtml(preMatch[1]);
+        code = code.trim();
+        if (code.length > 3 && code.length < 500) {
+            example = code;
+        }
+    }
+    
+    return { description, example };
+}
+
+/**
  * Extract help content from a help page
- * BQN help pages have sections for monad and dyad separated by h2 headers
+ * BQN help pages have various structures:
+ * 1. Separate h2 sections for monad (𝕩:) and dyad (𝕨...𝕩:)
+ * 2. Combined h2 for modifiers like "𝔽¨ 𝕩, 𝕨 𝔽¨ 𝕩: Each"
+ * 3. No h2 sections, just body content (like Cells)
+ * 4. Multiple sections without h2, split by "→full documentation" links
  */
 function parseHelpPage(html, glyph) {
     const result = {
@@ -131,10 +207,10 @@ function parseHelpPage(html, glyph) {
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
         .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
     
-    // Split by h2 tags to find monad and dyad sections
-    // Use a regex that captures everything between h2 tags
+    // Try to find h2 sections first
     const h2Regex = /<h2[^>]*>([\s\S]*?)<\/h2>([\s\S]*?)(?=<h2|$)/gi;
     let match;
+    let foundH2 = false;
     
     while ((match = h2Regex.exec(cleanHtml)) !== null) {
         const headerContent = match[1];
@@ -143,52 +219,67 @@ function parseHelpPage(html, glyph) {
         // Strip HTML from header to check for monad/dyad pattern
         const headerText = stripHtml(headerContent);
         
+        // Check for combined modifier pattern like "𝔽¨ 𝕩, 𝕨 𝔽¨ 𝕩: Each" or "𝔽⎉𝕘 𝕩, 𝕨 𝔽⎉𝕘 𝕩: Rank"
+        // These have BOTH monad and dyad forms in the SAME header, separated by comma
+        // The pattern is: monad form, dyad form (with comma in between)
+        const isCombinedModifier = headerText.includes('𝔽') && 
+                                   headerText.includes(',') && 
+                                   headerText.includes('𝕨');
+        
+        if (isCombinedModifier) {
+            foundH2 = true;
+            // For combined modifiers, use the same content for both monad and dyad
+            const content = extractContentFromSection(sectionContent);
+            result.monad = content;
+            result.dyad = { description: content.description, example: content.example };
+            continue;
+        }
+        
         // Check if this is monad (𝕩: but not 𝕨...𝕩:) or dyad (𝕨...𝕩:)
-        const isMonad = headerText.includes('𝕩') && !headerText.includes('𝕨');
+        // Also check for modifier patterns with 𝔽
+        const isMonad = (headerText.includes('𝕩') && !headerText.includes('𝕨')) ||
+                       (headerText.includes('𝔽') && headerText.includes('𝕩') && !headerText.includes('𝕨'));
         const isDyad = headerText.includes('𝕨') && headerText.includes('𝕩');
         
         if (!isMonad && !isDyad) continue;
         
+        foundH2 = true;
         const target = isMonad ? result.monad : result.dyad;
+        const content = extractContentFromSection(sectionContent);
+        target.description = content.description;
+        target.example = content.example;
+    }
+    
+    // If no h2 sections found, try to parse body content
+    // This handles pages like Cells that have no h2 structure
+    if (!foundH2) {
+        // Try splitting by "→full documentation" links (handles Valences-style pages)
+        const fullDocSplit = cleanHtml.split(/(?:<a[^>]*>)?→full documentation(?:<\/a>)?/i);
         
-        // Remove the "→full documentation" links for description extraction
-        let sectionClean = sectionContent
-            .replace(/<a[^>]*class="fulldoc"[^>]*>[\s\S]*?<\/a>/gi, '')
-            .replace(/<a[^>]*>→full documentation<\/a>/gi, '')
-            .replace(/→full documentation/gi, '');
-        
-        // Remove pre blocks for description extraction (but keep original for examples)
-        const sectionForDesc = sectionClean.replace(/<pre[^>]*>[\s\S]*?<\/pre>/gi, '');
-        
-        // Extract paragraphs for description
-        const paragraphs = sectionForDesc.match(/<p[^>]*>([\s\S]*?)<\/p>/gi) || [];
-        const descParts = [];
-        
-        for (const p of paragraphs) {
-            let text = stripHtml(p);
-            text = text.replace(/\s+/g, ' ').trim();
-            
-            // Skip very short or navigation text
-            if (text.length < 10) continue;
-            if (text.includes('github') && text.length < 50) continue;
-            if (text.match(/^↗️?$/)) continue;
-            
-            descParts.push(text);
-        }
-        
-        // Join description parts (usually 1-2 sentences)
-        target.description = descParts.slice(0, 3).join(' ');
-        if (target.description.length > 300) {
-            target.description = target.description.substring(0, 297) + '...';
-        }
-        
-        // Extract first code example from this section
-        const preMatch = sectionContent.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
-        if (preMatch) {
-            let code = stripHtml(preMatch[1]);
-            code = code.trim();
-            if (code.length > 3 && code.length < 500) {
-                target.example = code;
+        if (fullDocSplit.length >= 2) {
+            // Multiple sections separated by "→full documentation"
+            // First section (before first link) is monad, second is dyad
+            for (let i = 0; i < fullDocSplit.length && i < 2; i++) {
+                const section = fullDocSplit[i];
+                const content = extractContentFromSection(section);
+                if (content.description || content.example) {
+                    if (i === 0) {
+                        result.monad = content;
+                    } else {
+                        result.dyad = content;
+                    }
+                }
+            }
+        } else {
+            // Single section - extract from main body
+            // Find content after navigation (after the help/index.html link)
+            const bodyMatch = cleanHtml.match(/help\/index\.html[^<]*<\/a>\s*([\s\S]*)/i);
+            if (bodyMatch) {
+                const bodyContent = bodyMatch[1];
+                const content = extractContentFromSection(bodyContent);
+                // For single-section pages, treat as monad content (applies to both uses)
+                result.monad = content;
+                result.dyad = { description: content.description, example: content.example };
             }
         }
     }
