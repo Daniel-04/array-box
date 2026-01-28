@@ -7,7 +7,8 @@
   "scripts": {
     "scrape:bqn": "node scripts/scrape-bqn-docs.cjs",
     "scrape:uiua": "node scripts/scrape-uiua-docs.cjs",
-    "scrape:all": "node scripts/scrape-bqn-docs.cjs && node scripts/scrape-uiua-docs.cjs"
+    "scrape:j": "node scripts/scrape-j-docs.cjs",
+    "scrape:all": "node scripts/scrape-bqn-docs.cjs && node scripts/scrape-uiua-docs.cjs && node scripts/scrape-j-docs.cjs"
   },
   "exports": {
     ".": {
@@ -54,6 +55,14 @@
     "./uiua-docs.js": {
       "import": "./src/uiua-docs.js",
       "default": "./src/uiua-docs.js"
+    },
+    "./j-docs": {
+      "import": "./src/j-docs.js",
+      "default": "./src/j-docs.js"
+    },
+    "./j-docs.js": {
+      "import": "./src/j-docs.js",
+      "default": "./src/j-docs.js"
     },
     "./fonts/*": "./fonts/*",
     "./assets/*": "./assets/*"

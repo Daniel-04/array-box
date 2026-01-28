@@ -24,6 +24,7 @@
 // Re-export documentation for hover tooltips
 export { bqnGlyphDocs, bqnDocsMeta, getBqnHoverContent } from './bqn-docs.js';
 export { uiuaGlyphDocs, uiuaDocsMeta, getUiuaHoverContent } from './uiua-docs.js';
+export { jGlyphDocs, jDocsMeta, getJHoverContent } from './j-docs.js';
 
 // Glyph names for BQN (monadic/dyadic names)
 // Based on official BQN documentation (https://mlochbaum.github.io/BQN/doc/primitive.html)
@@ -117,18 +118,11 @@ export const bqnGlyphNames = {
     
     // System values
     '•': 'system',
-    '⍎': 'evaluate',
-    '⍕': 'format',
     
     // Strand/list
     '⟨': 'list start',
     '⟩': 'list end',
     '‿': 'strand',
-    
-    // Deprecated/Alternative glyphs
-    '↙': 'take (deprecated)',
-    '↖': 'drop (deprecated)',
-    '⍳': 'iota (APL compat)',
     
     // Syntax elements
     '#': 'comment',
@@ -716,10 +710,15 @@ const defaultStyles = `
     display: none;
     max-width: 95vw;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: transform 0.25s ease-out;
 }
 
 .array-keyboard-overlay.show {
     display: block;
+}
+
+.array-keyboard-overlay.has-tooltip {
+    transform: translate(calc(-50% - 170px), -50%);
 }
 
 .array-keyboard-header {
@@ -1231,21 +1230,25 @@ const defaultStyles = `
     background: #1f2937;
     border: 1px solid #4b5563;
     border-radius: 8px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
     z-index: 10001;
-    max-width: 440px;
-    min-width: 280px;
+    width: 320px;
+    max-width: 320px;
+    max-height: 60vh;
+    overflow-y: auto;
     pointer-events: auto;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.15s ease-in-out, visibility 0.15s ease-in-out;
+    transform: translateX(20px);
+    transition: opacity 0.2s ease-out, visibility 0.2s ease-out, transform 0.25s ease-out;
     font-family: 'JetBrains Mono', monospace;
 }
 
 .array-keyboard-tooltip.show {
     opacity: 1;
     visibility: visible;
+    transform: translateX(0);
 }
 
 .array-keyboard-tooltip-header {
@@ -1297,6 +1300,41 @@ const defaultStyles = `
     color: #d1d5db;
     line-height: 1.6;
     margin-bottom: 10px;
+}
+
+.array-keyboard-tooltip-title-line {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #e5e7eb;
+    margin-bottom: 6px;
+}
+
+.array-keyboard-tooltip-section {
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #374151;
+}
+
+.array-keyboard-tooltip-section:last-of-type {
+    border-bottom: none;
+    margin-bottom: 6px;
+    padding-bottom: 0;
+}
+
+.array-keyboard-tooltip-section-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 600;
+    color: #60a5fa;
+    margin-bottom: 4px;
+}
+
+.array-keyboard-tooltip-section-desc {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: #d1d5db;
+    line-height: 1.5;
 }
 
 .array-keyboard-tooltip-example {
@@ -1376,6 +1414,8 @@ export class ArrayKeyboard {
         this.resizeHandler = null;
         this.tooltip = null;
         this.tooltipTimeout = null;
+        this.currentTooltipGlyph = null;
+        this.tooltipLeftPos = null;
         
         this._injectStyles();
         this._createOverlay();
@@ -1543,7 +1583,7 @@ export class ArrayKeyboard {
         if (this.glyphNames) {
             const namesHint = document.createElement('span');
             namesHint.className = 'array-keyboard-names-hint';
-            namesHint.innerHTML = `<kbd>n</kbd> names <kbd>s</kbd> search`;
+            namesHint.innerHTML = `<kbd>s</kbd> search`;
             hintContainer.appendChild(namesHint);
         }
         
@@ -1920,18 +1960,8 @@ export class ArrayKeyboard {
         this.tooltip = document.createElement('div');
         this.tooltip.className = 'array-keyboard-tooltip';
         
-        // Keep tooltip visible when mouse enters it
-        this.tooltip.addEventListener('mouseenter', () => {
-            if (this.tooltipTimeout) {
-                clearTimeout(this.tooltipTimeout);
-                this.tooltipTimeout = null;
-            }
-        });
-        
-        // Hide tooltip when mouse leaves it
-        this.tooltip.addEventListener('mouseleave', () => {
-            this._hideTooltip();
-        });
+        // Tooltip stays visible until hovering another glyph or closing keyboard
+        // No mouseenter/mouseleave hiding needed
         
         // Append to body for proper fixed positioning
         document.body.appendChild(this.tooltip);
@@ -1941,8 +1971,9 @@ export class ArrayKeyboard {
      * Show tooltip for a glyph
      * @param {string} glyph - The glyph character
      * @param {HTMLElement} targetEl - The element being hovered
+     * @param {string|null} filterSection - Optional: 'monad' or 'dyad' to show only that section
      */
-    _showTooltip(glyph, targetEl) {
+    _showTooltip(glyph, targetEl, filterSection = null) {
         if (!this.tooltip || !this.glyphDocs) return;
         
         const doc = this.glyphDocs[glyph];
@@ -1954,15 +1985,21 @@ export class ArrayKeyboard {
             this.tooltipTimeout = null;
         }
         
+        // Track current glyph (with filter for uniqueness)
+        const tooltipKey = glyph + (filterSection || '');
+        
+        // Skip if already showing this exact tooltip
+        if (this.currentTooltipGlyph === tooltipKey && this.tooltip.classList.contains('show')) {
+            return;
+        }
+        this.currentTooltipGlyph = tooltipKey;
+        
         // Build tooltip content
         let html = '<div class="array-keyboard-tooltip-header">';
         
         // Glyph with syntax coloring and language font
         const syntaxClass = this._getSyntaxClass(glyph);
         html += `<span class="array-keyboard-tooltip-glyph ${syntaxClass}" style="font-family: ${this.fontFamily}">${glyph}</span>`;
-        
-        // Title (name)
-        html += `<span class="array-keyboard-tooltip-title">${this._escapeHtml(doc.name || '')}</span>`;
         
         // Type badge
         html += `<span class="array-keyboard-tooltip-type">${doc.type}</span>`;
@@ -1973,16 +2010,53 @@ export class ArrayKeyboard {
         }
         html += '</div>';
         
-        // Description
-        if (doc.description) {
-            // Truncate long descriptions
-            const shortDesc = doc.description.length > 180 ? doc.description.substring(0, 177) + '...' : doc.description;
-            html += `<div class="array-keyboard-tooltip-desc">${this._escapeHtml(shortDesc)}</div>`;
-        }
-        
-        // Example (with language font for code)
-        if (doc.example) {
-            html += `<div class="array-keyboard-tooltip-example" style="font-family: ${this.fontFamily}">${this._escapeHtml(doc.example)}</div>`;
+        // Check if doc has monad/dyad structure (BQN, J) or simple name/description (Uiua)
+        if (doc.monad || doc.dyad) {
+            // BQN/J style: separate monad and dyad sections
+            // If filterSection is set, only show that section
+            const showMonad = doc.monad && (!filterSection || filterSection === 'monad');
+            const showDyad = doc.dyad && (!filterSection || filterSection === 'dyad');
+            
+            if (showMonad) {
+                html += '<div class="array-keyboard-tooltip-section">';
+                html += `<div class="array-keyboard-tooltip-section-title">${this._escapeHtml(doc.monad.name)}</div>`;
+                if (doc.monad.description) {
+                    html += `<div class="array-keyboard-tooltip-section-desc">${this._escapeHtml(doc.monad.description)}</div>`;
+                }
+                // Show monad example if available
+                if (doc.monad.example) {
+                    html += `<div class="array-keyboard-tooltip-example" style="font-family: ${this.fontFamily}">${this._escapeHtml(doc.monad.example)}</div>`;
+                }
+                html += '</div>';
+            }
+            
+            if (showDyad) {
+                html += '<div class="array-keyboard-tooltip-section">';
+                html += `<div class="array-keyboard-tooltip-section-title">${this._escapeHtml(doc.dyad.name)}</div>`;
+                if (doc.dyad.description) {
+                    html += `<div class="array-keyboard-tooltip-section-desc">${this._escapeHtml(doc.dyad.description)}</div>`;
+                }
+                // Show dyad example if available
+                if (doc.dyad.example) {
+                    html += `<div class="array-keyboard-tooltip-example" style="font-family: ${this.fontFamily}">${this._escapeHtml(doc.dyad.example)}</div>`;
+                }
+                html += '</div>';
+            }
+        } else {
+            // Uiua style: simple name and description
+            if (doc.name) {
+                html += `<div class="array-keyboard-tooltip-title-line">${this._escapeHtml(doc.name)}</div>`;
+            }
+            
+            if (doc.description) {
+                const shortDesc = doc.description.length > 200 ? doc.description.substring(0, 197) + '...' : doc.description;
+                html += `<div class="array-keyboard-tooltip-desc">${this._escapeHtml(shortDesc)}</div>`;
+            }
+            
+            // Example (with language font for code) - for Uiua style
+            if (doc.example) {
+                html += `<div class="array-keyboard-tooltip-example" style="font-family: ${this.fontFamily}">${this._escapeHtml(doc.example)}</div>`;
+            }
         }
         
         // Doc link
@@ -2003,69 +2077,108 @@ export class ArrayKeyboard {
     }
     
     /**
-     * Position tooltip relative to target element
+     * Position tooltip to the right of the keyboard overlay, centered vertically on page
      */
     _positionTooltip(targetEl) {
-        const rect = targetEl.getBoundingClientRect();
-        const padding = 10;
+        const padding = 16;
+        const slideAmount = 170;
+        const gap = 24;
         
-        // Get tooltip dimensions - need to make it visible first
+        // Check if already slid
+        const alreadySlid = this.overlay.classList.contains('has-tooltip');
+        
+        // Only calculate horizontal position if we don't have a cached value
+        if (this.tooltipLeftPos === null) {
+            // Make sure we're measuring from un-slid state
+            if (alreadySlid) {
+                this.overlay.style.transition = 'none';
+                this.overlay.classList.remove('has-tooltip');
+                void this.overlay.offsetWidth; // Force reflow
+            }
+            
+            // Get keyboard position before sliding
+            const overlayRect = this.overlay.getBoundingClientRect();
+            
+            // Calculate tooltip position:
+            // After keyboard slides left by slideAmount, its right edge will be at: overlayRect.right - slideAmount
+            // Tooltip should start `gap` pixels to the right of that
+            this.tooltipLeftPos = overlayRect.right - slideAmount + gap;
+            
+            // Restore state
+            if (alreadySlid) {
+                this.overlay.classList.add('has-tooltip');
+                this.overlay.style.transition = '';
+            }
+        }
+        
+        // Get tooltip height for vertical centering
         this.tooltip.style.visibility = 'hidden';
         this.tooltip.style.opacity = '0';
         this.tooltip.classList.add('show');
-        
-        // Force reflow to get accurate dimensions
-        const tooltipWidth = this.tooltip.offsetWidth;
         const tooltipHeight = this.tooltip.offsetHeight;
-        
-        // Remove temporary show class
         this.tooltip.classList.remove('show');
         
-        // Calculate position - prefer above, fallback to below
-        let top = rect.top - tooltipHeight - padding;
-        let left = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-        
-        // If too high, position below
-        if (top < padding) {
-            top = rect.bottom + padding;
-        }
-        
-        // Keep within viewport horizontally
-        const maxLeft = window.innerWidth - tooltipWidth - padding;
-        if (left < padding) {
-            left = padding;
-        } else if (left > maxLeft) {
-            left = maxLeft;
-        }
+        // Center vertically on the page
+        let top = (window.innerHeight - tooltipHeight) / 2;
         
         // Keep within viewport vertically
+        if (top < padding) {
+            top = padding;
+        }
         const maxTop = window.innerHeight - tooltipHeight - padding;
         if (top > maxTop) {
             top = maxTop;
         }
-        if (top < padding) {
-            top = padding;
-        }
         
         this.tooltip.style.top = `${top}px`;
-        this.tooltip.style.left = `${left}px`;
+        this.tooltip.style.left = `${this.tooltipLeftPos}px`;
         
         // Reset styles for animation
         this.tooltip.style.visibility = '';
         this.tooltip.style.opacity = '';
+        
+        // Add class to overlay to trigger slide animation (if not already)
+        if (!alreadySlid) {
+            this.overlay.classList.add('has-tooltip');
+        }
     }
     
     /**
      * Hide tooltip
+     * @param {boolean} resetPosition - Whether to reset the cached position (default: false)
      */
-    _hideTooltip() {
+    _hideTooltip(resetPosition = false) {
         if (!this.tooltip) return;
         
-        // Add a small delay before hiding to allow moving to the tooltip
-        this.tooltipTimeout = setTimeout(() => {
-            this.tooltip.classList.remove('show');
-            this.tooltip.style.pointerEvents = 'none';
-        }, 100);
+        // Clear any pending timeout
+        if (this.tooltipTimeout) {
+            clearTimeout(this.tooltipTimeout);
+            this.tooltipTimeout = null;
+        }
+        
+        this.tooltip.classList.remove('show');
+        this.tooltip.style.pointerEvents = 'none';
+        this.currentTooltipGlyph = null;
+        
+        // Only reset position cache when explicitly requested (e.g., keyboard hidden)
+        if (resetPosition) {
+            this.tooltipLeftPos = null;
+        }
+        
+        // Remove slide class from overlay - do it without transition to avoid 
+        // leader lines being drawn at wrong position during animation
+        if (this.overlay && this.overlay.classList.contains('has-tooltip')) {
+            this.overlay.style.transition = 'none';
+            this.overlay.classList.remove('has-tooltip');
+            void this.overlay.offsetWidth; // Force reflow
+            this.overlay.style.transition = '';
+            
+            // Update leader lines after keyboard has snapped back
+            if (this.namesVisible) {
+                this._updateLeaderLines();
+            }
+        }
+        
     }
     
     /**
@@ -2089,9 +2202,8 @@ export class ArrayKeyboard {
             this._showTooltip(glyph, element);
         });
         
-        element.addEventListener('mouseleave', () => {
-            this._hideTooltip();
-        });
+        // Note: We don't hide on mouseleave - tooltip stays until hovering another glyph
+        // This provides a better UX for reading documentation
     }
     
     /**
@@ -2228,9 +2340,31 @@ export class ArrayKeyboard {
         // Show tooltip when search narrows to a single result
         if (this.searchFilter && glyphElements.length === 1 && this.glyphDocs) {
             const singleResult = glyphElements[0];
-            this._showTooltip(singleResult.glyph, singleResult.el);
-        } else if (this.searchFilter && glyphElements.length > 1) {
-            // Hide tooltip when multiple results
+            const doc = this.glyphDocs[singleResult.glyph];
+            
+            // Determine which section (monad/dyad) matches the search term
+            let filterSection = null;
+            if (doc && (doc.monad || doc.dyad)) {
+                const searchLower = this.searchFilter.toLowerCase();
+                const monadMatches = doc.monad && doc.monad.name && 
+                    doc.monad.name.toLowerCase().includes(searchLower);
+                const dyadMatches = doc.dyad && doc.dyad.name && 
+                    doc.dyad.name.toLowerCase().includes(searchLower);
+                
+                // Only filter if exactly one section matches
+                if (monadMatches && !dyadMatches) {
+                    filterSection = 'monad';
+                } else if (dyadMatches && !monadMatches) {
+                    filterSection = 'dyad';
+                }
+                // If both match or neither match, show both (filterSection stays null)
+            }
+            
+            this._showTooltip(singleResult.glyph, singleResult.el, filterSection);
+            // Don't draw leader lines when showing hover doc for single result
+            return;
+        } else {
+            // Hide tooltip when: no search filter, multiple results, or no docs
             this._hideTooltip();
         }
         
@@ -2750,15 +2884,23 @@ export class ArrayKeyboard {
     /**
      * Show search input
      */
-    showSearch() {
-        if (!this.namesVisible) return;
+    showSearch(initialChar = '') {
+        // Show names first if not already visible
+        if (!this.namesVisible) {
+            this.showNames();
+        }
         
         this._createSearchInput();
         this.searchContainer.classList.add('show');
         this.searchVisible = true;
-        this.searchInput.value = '';
-        this.searchFilter = '';
+        this.searchInput.value = initialChar;
+        this.searchFilter = initialChar.toLowerCase();
         this.searchInput.focus();
+        
+        // Update leader lines if there's an initial character
+        if (initialChar) {
+            this._updateLeaderLines();
+        }
     }
     
     /**
@@ -2840,19 +2982,19 @@ export class ArrayKeyboard {
             // Only handle remaining shortcuts if keyboard is visible
             if (!this.isVisible()) return;
             
-            // 'n' to toggle names (if glyphNames available)
-            if ((e.key === 'n' || e.key === 'N') && this.glyphNames && !e.ctrlKey && !e.altKey && !e.metaKey) {
-                e.preventDefault();
-                e.stopPropagation();
-                this.toggleNames();
-                return;
-            }
-            
-            // 's' to toggle search (if names are visible)
-            if ((e.key === 's' || e.key === 'S') && this.namesVisible && !e.ctrlKey && !e.altKey && !e.metaKey) {
+            // 's' to toggle search (also shows names if not visible)
+            if ((e.key === 's' || e.key === 'S') && this.glyphNames && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 this.toggleSearch();
+                return;
+            }
+            
+            // Any letter key (a-z) when search not visible - auto-show search with that letter
+            if (!this.searchVisible && e.key.length === 1 && /^[a-zA-Z]$/.test(e.key) && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                e.preventDefault();
+                e.stopPropagation();
+                this.showSearch(e.key);
                 return;
             }
             
@@ -2932,6 +3074,12 @@ export class ArrayKeyboard {
         if (this.overlay) {
             this.overlay.classList.add('show');
         }
+        // Hide main app container when keyboard is shown
+        const mainContainer = document.querySelector('.container');
+        if (mainContainer) {
+            mainContainer.style.opacity = '0';
+            mainContainer.style.pointerEvents = 'none';
+        }
     }
     
     /**
@@ -2941,8 +3089,16 @@ export class ArrayKeyboard {
         if (this.overlay) {
             this.overlay.classList.remove('show');
         }
-        // Also hide names when hiding keyboard
+        // Also hide names and tooltip when hiding keyboard
         this.hideNames();
+        this._hideTooltip(true); // Reset position cache when keyboard is hidden
+        
+        // Show main app container when keyboard is hidden
+        const mainContainer = document.querySelector('.container');
+        if (mainContainer) {
+            mainContainer.style.opacity = '';
+            mainContainer.style.pointerEvents = '';
+        }
     }
     
     /**

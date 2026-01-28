@@ -6,7 +6,7 @@ This project includes documentation scraped from the following open-source proje
 
 ## BQN Documentation
 
-The BQN primitive documentation in `docs/bqn-docs.json` and `src/bqn-docs.js` is derived from the BQN project.
+The BQN primitive documentation in `src/bqn-docs.js` is derived from the BQN project.
 
 **Source:** https://mlochbaum.github.io/BQN/help/  
 **Repository:** https://github.com/mlochbaum/BQN  
@@ -34,7 +34,7 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ## Uiua Documentation
 
-The Uiua primitive documentation in `docs/uiua-docs.json` and `src/uiua-docs.js` is derived from the Uiua project.
+The Uiua primitive documentation in `src/uiua-docs.js` is derived from the Uiua project.
 
 **Source:** https://www.uiua.org/docs  
 **Repository:** https://github.com/uiua-lang/uiua  
@@ -63,3 +63,25 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+---
+
+## J Language Documentation
+
+The J primitive documentation in `src/j-docs.js` is derived from the J Wiki (NuVoc).
+
+**Source:** https://code.jsoftware.com/wiki/NuVoc  
+**License:** Creative Commons Attribution-ShareAlike (CC BY-SA)
+
+The J Wiki content is available under the Creative Commons Attribution-ShareAlike license.
+This means you are free to:
+
+- **Share** — copy and redistribute the material in any medium or format
+- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially
+
+Under the following terms:
+
+- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
+- **ShareAlike** — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
+
+Full license text: https://creativecommons.org/licenses/by-sa/4.0/

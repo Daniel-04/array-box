@@ -117,62 +117,79 @@ function parseHelpIndex(html) {
 
 /**
  * Extract help content from a help page
+ * BQN help pages have sections for monad and dyad separated by h2 headers
  */
 function parseHelpPage(html, glyph) {
     const result = {
-        descriptions: [],
-        examples: [],
-        fullDocUrl: null,
+        monad: { description: '', example: '' },
+        dyad: { description: '', example: '' },
     };
     
-    // Extract full documentation link
-    const fullDocMatch = html.match(/href="([^"]*doc[^"]+)"[^>]*>.*?full documentation/i);
-    if (fullDocMatch) {
-        result.fullDocUrl = fullDocMatch[1];
-        if (!result.fullDocUrl.startsWith('http')) {
-            result.fullDocUrl = 'https://mlochbaum.github.io/BQN/' + result.fullDocUrl.replace(/^\.\.\//, '');
-        }
-    }
-    
-    // Remove SVG, script, style, and pre (code) blocks before extracting descriptions
+    // Remove SVG, script, style content
     let cleanHtml = html
         .replace(/<svg[^>]*>[\s\S]*?<\/svg>/gi, '')
         .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<pre[^>]*>[\s\S]*?<\/pre>/gi, '')  // Remove code blocks from description parsing
-        .replace(/<a[^>]*>→full documentation<\/a>/gi, '')  // Remove full doc links
-        .replace(/→full documentation/gi, '');  // Remove plain text full doc links
+        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '');
     
-    // Extract paragraphs (descriptions)
-    const paragraphs = cleanHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/gi) || [];
+    // Split by h2 tags to find monad and dyad sections
+    // Use a regex that captures everything between h2 tags
+    const h2Regex = /<h2[^>]*>([\s\S]*?)<\/h2>([\s\S]*?)(?=<h2|$)/gi;
+    let match;
     
-    for (const p of paragraphs) {
-        let text = stripHtml(p);
-        // Skip navigation, links-only paragraphs, or very short ones
-        if (text.length < 10) continue;
-        if (text.match(/^→full documentation$/i)) continue;
-        if (text.match(/^\[.*\]$/)) continue;
-        if (text.includes('github') && text.length < 50) continue;
+    while ((match = h2Regex.exec(cleanHtml)) !== null) {
+        const headerContent = match[1];
+        const sectionContent = match[2];
         
-        // Clean up the text - remove "→full documentation" remnants
-        text = text.replace(/→full documentation/gi, '').trim();
-        text = text.replace(/\s+/g, ' ').trim();
+        // Strip HTML from header to check for monad/dyad pattern
+        const headerText = stripHtml(headerContent);
         
-        if (text.length > 10) {
-            result.descriptions.push(text);
+        // Check if this is monad (𝕩: but not 𝕨...𝕩:) or dyad (𝕨...𝕩:)
+        const isMonad = headerText.includes('𝕩') && !headerText.includes('𝕨');
+        const isDyad = headerText.includes('𝕨') && headerText.includes('𝕩');
+        
+        if (!isMonad && !isDyad) continue;
+        
+        const target = isMonad ? result.monad : result.dyad;
+        
+        // Remove the "→full documentation" links for description extraction
+        let sectionClean = sectionContent
+            .replace(/<a[^>]*class="fulldoc"[^>]*>[\s\S]*?<\/a>/gi, '')
+            .replace(/<a[^>]*>→full documentation<\/a>/gi, '')
+            .replace(/→full documentation/gi, '');
+        
+        // Remove pre blocks for description extraction (but keep original for examples)
+        const sectionForDesc = sectionClean.replace(/<pre[^>]*>[\s\S]*?<\/pre>/gi, '');
+        
+        // Extract paragraphs for description
+        const paragraphs = sectionForDesc.match(/<p[^>]*>([\s\S]*?)<\/p>/gi) || [];
+        const descParts = [];
+        
+        for (const p of paragraphs) {
+            let text = stripHtml(p);
+            text = text.replace(/\s+/g, ' ').trim();
+            
+            // Skip very short or navigation text
+            if (text.length < 10) continue;
+            if (text.includes('github') && text.length < 50) continue;
+            if (text.match(/^↗️?$/)) continue;
+            
+            descParts.push(text);
         }
-    }
-    
-    // Extract code examples from <pre> blocks (from original html)
-    const preBlocks = html.match(/<pre[^>]*>([\s\S]*?)<\/pre>/gi) || [];
-    
-    for (const block of preBlocks) {
-        let code = stripHtml(block);
-        // Clean up whitespace but preserve structure
-        code = code.replace(/^\s+/gm, ' ').trim();
         
-        if (code.length > 3 && code.length < 300) {
-            result.examples.push(code);
+        // Join description parts (usually 1-2 sentences)
+        target.description = descParts.slice(0, 3).join(' ');
+        if (target.description.length > 300) {
+            target.description = target.description.substring(0, 297) + '...';
+        }
+        
+        // Extract first code example from this section
+        const preMatch = sectionContent.match(/<pre[^>]*>([\s\S]*?)<\/pre>/i);
+        if (preMatch) {
+            let code = stripHtml(preMatch[1]);
+            code = code.trim();
+            if (code.length > 3 && code.length < 500) {
+                target.example = code;
+            }
         }
     }
     
@@ -298,24 +315,46 @@ async function scrapeBqnDocs() {
             
             const type = determineType(prim.glyph, prim.name);
             
-            docs[prim.glyph] = {
+            // Parse names - typically "MonadName, DyadName" or "MonadName / DyadName"
+            const names = prim.name.split(/[,\/]/).map(n => n.trim());
+            const monadName = names[0] || '';
+            const dyadName = names[1] || '';
+            
+            const doc = {
                 glyph: prim.glyph,
                 type,
-                name: prim.name,
-                description: helpContent.descriptions.slice(0, 2).join(' ') || prim.name,
-                example: helpContent.examples[0] || null,
-                docUrl: helpContent.fullDocUrl || prim.helpUrl,
+                docUrl: prim.helpUrl,  // Use help page URL, not full docs
             };
+            
+            // Add monadic info if available
+            if (monadName) {
+                doc.monad = {
+                    name: monadName,
+                    description: helpContent.monad.description || '',
+                    example: helpContent.monad.example || null
+                };
+            }
+            
+            // Add dyadic info if available
+            if (dyadName) {
+                doc.dyad = {
+                    name: dyadName,
+                    description: helpContent.dyad.description || '',
+                    example: helpContent.dyad.example || null
+                };
+            }
+            
+            docs[prim.glyph] = doc;
             
         } catch (err) {
             console.error(`  Failed to fetch ${prim.helpUrl}: ${err.message}`);
             // Still add basic info
+            const names = prim.name.split(/[,\/]/).map(n => n.trim());
             docs[prim.glyph] = {
                 glyph: prim.glyph,
                 type: determineType(prim.glyph, prim.name),
-                name: prim.name,
-                description: prim.name,
-                example: null,
+                monad: names[0] ? { name: names[0], description: '' } : undefined,
+                dyad: names[1] ? { name: names[1], description: '' } : undefined,
                 docUrl: prim.helpUrl,
             };
         }
