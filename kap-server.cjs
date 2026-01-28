@@ -19,6 +19,7 @@ const PORT = process.argv[2] ? parseInt(process.argv[2]) : 8083;
 function findKapExecutable() {
     const candidates = [
         'kap-jvm',
+        path.join(homedir(), 'Downloads/gui/bin/kap-jvm'),
         path.join(homedir(), 'Downloads/kap-jvm-build-linux/gui/bin/kap-jvm'),
         path.join(homedir(), 'kap/gui/bin/kap-jvm'),
         '/usr/local/bin/kap-jvm',
@@ -43,7 +44,7 @@ const kapExecutable = findKapExecutable();
 
 if (!kapExecutable) {
     console.error('Error: Kap interpreter not found.');
-    console.error('Tried: kap-jvm, ~/Downloads/kap-jvm-build-linux/gui/bin/kap-jvm, and standard locations');
+    console.error('Tried: kap-jvm, ~/Downloads/gui/bin/kap-jvm, ~/Downloads/kap-jvm-build-linux/gui/bin/kap-jvm, and standard locations');
     console.error('Please ensure Kap JVM is installed.');
     process.exit(1);
 }
