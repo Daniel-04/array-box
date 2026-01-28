@@ -718,6 +718,14 @@ const defaultStyles = `
     display: flex;
 }
 
+.array-keyboard-spacer {
+    min-height: 90vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
 .array-keyboard-overlay {
     background: #1f2937;
     border: 3px solid #4b5563;
@@ -1665,7 +1673,11 @@ export class ArrayKeyboard {
             this._createKeyboardView();
         }
         
-        this.wrapper.appendChild(this.overlay);
+        // Create invisible spacer to maintain consistent height (prevents jitter)
+        this.spacer = document.createElement('div');
+        this.spacer.className = 'array-keyboard-spacer';
+        this.spacer.appendChild(this.overlay);
+        this.wrapper.appendChild(this.spacer);
     }
     
     /**
@@ -3446,8 +3458,8 @@ export class ArrayKeyboard {
         const wasVisible = this.isVisible();
         const namesWereVisible = this.namesVisible;
         
-        if (this.overlay) {
-            this.overlay.remove();
+        if (this.spacer) {
+            this.spacer.remove();
         }
         if (this.namesOverlay) {
             this.namesOverlay.remove();
@@ -3530,9 +3542,9 @@ export class ArrayKeyboard {
         if (prefixKey) this.prefixKey = prefixKey;
         
         // Remove old overlay and create new one
-        if (this.overlay) {
+        if (this.spacer) {
             const wasVisible = this.isVisible();
-            this.overlay.remove();
+            this.spacer.remove();
             this._createOverlay();
             if (wasVisible) this.show();
         }
@@ -3544,9 +3556,9 @@ export class ArrayKeyboard {
     updateSyntaxRules(syntaxRules) {
         this.syntaxRules = syntaxRules;
         // Refresh display
-        if (this.overlay) {
+        if (this.spacer) {
             const wasVisible = this.isVisible();
-            this.overlay.remove();
+            this.spacer.remove();
             this._createOverlay();
             if (wasVisible) this.show();
         }
@@ -3574,8 +3586,8 @@ export class ArrayKeyboard {
         if (this.resizeHandler) {
             window.removeEventListener('resize', this.resizeHandler);
         }
-        if (this.overlay) {
-            this.overlay.remove();
+        if (this.spacer) {
+            this.spacer.remove();
         }
         if (this.namesOverlay) {
             this.namesOverlay.remove();
@@ -3606,9 +3618,9 @@ export class ArrayKeyboard {
         this._createNamesOverlay();
         
         // Update header hint
-        if (this.overlay) {
+        if (this.spacer) {
             const wasVisible = this.isVisible();
-            this.overlay.remove();
+            this.spacer.remove();
             this._createOverlay();
             if (wasVisible) this.show();
         }
@@ -3628,9 +3640,9 @@ export class ArrayKeyboard {
         this._createTooltip();
         
         // Recreate overlay to re-add hover handlers
-        if (this.overlay) {
+        if (this.spacer) {
             const wasVisible = this.isVisible();
-            this.overlay.remove();
+            this.spacer.remove();
             this._createOverlay();
             if (wasVisible) this.show();
         }
