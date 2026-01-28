@@ -2,24 +2,30 @@
 
 <img width="1920" height="1080" alt="Image" src="https://github.com/user-attachments/assets/be0041c8-3edd-4364-9090-c008fc6ec76a" />
 
-A code editor and runner for array programming languages: **BQN**, **APL**, **J**, **Uiua**, and **Kap**.
+A code editor and runner for array programming languages: **BQN**, **APL**, **J**, **Uiua**, **Kap**, and **TinyAPL**.
 
 ## Features
 
-- Syntax highlighting for BQN, APL, J, Uiua, and Kap
-- Keyboard mappings for typing special characters (BQN: `\` prefix, APL: `` ` `` prefix)
-- Light and dark themes (toggle with `Ctrl+D`)
-- Code execution with `Ctrl+Enter`
+- Syntax highlighting for BQN, APL, J, Uiua, Kap, and TinyAPL
+- Keyboard mappings for typing special characters (BQN: `\` prefix, APL/Kap/TinyAPL: `` ` `` prefix)
+- Visual keyboard overlay with glyph documentation (press `Ctrl+K` or `Ctrl+?`)
+- Code execution with `Enter`
 - Switch languages with `Ctrl+Up/Down`
+- Light and dark themes
 
 ## Running the Demo
 
 ```bash
-# Start the server manager (handles J and APL backends)
-node server-manager.cjs
+# Start the server manager (handles J, APL, and Kap backends)
+node servers/server-manager.cjs
 
 # Open index.html in a browser
 ```
+
+**Note:** 
+- **BQN**, **Uiua**, and **TinyAPL** run entirely in the browser (no server required)
+- **J** and **APL** require local installations and are managed by the server manager
+- **Kap** requires a local Kap installation and is managed by the server manager
 
 ## Using as a Library
 
@@ -39,10 +45,13 @@ git submodule add https://github.com/codereport/array-box
 
 ```javascript
 // Keyboard mappings
-import { createKeyboardHandler, bqnKeymap, aplKeymap } from 'array-box/keymap';
+import { createKeyboardHandler, bqnKeymap, aplKeymap, kapKeymap, tinyaplKeymap } from 'array-box/keymap';
 
 // Syntax highlighting
 import { syntaxRules, highlightCode } from 'array-box/syntax';
+
+// Visual keyboard overlay
+import { ArrayKeyboard } from 'array-box/keyboard';
 
 // Theme CSS (import in your CSS or HTML)
 import 'array-box/theme.css';
@@ -74,7 +83,9 @@ element.innerHTML = html;
 
 **`array-box/keymap`**
 - `bqnKeymap` - BQN character mappings
-- `aplKeymap` - APL character mappings  
+- `aplKeymap` - APL character mappings
+- `kapKeymap` - Kap character mappings
+- `tinyaplKeymap` - TinyAPL character mappings
 - `createKeyboardHandler(element, language)` - Attach keyboard handler
 - `getKeymapInfo(language)` - Get keymap metadata
 - `insertText(element, text)` - Insert text at cursor
@@ -83,6 +94,11 @@ element.innerHTML = html;
 - `syntaxRules` - Token classifications for each language
 - `highlightCode(text, language)` - Returns HTML with syntax spans
 - `escapeHtml(text)` - Escape HTML special characters
+
+**`array-box/keyboard`**
+- `ArrayKeyboard` - Visual keyboard overlay component
+- `bqnGlyphNames`, `aplGlyphNames`, `jGlyphNames`, `uiuaGlyphNames`, `kapGlyphNames`, `tinyaplGlyphNames` - Glyph name mappings
+- `bqnGlyphDocs`, `aplGlyphDocs`, `jGlyphDocs`, `uiuaGlyphDocs`, `kapGlyphDocs`, `tinyaplGlyphDocs` - Glyph documentation
 
 **`array-box/theme.css`**
 - CSS variables for light/dark themes
@@ -96,13 +112,23 @@ array-box/
 ├── src/
 │   ├── keymap.js      # ES module - keyboard mappings
 │   ├── syntax.js      # ES module - syntax highlighting
-│   └── theme.css      # CSS variables and syntax classes
-├── fonts/             # BQN, APL, Uiua fonts
+│   ├── keyboard.js    # ES module - visual keyboard overlay
+│   ├── theme.css      # CSS variables and syntax classes
+│   ├── *-docs.js      # Documentation for each language (bqn, apl, j, uiua, kap, tinyapl)
+│   └── ...
+├── fonts/             # Array language fonts (BQN, APL, Uiua, TinyAPL, Kap)
 ├── assets/            # Language logos
+├── wasm/              # WASM builds
+│   ├── tinyapl/       # TinyAPL WASM build
+│   └── uiua/          # Uiua WASM build
+├── servers/           # Backend server files
+│   ├── server-manager.cjs  # Server manager (J, APL, Kap)
+│   ├── j-server.cjs        # J language server
+│   ├── apl-server.cjs      # APL language server
+│   └── kap-server.cjs      # Kap language server
+├── scripts/           # Documentation scraping scripts
 ├── index.html         # Demo site (imports from src/)
-├── keymap.js          # Legacy UMD version (window.ArrayKeymap)
-├── package.json       # npm package configuration
-└── server-manager.cjs # Backend server manager
+└── package.json       # npm package configuration
 ```
 
 ## License

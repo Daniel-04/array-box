@@ -311,6 +311,11 @@
                 <img id="currentLogo" src="assets/apl.png" alt="APL">
             </button>
             <div class="dropdown" id="dropdown">
+                <div class="dropdown-item" data-lang="apl">
+                    <img src="assets/apl.png" alt="APL">
+                    <span class="lang-name">APL</span>
+                    <span class="lang-version">Dyalog v20.0</span>
+                </div>
                 <div class="dropdown-item" data-lang="bqn">
                     <img src="assets/bqn.svg" alt="BQN">
                     <span class="lang-name">BQN</span>
@@ -325,11 +330,6 @@
                     <img src="assets/j_logo.png" alt="J">
                     <span class="lang-name">J</span>
                     <span class="lang-version">J9.6</span>
-                </div>
-                <div class="dropdown-item" data-lang="apl">
-                    <img src="assets/apl.png" alt="APL">
-                    <span class="lang-name">APL</span>
-                    <span class="lang-version">Dyalog v20.0</span>
                 </div>
                 <div class="dropdown-item" data-lang="kap">
                     <img src="assets/kap.png" alt="Kap">
@@ -547,7 +547,7 @@
                     
                     // Dynamically import the local TinyAPL module
                     console.log('[TinyAPL] Importing module...');
-                    tinyaplModule = await import('./tinyapl-wasm/tinyapl.js');
+                    tinyaplModule = await import('./wasm/tinyapl/tinyapl.js');
                     console.log('[TinyAPL] Module imported, creating context...');
                     
                     // Create a context with I/O handlers
@@ -1079,7 +1079,7 @@
                         } else {
                             return { 
                                 success: false, 
-                                output: 'Uiua WASM module not available.\n\nRun: cd uiua-wasm && ./build.sh'
+                                output: 'Uiua WASM module not available.\n\nRun: cd wasm/uiua && ./build.sh'
                             };
                         }
                     }
@@ -1217,7 +1217,7 @@
                         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                             return { 
                                 success: false, 
-                                output: 'Cannot connect to local Kap server. Please make sure the Kap server is running on http://localhost:8083\n\nRun: node kap-server.cjs' 
+                                output: 'Cannot connect to local Kap server. Please make sure the Kap server is running on http://localhost:8083\n\nRun: node servers/kap-server.cjs' 
                             };
                         }
                         return { 
@@ -1280,7 +1280,7 @@
             }
         };
 
-        const languageOrder = ['bqn', 'uiua', 'j', 'apl', 'kap', 'tinyapl'];
+        const languageOrder = ['apl', 'bqn', 'uiua', 'j', 'kap', 'tinyapl'];
         let currentLanguage = 'apl';
         let currentKeyboardCleanup = null;
 
