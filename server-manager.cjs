@@ -73,6 +73,20 @@ const servers = {
         startTime: null,
         executable: 'WASM'
     },
+    tinyapl: {
+        name: 'TinyAPL (client)',
+        script: null,  // Runs in browser via WASM
+        port: null,
+        color: ansi.magenta,
+        symbol: 'TAP',
+        process: null,
+        status: 'browser',  // Always running in browser
+        requests: 0,
+        errors: 0,
+        lastRequest: null,
+        startTime: null,
+        executable: 'WASM'
+    },
     kap: {
         name: 'Kap Server',
         script: 'kap-server.cjs',

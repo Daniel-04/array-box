@@ -197,6 +197,129 @@ export const kapKeymap = {
 };
 
 /**
+ * TinyAPL keymap: backtick (`) prefix with double-prefix support
+ * Based on https://tinyapl.rubenverg.com/run/latest
+ * 
+ * TinyAPL uses a unique double-prefix system:
+ * - prefix once + key → symP (e.g., ` + e = ∊)
+ * - prefix once + shift+key → symPS (e.g., ` + E = ⍷)
+ * - prefix twice + key → symPP (e.g., `` + e = ⋵)
+ * - prefix twice + shift+key → symPPS (e.g., `` + E = ⋷)
+ * 
+ * Structure: { code, sym, symS, symP, symPS, symPP, symPPS }
+ * where code is the key code, sym/symS are base keys, and symP/PS/PP/PPS are prefix mappings
+ */
+export const tinyaplKeyboard = [
+    // Numbers row
+    { code: 'Backquote', sym: '`', symS: '~', symP: '⍨', symPS: '⌺', symPP: '⋄', symPPS: undefined },
+    { code: 'Digit1', sym: '1', symS: '!', symP: '¨', symPS: '↗', symPP: undefined, symPPS: '⑴' },
+    { code: 'Digit2', sym: '2', symS: '@', symP: '¯', symPS: undefined, symPP: undefined, symPPS: undefined },
+    { code: 'Digit3', sym: '3', symS: '#', symP: undefined, symPS: '⍒', symPP: undefined, symPPS: undefined },
+    { code: 'Digit4', sym: '4', symS: '$', symP: '≤', symPS: '⍋', symPP: '⊴', symPPS: undefined },
+    { code: 'Digit5', sym: '5', symS: '%', symP: '⬚', symPS: '≈', symPP: '⤺', symPPS: undefined },
+    { code: 'Digit6', sym: '6', symS: '^', symP: '≥', symPS: '⍉', symPP: '⊵', symPPS: undefined },
+    { code: 'Digit7', sym: '7', symS: '&', symP: undefined, symPS: '⊖', symPP: undefined, symPPS: undefined },
+    { code: 'Digit8', sym: '8', symS: '*', symP: '≠', symPS: '⍣', symPP: '⍟', symPPS: '∞' },
+    { code: 'Digit9', sym: '9', symS: '(', symP: '∨', symPS: '⍱', symPP: '∻', symPPS: '⦋' },
+    { code: 'Digit0', sym: '0', symS: ')', symP: '∧', symPS: '⍲', symPP: '⍬', symPPS: '⦌' },
+    { code: 'Minus', sym: '-', symS: '_', symP: '×', symPS: '⊗', symPP: '⸚', symPPS: 'ⵧ' },
+    { code: 'Equal', sym: '=', symS: '+', symP: '÷', symPS: '⊕', symPP: '⌹', symPPS: '⧺' },
+    
+    // QWERTY row
+    { code: 'KeyQ', sym: 'q', symS: 'Q', symP: undefined, symPS: undefined, symPP: '⇾', symPPS: '⇽' },
+    { code: 'KeyW', sym: 'w', symS: 'W', symP: '⍵', symPS: '⍹', symPP: undefined, symPPS: undefined },
+    { code: 'KeyE', sym: 'e', symS: 'E', symP: '∊', symPS: '⍷', symPP: '⋵', symPPS: '⋷' },
+    { code: 'KeyR', sym: 'r', symS: 'R', symP: '⍴', symPS: '√', symPP: 'ϼ', symPPS: 'ℜ' },
+    { code: 'KeyT', sym: 't', symS: 'T', symP: '⊞', symPS: '⍨', symPP: '߹', symPPS: '‥' },
+    { code: 'KeyY', sym: 'y', symS: 'Y', symP: '↑', symPS: '↟', symPP: 'ᓚ', symPPS: undefined },
+    { code: 'KeyU', sym: 'u', symS: 'U', symP: '↓', symPS: '↡', symPP: 'ᓗ', symPPS: undefined },
+    { code: 'KeyI', sym: 'i', symS: 'I', symP: '⍳', symPS: '⍸', symPP: '…', symPPS: 'ℑ' },
+    { code: 'KeyO', sym: 'o', symS: 'O', symP: '○', symPS: '⍥', symPP: undefined, symPPS: undefined },
+    { code: 'KeyP', sym: 'p', symS: 'P', symP: '◡', symPS: '◠', symPP: '⏨', symPPS: '⌓' },
+    { code: 'BracketLeft', sym: '[', symS: '{', symP: '←', symPS: '⟨', symPP: '⦅', symPPS: '⦃' },
+    { code: 'BracketRight', sym: ']', symS: '}', symP: '→', symPS: '⟩', symPP: '⦆', symPPS: '⦄' },
+    
+    // Home row
+    { code: 'KeyA', sym: 'a', symS: 'A', symP: '⍺', symPS: '⍶', symPP: 'ɛ', symPPS: undefined },
+    { code: 'KeyS', sym: 's', symS: 'S', symP: '⌈', symPS: '§', symPP: '↾', symPPS: undefined },
+    { code: 'KeyD', sym: 'd', symS: 'D', symP: '⌊', symPS: '⸠', symPP: '⇂', symPPS: undefined },
+    { code: 'KeyF', sym: 'f', symS: 'F', symP: '⍛', symPS: '∡', symPP: '∠', symPPS: undefined },
+    { code: 'KeyG', sym: 'g', symS: 'G', symP: '∇', symPS: '⍢', symPP: '⫇', symPPS: undefined },
+    { code: 'KeyH', sym: 'h', symS: 'H', symP: '∆', symPS: '⍙', symPP: '⊸', symPPS: '⟜' },
+    { code: 'KeyJ', sym: 'j', symS: 'J', symP: '∘', symPS: '⍤', symPP: 'ᴊ', symPPS: undefined },
+    { code: 'KeyK', sym: 'k', symS: 'K', symP: undefined, symPS: '⌸', symPP: undefined, symPPS: undefined },
+    { code: 'KeyL', sym: 'l', symS: 'L', symP: '⎕', symPS: '⌷', symPP: undefined, symPPS: undefined },
+    { code: 'Semicolon', sym: ';', symS: ':', symP: '⍎', symPS: '≡', symPP: '⍮', symPPS: '⍠' },
+    { code: 'Quote', sym: "'", symS: '"', symP: '⍕', symPS: '≢', symPP: '⍘', symPPS: '⍞' },
+    { code: 'Backslash', sym: '\\', symS: '|', symP: '⊢', symPS: '⊣', symPP: '⊩', symPPS: '⫣' },
+    
+    // Bottom row
+    { code: 'KeyZ', sym: 'z', symS: 'Z', symP: '⊂', symPS: '⊆', symPP: '⊏', symPPS: 'ᑣ' },
+    { code: 'KeyX', sym: 'x', symS: 'X', symP: '⊃', symPS: '⊇', symPP: '⊐', symPPS: 'ᑒ' },
+    { code: 'KeyC', sym: 'c', symS: 'C', symP: '∩', symPS: '⍝', symPP: '⟃', symPPS: '⟄' },
+    { code: 'KeyV', sym: 'v', symS: 'V', symP: '∪', symPS: '⁖', symPP: '⫤', symPPS: undefined },
+    { code: 'KeyB', sym: 'b', symS: 'B', symP: '⊥', symPS: '∵', symPP: '⇇', symPPS: undefined },
+    { code: 'KeyN', sym: 'n', symS: 'N', symP: '⊤', symPS: '·', symPP: '↚', symPPS: undefined },
+    { code: 'KeyM', sym: 'm', symS: 'M', symP: '«', symPS: '»', symPP: '↩', symPPS: undefined },
+    { code: 'Comma', sym: ',', symS: '<', symP: '⍪', symPS: 'ᑈ', symPP: '⊲', symPPS: undefined },
+    { code: 'Period', sym: '.', symS: '>', symP: '∙', symPS: 'ᐵ', symPP: '⊳', symPPS: '■' },
+    { code: 'Slash', sym: '/', symS: '?', symP: '⌿', symPS: undefined, symPP: undefined, symPPS: '⍰' },
+    
+    // Space
+    { code: 'Space', sym: 'Space', symS: 'Space', symP: '`', symPS: '‿', symPP: undefined, symPPS: undefined }
+];
+
+/**
+ * TinyAPL keymap converted to code-based lookup format for the keyboard handler
+ * Uses key code as lookup, returns object with { symP, symPS, symPP, symPPS }
+ * Handler checks shiftKey to determine which glyph to use
+ */
+export const tinyaplKeymap = (() => {
+    const map = {};
+    for (const k of tinyaplKeyboard) {
+        map[k.code] = {
+            symP: k.symP,
+            symPS: k.symPS,
+            symPP: k.symPP,
+            symPPS: k.symPPS
+        };
+    }
+    return map;
+})();
+
+/**
+ * TinyAPL glyph reference organized by category
+ * For use in category-mode keyboard display
+ */
+export const tinyaplGlyphs = {
+    // Functions (blue) - primitive functions
+    functions: [
+        '+', '-', '×', '÷', '*', '⍟', '√', '⌊', '⌈', '⸠', '⌹', '!', '|', '∨', '∧',
+        '⊕', '⊗', '∡', 'ℜ', 'ℑ', '⧺', 'ⵧ', '⊥', '⊤',
+        '=', '≠', '<', '≤', '≥', '>', '≡', '≢', '⊲', '⊴', '⊵', '⊳', '≈',
+        '∪', '∩', '~', '§',
+        '⍳', '⍸', '∊', '⍷', '⋷', '⋵', '⍴', '≢', 'ϼ',
+        '?', '…', '⍮', '‥', '߹',
+        '↑', '↓', '⊂', '⊆', '⫇', '⍋', '⍒', '⌿', ',', '⍪', '⊖', '⍉', '∧', '∨',
+        '⊃', '⊇', '⌷', '⊢', '⊣', '⍎', '⍕', '↗', '⇂', '↾'
+    ],
+    // Adverbs (green) - 1-modifiers
+    monadic: [
+        '/', '\\', '↟', '↡', '¨', 'ᐵ', 'ᑈ', 'ᑣ', 'ᑒ', '⍣', '∙', '⊞', '⍤', '◡', '◠',
+        'ᓗ', 'ᓚ', '⍥', '⌓', '@', '⌸', '⌺', '⁖', '⍢', '∵', '⎊'
+    ],
+    // Conjunctions (yellow) - 2-modifiers/combinators
+    dyadic: [
+        '⍨', '∘', '⍛', '⊸', '⟜', '⍤', '⍥', '⸚', '«', '»', '⇾', '⇽', '⫤', '⫣', '⊩'
+    ],
+    // Special syntax
+    syntax: [
+        '←', '→', '⍺', '⍵', '⍶', '⍹', '∇', '⋄', ':', '■', '⍝', '⟨', '⟩', '⦅', '⦆',
+        '{', '}', '⍬', '∻', '⦻', '∅', '¯', '∞', '⏨', 'ᴊ'
+    ]
+};
+
+/**
  * Uiua glyph reference (not a keymap - Uiua uses named functions)
  * Organized by category for reference display
  * Based on https://www.uiua.org/docs/
@@ -384,14 +507,79 @@ export function insertText(element, text) {
 /**
  * Creates a keyboard input handler for an input element
  * @param {HTMLInputElement|HTMLTextAreaElement|HTMLElement} inputElement - The input element to attach to
- * @param {string} language - 'bqn', 'apl', or 'kap'
+ * @param {string} language - 'bqn', 'apl', 'kap', or 'tinyapl'
  * @returns {function} - Cleanup function to remove the handler
  */
 export function createKeyboardHandler(inputElement, language) {
-    let prefixActive = false;
+    // TinyAPL uses double-prefix (0 = none, 1 = single prefix, 2 = double prefix)
+    // Other languages use simple boolean prefix
+    const isTinyapl = language === 'tinyapl';
+    let prefixLevel = 0; // 0, 1, or 2 for TinyAPL; 0 or 1 for others
     const prefixKey = language === 'bqn' ? '\\' : '`';
-    const keymap = language === 'bqn' ? bqnKeymap : (language === 'kap' ? kapKeymap : aplKeymap);
+    const keymap = language === 'bqn' ? bqnKeymap : 
+                   language === 'kap' ? kapKeymap : 
+                   language === 'tinyapl' ? tinyaplKeymap :
+                   aplKeymap;
     const DEBUG = false; // Set to true to enable debug logging
+    
+    // Map physical key codes to logical keys
+    function getCodeToKey(shiftPressed) {
+        return {
+            // Numbers row
+            'Digit1': shiftPressed ? '!' : '1',
+            'Digit2': shiftPressed ? '@' : '2',
+            'Digit3': shiftPressed ? '#' : '3',
+            'Digit4': shiftPressed ? '$' : '4',
+            'Digit5': shiftPressed ? '%' : '5',
+            'Digit6': shiftPressed ? '^' : '6',
+            'Digit7': shiftPressed ? '&' : '7',
+            'Digit8': shiftPressed ? '*' : '8',
+            'Digit9': shiftPressed ? '(' : '9',
+            'Digit0': shiftPressed ? ')' : '0',
+            'Minus': shiftPressed ? '_' : '-',
+            'Equal': shiftPressed ? '+' : '=',
+            'Backquote': shiftPressed ? '~' : '`',
+            
+            // Letters (always uppercase when shift is pressed)
+            'KeyQ': shiftPressed ? 'Q' : 'q',
+            'KeyW': shiftPressed ? 'W' : 'w',
+            'KeyE': shiftPressed ? 'E' : 'e',
+            'KeyR': shiftPressed ? 'R' : 'r',
+            'KeyT': shiftPressed ? 'T' : 't',
+            'KeyY': shiftPressed ? 'Y' : 'y',
+            'KeyU': shiftPressed ? 'U' : 'u',
+            'KeyI': shiftPressed ? 'I' : 'i',
+            'KeyO': shiftPressed ? 'O' : 'o',
+            'KeyP': shiftPressed ? 'P' : 'p',
+            'KeyA': shiftPressed ? 'A' : 'a',
+            'KeyS': shiftPressed ? 'S' : 's',
+            'KeyD': shiftPressed ? 'D' : 'd',
+            'KeyF': shiftPressed ? 'F' : 'f',
+            'KeyG': shiftPressed ? 'G' : 'g',
+            'KeyH': shiftPressed ? 'H' : 'h',
+            'KeyJ': shiftPressed ? 'J' : 'j',
+            'KeyK': shiftPressed ? 'K' : 'k',
+            'KeyL': shiftPressed ? 'L' : 'l',
+            'KeyZ': shiftPressed ? 'Z' : 'z',
+            'KeyX': shiftPressed ? 'X' : 'x',
+            'KeyC': shiftPressed ? 'C' : 'c',
+            'KeyV': shiftPressed ? 'V' : 'v',
+            'KeyB': shiftPressed ? 'B' : 'b',
+            'KeyN': shiftPressed ? 'N' : 'n',
+            'KeyM': shiftPressed ? 'M' : 'm',
+            
+            // Punctuation
+            'BracketLeft': shiftPressed ? '{' : '[',
+            'BracketRight': shiftPressed ? '}' : ']',
+            'Backslash': shiftPressed ? '|' : '\\',
+            'Semicolon': shiftPressed ? ':' : ';',
+            'Quote': shiftPressed ? '"' : "'",
+            'Comma': shiftPressed ? '<' : ',',
+            'Period': shiftPressed ? '>' : '.',
+            'Slash': shiftPressed ? '?' : '/',
+            'Space': ' '
+        };
+    }
     
     function handleKeyDown(e) {
         // Don't interfere with modifier keys or special keys
@@ -401,110 +589,68 @@ export function createKeyboardHandler(inputElement, language) {
         
         // Don't interfere with Ctrl/Alt/Meta key combinations (like Ctrl+K, Ctrl+Enter, etc.)
         if (e.ctrlKey || e.altKey || e.metaKey) {
-            prefixActive = false; // Reset prefix state
+            prefixLevel = 0; // Reset prefix state
             return;
         }
         
-        // Check if this is the prefix key (handle both 'Backslash' code and '\' key)
-        // Note: e.key for backslash can be '\' or 'Backslash' depending on browser
-        // e.code for backslash is always 'Backslash'
+        // Check if this is the prefix key
         const isPrefixKey = (e.key === prefixKey || 
                             e.key === 'Backslash' && prefixKey === '\\' ||
                             (prefixKey === '\\' && e.code === 'Backslash') ||
                             (prefixKey === '`' && (e.code === 'Backquote' || e.key === '`')));
         
         if (isPrefixKey) {
-            if (prefixActive) {
-                // Double prefix key - insert the prefix character itself
-                prefixActive = false;
-                return; // Let the default behavior happen
+            if (isTinyapl) {
+                // TinyAPL: Allow up to 2 prefix levels
+                if (prefixLevel < 2) {
+                    e.preventDefault();
+                    prefixLevel++;
+                    if (DEBUG) console.log('TinyAPL prefix level:', prefixLevel);
+                    return;
+                } else {
+                    // Third press - insert the prefix character
+                    prefixLevel = 0;
+                    return; // Let default behavior happen
+                }
+            } else {
+                // Other languages: Simple toggle
+                if (prefixLevel > 0) {
+                    // Double prefix key - insert the prefix character itself
+                    prefixLevel = 0;
+                    return; // Let the default behavior happen
+                }
+                e.preventDefault();
+                prefixLevel = 1;
+                if (DEBUG) console.log('Prefix activated:', prefixKey);
+                return;
             }
-            e.preventDefault();
-            prefixActive = true;
-            if (DEBUG) console.log('Prefix activated:', prefixKey);
-            return;
+        }
+        
+        // Ignore modifier keys when prefix is active (don't reset prefix state)
+        if (prefixLevel > 0 && (e.key === 'Shift' || e.key === 'CapsLock')) {
+            return; // Don't consume Shift/CapsLock, just ignore them
         }
         
         // If prefix is active, look up the character
-        if (prefixActive) {
+        if (prefixLevel > 0) {
             e.preventDefault(); // Always prevent default when prefix is active
-            prefixActive = false;
+            const currentPrefixLevel = prefixLevel;
+            prefixLevel = 0;
             
             // Use getModifierState for more reliable shift detection
             const shiftPressed = e.shiftKey || e.getModifierState('Shift');
-            
-            // Map physical key codes to logical keys, accounting for shift
-            // This is more reliable than e.key because it's consistent across browsers
-            const codeToKey = {
-                // Numbers row
-                'Digit1': shiftPressed ? '!' : '1',
-                'Digit2': shiftPressed ? '@' : '2',
-                'Digit3': shiftPressed ? '#' : '3',
-                'Digit4': shiftPressed ? '$' : '4',
-                'Digit5': shiftPressed ? '%' : '5',
-                'Digit6': shiftPressed ? '^' : '6',
-                'Digit7': shiftPressed ? '&' : '7',
-                'Digit8': shiftPressed ? '*' : '8',
-                'Digit9': shiftPressed ? '(' : '9',
-                'Digit0': shiftPressed ? ')' : '0',
-                'Minus': shiftPressed ? '_' : '-',
-                'Equal': shiftPressed ? '+' : '=',
-                'Backquote': shiftPressed ? '~' : '`',
-                
-                // Letters (always uppercase when shift is pressed)
-                'KeyQ': shiftPressed ? 'Q' : 'q',
-                'KeyW': shiftPressed ? 'W' : 'w',
-                'KeyE': shiftPressed ? 'E' : 'e',
-                'KeyR': shiftPressed ? 'R' : 'r',
-                'KeyT': shiftPressed ? 'T' : 't',
-                'KeyY': shiftPressed ? 'Y' : 'y',
-                'KeyU': shiftPressed ? 'U' : 'u',
-                'KeyI': shiftPressed ? 'I' : 'i',
-                'KeyO': shiftPressed ? 'O' : 'o',
-                'KeyP': shiftPressed ? 'P' : 'p',
-                'KeyA': shiftPressed ? 'A' : 'a',
-                'KeyS': shiftPressed ? 'S' : 's',
-                'KeyD': shiftPressed ? 'D' : 'd',
-                'KeyF': shiftPressed ? 'F' : 'f',
-                'KeyG': shiftPressed ? 'G' : 'g',
-                'KeyH': shiftPressed ? 'H' : 'h',
-                'KeyJ': shiftPressed ? 'J' : 'j',
-                'KeyK': shiftPressed ? 'K' : 'k',
-                'KeyL': shiftPressed ? 'L' : 'l',
-                'KeyZ': shiftPressed ? 'Z' : 'z',
-                'KeyX': shiftPressed ? 'X' : 'x',
-                'KeyC': shiftPressed ? 'C' : 'c',
-                'KeyV': shiftPressed ? 'V' : 'v',
-                'KeyB': shiftPressed ? 'B' : 'b',
-                'KeyN': shiftPressed ? 'N' : 'n',
-                'KeyM': shiftPressed ? 'M' : 'm',
-                
-                // Punctuation
-                'BracketLeft': shiftPressed ? '{' : '[',
-                'BracketRight': shiftPressed ? '}' : ']',
-                'Backslash': shiftPressed ? '|' : '\\',
-                'Semicolon': shiftPressed ? ':' : ';',
-                'Quote': shiftPressed ? '"' : "'",
-                'Comma': shiftPressed ? '<' : ',',
-                'Period': shiftPressed ? '>' : '.',
-                'Slash': shiftPressed ? '?' : '/',
-                'Space': ' '
-            };
+            const codeToKey = getCodeToKey(shiftPressed);
             
             // Get the logical key from the physical key code
             let key = null;
-            // Prefer e.code (more reliable), but fall back to e.key if not available
             if (e.code && codeToKey.hasOwnProperty(e.code)) {
                 key = codeToKey[e.code];
             } else if (e.key) {
-                // Fallback: use e.key and adjust for shift
                 key = e.key;
                 if (shiftPressed) {
                     if (key.length === 1 && key >= 'a' && key <= 'z') {
                         key = key.toUpperCase();
                     } else {
-                        // For numbers/symbols, e.key should already be the shifted version
-                        // but let's handle common cases explicitly
                         const shiftMap = {
                             '1': '!', '2': '@', '3': '#', '4': '$', '5': '%',
                             '6': '^', '7': '&', '8': '*', '9': '(', '0': ')',
@@ -519,26 +665,41 @@ export function createKeyboardHandler(inputElement, language) {
                 }
             }
             
-            // Debug logging
+            // Look up the mapped character
+            let mapped = null;
+            if (isTinyapl) {
+                // TinyAPL uses code-based lookup with shift state
+                // keymap[code] = { symP, symPS, symPP, symPPS }
+                const entry = keymap[e.code];
+                if (entry) {
+                    if (currentPrefixLevel === 1) {
+                        // Single prefix: use symP (unshifted) or symPS (shifted)
+                        mapped = shiftPressed ? entry.symPS : entry.symP;
+                    } else {
+                        // Double prefix: use symPP (unshifted) or symPPS (shifted)
+                        mapped = shiftPressed ? entry.symPPS : entry.symPP;
+                    }
+                }
+            } else {
+                // Standard keymap lookup
+                mapped = key && keymap[key];
+            }
+            
             if (DEBUG) {
                 console.log('Key lookup:', { 
                     code: e.code, 
                     key: e.key, 
                     shiftKey: e.shiftKey,
                     shiftPressed, 
-                    resolvedKey: key, 
-                    hasMapping: keymap.hasOwnProperty(key),
-                    mapped: keymap[key] 
+                    resolvedKey: key,
+                    prefixLevel: currentPrefixLevel,
+                    mapped
                 });
             }
             
-            // Look up the mapped character
-            if (key && keymap.hasOwnProperty(key)) {
-                const mapped = keymap[key];
-                if (mapped && mapped !== '') {
-                    insertText(inputElement, mapped);
-                    return;
-                }
+            if (mapped && mapped !== '') {
+                insertText(inputElement, mapped);
+                return;
             }
             
             // If no mapping found, don't insert anything (we already prevented default)
@@ -546,7 +707,7 @@ export function createKeyboardHandler(inputElement, language) {
     }
     
     function handleBlur() {
-        prefixActive = false;
+        prefixLevel = 0;
     }
     
     inputElement.addEventListener('keydown', handleKeyDown);
@@ -561,12 +722,23 @@ export function createKeyboardHandler(inputElement, language) {
 
 /**
  * Get info about a keyboard mapping for display
- * @param {string} language - 'bqn', 'apl', or 'kap'
+ * @param {string} language - 'bqn', 'apl', 'kap', or 'tinyapl'
  * @returns {object} Object with prefixKey, keymap, and description
  */
 export function getKeymapInfo(language) {
     const prefixKey = language === 'bqn' ? '\\' : '`';
-    const keymap = language === 'bqn' ? bqnKeymap : (language === 'kap' ? kapKeymap : aplKeymap);
+    const keymap = language === 'bqn' ? bqnKeymap : 
+                   language === 'kap' ? kapKeymap :
+                   language === 'tinyapl' ? tinyaplKeymap :
+                   aplKeymap;
+    
+    if (language === 'tinyapl') {
+        return {
+            prefixKey,
+            keymap,
+            description: 'Press ` once for level 1 glyphs, twice for level 2 glyphs'
+        };
+    }
     
     return {
         prefixKey,
@@ -582,6 +754,9 @@ export default {
     bqnKeymap,
     aplKeymap,
     kapKeymap,
+    tinyaplKeymap,
+    tinyaplKeyboard,
+    tinyaplGlyphs,
     uiuaGlyphs,
     jGlyphs,
     createKeyboardHandler,

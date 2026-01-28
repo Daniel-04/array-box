@@ -24,6 +24,10 @@
     font-family: 'Kap';
     src: url('../fonts/APL387.ttf') format('truetype');
 }
+@font-face {
+    font-family: 'TinyAPL';
+    src: url('../fonts/TinyAPL386.ttf') format('truetype');
+}
 
 /* Dark mode (always on) - using Tailwind gray palette */
 :root {
@@ -92,6 +96,10 @@
 
 .font-apl {
     font-family: 'APL', 'Courier New', monospace;
+}
+
+.font-tinyapl {
+    font-family: 'TinyAPL', 'Courier New', monospace;
 }
 
 /* Visual Keyboard Styles */
@@ -195,6 +203,11 @@
 .keyboard-overlay.kap .key-symbol,
 .keyboard-overlay.kap .key-shift-symbol {
     font-family: 'Kap', 'Courier New', monospace;
+}
+
+.keyboard-overlay.tinyapl .key-symbol,
+.keyboard-overlay.tinyapl .key-shift-symbol {
+    font-family: 'TinyAPL', 'Courier New', monospace;
 }
 
 .key-symbol.empty {

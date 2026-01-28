@@ -27,6 +27,7 @@ export { uiuaGlyphDocs, uiuaDocsMeta, getUiuaHoverContent } from './uiua-docs.js
 export { jGlyphDocs, jDocsMeta, getJHoverContent } from './j-docs.js';
 export { kapGlyphDocs, kapDocsMeta, getKapHoverContent } from './kap-docs.js';
 export { aplGlyphDocs, aplDocsMeta, getAplHoverContent } from './apl-docs.js';
+export { tinyaplGlyphDocs, tinyaplDocsMeta, getTinyaplHoverContent } from './tinyapl-docs.js';
 
 // Glyph names for BQN (monadic/dyadic names)
 // Based on official BQN documentation (https://mlochbaum.github.io/BQN/doc/primitive.html)
@@ -378,6 +379,194 @@ export const kapGlyphNames = {
     '⍓': 'grade up prefix',
     '⫽': 'double slash / parallel',
     
+};
+
+// Glyph names for TinyAPL (monadic/dyadic names)
+// Based on https://tinyapl.rubenverg.com/
+export const tinyaplGlyphNames = {
+    // Arithmetic
+    '+': 'conjugate / add',
+    '-': 'negate / subtract',
+    '×': 'direction / multiply',
+    '÷': 'reciprocal / divide',
+    '*': 'exponential / power',
+    '⍟': 'natural log / logarithm',
+    '√': 'square root / root',
+    '⌊': 'floor / minimum',
+    '⌈': 'ceiling / maximum',
+    '⸠': 'round / round to nearest',
+    '⌹': 'matrix inverse / matrix divide',
+    '!': 'factorial / binomial',
+    '|': 'magnitude / remainder',
+    '∨': 'gcd / or / demote',
+    '∧': 'lcm / and / promote',
+    '⍲': 'nand',
+    '⍱': 'nor',
+    '~': 'not / difference',
+    
+    // Complex numbers
+    '⊕': 'pure imaginary / cartesian',
+    '⊗': 'unit polar / polar',
+    '∡': 'phase / arctangent',
+    'ℜ': 'real part',
+    'ℑ': 'imaginary part',
+    '⧺': 'increment',
+    'ⵧ': 'decrement / span',
+    '⊥': 'decode',
+    '⊤': 'encode',
+    
+    // Comparison
+    '=': 'equals',
+    '≠': 'not equals / nub sieve',
+    '<': 'less than',
+    '≤': 'less or equal',
+    '≥': 'greater or equal',
+    '>': 'greater than / first cell',
+    '≡': 'depth / identical',
+    '≢': 'tally / not identical',
+    '⊲': 'precedes',
+    '⊴': 'precedes or identical / sort up',
+    '⊵': 'succeeds or identical / sort down',
+    '⊳': 'succeeds',
+    '≈': 'approximate',
+    
+    // Set operations
+    '∪': 'unique / union',
+    '∩': 'intersection',
+    '§': 'symmetric difference',
+    
+    // Property functions
+    '⍳': 'index generator / index of',
+    '⍸': 'where / interval index',
+    '∊': 'enlist / element of',
+    '⍷': 'find',
+    '⋷': 'mask',
+    '⋵': 'histogram / count',
+    '⍴': 'shape / reshape',
+    'ϼ': 'rank / rerank',
+    
+    // Array creation
+    '?': 'roll / deal',
+    '…': 'range',
+    '⍮': 'pair / singleton',
+    '‥': 'from keys and values / from inverted table',
+    '߹': 'key-value pair / from pairs',
+    
+    // Dictionary
+    '∻': 'empty dictionary',
+    
+    // Manipulation
+    '↑': 'mix / take',
+    '↓': 'major cells / drop / key-value pairs',
+    '⊂': 'enclose / partitioned enclose',
+    '⊆': 'nest / partition',
+    '⫇': 'group',
+    '⍋': 'grade up / sort by up',
+    '⍒': 'grade down / sort by down',
+    '⌿': 'replicate',
+    ',': 'ravel / laminate',
+    '⍪': 'join / catenate',
+    '⊖': 'reverse / rotate',
+    '⍉': 'transpose / inverted table',
+    
+    // Lookup
+    '⊃': 'first / pick / keys',
+    '⊇': 'last / from / values',
+    '⌷': 'index',
+    '⊢': 'right / identity',
+    '⊣': 'left / identity',
+    
+    // Misc
+    '⍎': 'execute',
+    '⍕': 'format',
+    '↗': 'raise',
+    '⇂': 'minimal',
+    '↾': 'maximal',
+    '⍬': 'empty vector',
+    
+    // Operators (1-modifiers)
+    '/': 'reduce / fold',
+    '\\': 'reduce back / fold back',
+    '↟': 'on prefixes / on outfixes',
+    '↡': 'on suffixes / on infixes',
+    '¨': 'each',
+    'ᐵ': 'each right',
+    'ᑈ': 'each left',
+    'ᑣ': 'boxed',
+    'ᑒ': 'on contents',
+    '⍣': 'repeat / until',
+    '∙': 'inner product / alternant',
+    '⊞': 'table',
+    '⍤': 'at rank / atop',
+    '◡': 'on cells',
+    '◠': 'on scalars',
+    'ᓗ': 'cells left',
+    'ᓚ': 'cells right',
+    '⍥': 'at depth / over',
+    '⌓': 'on simple scalars',
+    '@': 'at',
+    '⌸': 'key / key with vocabulary',
+    '⌺': 'stencil',
+    '⁖': 'valences',
+    '⍢': 'under',
+    '∵': 'bitwise',
+    '⎊': 'catch',
+    
+    // Combinators (2-modifiers)
+    '⍨': 'constant / commute / duplicate',
+    '∘': 'bind / after',
+    '⍛': 'default bind / before',
+    '⊸': 'left hook',
+    '⟜': 'right hook',
+    '⸚': 'mirror',
+    '«': 'fork left / nudge',
+    '»': 'fork right / nudge back',
+    '⇾': 'left fork',
+    '⇽': 'right fork',
+    '⫤': 'ident',
+    '⫣': 'lev',
+    '⊩': 'dex',
+    
+    // Syntax
+    '←': 'assign',
+    '→': 'guard',
+    '⍺': 'left argument',
+    '⍵': 'right argument',
+    '⍶': 'left function operand',
+    '⍹': 'right function operand',
+    '∇': 'recurse',
+    '⋄': 'statement separator',
+    ':': 'guard',
+    '■': 'early return',
+    '⍝': 'comment',
+    '⟨': 'array start',
+    '⟩': 'array end',
+    '⦅': 'train start',
+    '⦆': 'train end',
+    '⏨': 'exponent notation',
+    'ᴊ': 'complex notation',
+    '∞': 'infinity',
+    '⎕': 'quad / array input / standard output',
+    '⍞': 'character input / standard error',
+    '⑴': 'origin one',
+    '⤺': 'backward',
+    '⦃': 'struct start',
+    '⦄': 'struct end',
+    '⦋': 'bracket left',
+    '⦌': 'bracket right',
+    'ɛ': 'epsilon (small)',
+    '·': 'middle dot',
+    '⟃': 'inline comment start',
+    '⟄': 'inline comment end',
+    '⇇': 'parallel',
+    '↚': 'not implies',
+    '↩': 'return',
+    '⍰': 'ternary then',
+    '⍠': 'ternary else / variant',
+    '⍘': 'escape',
+    '⊏': 'first cell select',
+    '⊐': 'index of',
+    '⬚': 'fill',
 };
 
 // Glyph names for J (monadic/dyadic names)
@@ -939,6 +1128,17 @@ const defaultStyles = `
     font-size: 16px;
 }
 
+/* TinyAPL label - centered at bottom when all 4 quadrants are used */
+.array-keyboard-key.quadrant-layout .array-keyboard-label.tinyapl-label {
+    position: absolute;
+    bottom: 2px;
+    right: 50%;
+    transform: translateX(50%);
+    font-size: 12px;
+    color: #6b7280;
+    opacity: 0.7;
+}
+
 /* Syntax highlighting colors - use CSS variables with fallbacks for standalone use */
 .array-keyboard-symbol.syntax-function,
 .array-keyboard-shift-symbol.syntax-function,
@@ -1434,7 +1634,7 @@ export class ArrayKeyboard {
      * @param {string} options.toggleKey - Key to toggle keyboard (default: 'k')
      * @param {HTMLElement} options.container - Container element (default: document.body)
      * @param {boolean} options.enabled - Whether keyboard is enabled (default: true)
-     * @param {string} options.displayMode - 'keyboard' or 'category' (default: 'keyboard')
+     * @param {string} options.displayMode - 'keyboard', 'category', or 'tinyapl' (default: 'keyboard')
      * @param {Object} options.glyphCategories - For category mode: { categoryName: { glyphs: [], label: '', syntaxClass: '' }, ... }
      * @param {string} options.categoryTitle - Custom title for category view (default: '{language} Glyphs')
      * @param {Object} options.glyphNames - Glyph to name mapping for leader line labels { '⍺': 'alpha', ... }
@@ -1442,6 +1642,7 @@ export class ArrayKeyboard {
      * @param {boolean} options.compactCategories - For category mode: show all glyphs inline with legend at bottom (default: false)
      * @param {string} options.logoPath - Path to logo image to display instead of text title (optional)
      * @param {Object} options.glyphDocs - Glyph documentation for hover tooltips { '⥊': { monadic: '...', ... }, ... }
+     * @param {Array} options.tinyaplKeyboard - TinyAPL keyboard data with 4 prefix levels (optional)
      */
     constructor(options = {}) {
         this.keymap = options.keymap || {};
@@ -1461,6 +1662,7 @@ export class ArrayKeyboard {
         this.compactCategories = options.compactCategories || false;
         this.logoPath = options.logoPath || null;
         this.glyphDocs = options.glyphDocs || null;
+        this.tinyaplKeyboard = options.tinyaplKeyboard || null;
         
         this.wrapper = null;
         this.overlay = null;
@@ -1669,6 +1871,8 @@ export class ArrayKeyboard {
         
         if (this.displayMode === 'category' && this.glyphCategories) {
             this._createCategoryView();
+        } else if (this.displayMode === 'tinyapl' && this.tinyaplKeyboard) {
+            this._createTinyaplKeyboardView();
         } else {
             this._createKeyboardView();
         }
@@ -1891,6 +2095,140 @@ export class ArrayKeyboard {
     }
     
     /**
+     * Create TinyAPL keyboard view with 4-glyph layout (double-prefix system)
+     * 
+     * TinyAPL uses: prefix1 + key, prefix1 + shift+key, prefix2 + key, prefix2 + shift+key
+     * 
+     * Layout for each key:
+     * ┌─────────────────────┐
+     * │ symPS     symPPS   │  <- TOP ROW: shifted values (prefix1 left, prefix2 right)
+     * │ symP      symPP    │  <- BOTTOM ROW: unshifted values
+     * └─────────────────────┘
+     */
+    _createTinyaplKeyboardView() {
+        const rowsContainer = document.createElement('div');
+        rowsContainer.className = 'array-keyboard-rows';
+        
+        // Group keyboard data by row (using standard QWERTY layout)
+        const rowCodes = [
+            ['Backquote', 'Digit1', 'Digit2', 'Digit3', 'Digit4', 'Digit5', 'Digit6', 'Digit7', 'Digit8', 'Digit9', 'Digit0', 'Minus', 'Equal'],
+            ['KeyQ', 'KeyW', 'KeyE', 'KeyR', 'KeyT', 'KeyY', 'KeyU', 'KeyI', 'KeyO', 'KeyP', 'BracketLeft', 'BracketRight'],
+            ['KeyA', 'KeyS', 'KeyD', 'KeyF', 'KeyG', 'KeyH', 'KeyJ', 'KeyK', 'KeyL', 'Semicolon', 'Quote', 'Backslash'],
+            ['KeyZ', 'KeyX', 'KeyC', 'KeyV', 'KeyB', 'KeyN', 'KeyM', 'Comma', 'Period', 'Slash'],
+            ['Space']
+        ];
+        
+        // Create a lookup map from code to keyboard entry
+        const keyLookup = {};
+        for (const k of this.tinyaplKeyboard) {
+            keyLookup[k.code] = k;
+        }
+        
+        const totalRows = rowCodes.length;
+        rowCodes.forEach((rowKeys, rowIndex) => {
+            const rowDiv = document.createElement('div');
+            rowDiv.className = 'array-keyboard-row';
+            
+            rowKeys.forEach(code => {
+                const keyData = keyLookup[code];
+                if (!keyData) return;
+                
+                const keyDiv = document.createElement('div');
+                keyDiv.className = 'array-keyboard-key';
+                
+                if (code === 'Space') {
+                    keyDiv.classList.add('space');
+                }
+                
+                // Determine display label
+                let displayLabel = keyData.sym;
+                if (code === 'Space') displayLabel = 'Space';
+                else if (keyData.sym === '\\') displayLabel = '\\';
+                else if (keyData.sym === "'") displayLabel = "'";
+                else if (keyData.sym.length === 1 && keyData.sym >= 'a' && keyData.sym <= 'z') {
+                    displayLabel = keyData.sym.toUpperCase();
+                }
+                
+                // Check if this key has any prefix glyphs
+                const hasAnyGlyph = keyData.symP || keyData.symPS || keyData.symPP || keyData.symPPS;
+                
+                if (hasAnyGlyph) {
+                    // Use quadrant layout showing all 4 prefix levels
+                    keyDiv.classList.add('quadrant-layout');
+                    
+                    const glyphs = [];
+                    
+                    // TOP ROW: shifted values
+                    if (keyData.symPS) {
+                        glyphs.push({ char: keyData.symPS, position: 'top-left', type: 'prefix1-shifted' });
+                    }
+                    if (keyData.symPPS) {
+                        glyphs.push({ char: keyData.symPPS, position: 'top-right', type: 'prefix2-shifted' });
+                    }
+                    
+                    // BOTTOM ROW: unshifted values
+                    if (keyData.symP) {
+                        glyphs.push({ char: keyData.symP, position: 'bottom-left', type: 'prefix1' });
+                    }
+                    if (keyData.symPP) {
+                        glyphs.push({ char: keyData.symPP, position: 'bottom-right', type: 'prefix2' });
+                    }
+                    
+                    // Create glyph elements
+                    glyphs.forEach(g => {
+                        const span = document.createElement('span');
+                        const syntaxClass = this._getSyntaxClass(g.char);
+                        span.className = `array-keyboard-quadrant-glyph ${syntaxClass} ${g.position}`;
+                        span.style.fontFamily = this.fontFamily;
+                        span.textContent = g.char;
+                        span.dataset.type = g.type;
+                        this._addHoverHandlers(span, g.char);
+                        keyDiv.appendChild(span);
+                    });
+                    
+                    // Add key label (smaller, positioned in corner)
+                    const labelSpan = document.createElement('span');
+                    labelSpan.className = 'array-keyboard-label tinyapl-label';
+                    labelSpan.textContent = displayLabel;
+                    keyDiv.appendChild(labelSpan);
+                } else {
+                    // Empty key - just show label
+                    const labelSpan = document.createElement('span');
+                    labelSpan.className = 'array-keyboard-label';
+                    labelSpan.textContent = displayLabel;
+                    keyDiv.appendChild(labelSpan);
+                }
+                
+                rowDiv.appendChild(keyDiv);
+            });
+            
+            // Add doc links to the last row (space bar row)
+            if (rowIndex === totalRows - 1 && this.docLinks && (this.docLinks.layout || this.docLinks.primitives || this.docLinks.syntax)) {
+                const linksContainer = document.createElement('span');
+                linksContainer.className = 'array-keyboard-doc-links';
+                
+                const links = [];
+                if (this.docLinks.layout) {
+                    links.push(`<a href="${this.docLinks.layout}" target="_blank" rel="noopener">layout</a>`);
+                }
+                if (this.docLinks.primitives) {
+                    links.push(`<a href="${this.docLinks.primitives}" target="_blank" rel="noopener">primitives</a>`);
+                }
+                if (this.docLinks.syntax) {
+                    links.push(`<a href="${this.docLinks.syntax}" target="_blank" rel="noopener">syntax</a>`);
+                }
+                linksContainer.innerHTML = links.join('<span class="separator">|</span>');
+                
+                rowDiv.appendChild(linksContainer);
+            }
+            
+            rowsContainer.appendChild(rowDiv);
+        });
+        
+        this.overlay.appendChild(rowsContainer);
+    }
+    
+    /**
      * Create category-based glyph view
      */
     _createCategoryView() {
@@ -2098,8 +2436,21 @@ export class ArrayKeyboard {
         }
         html += '</div>';
         
-        // Check if doc has monad/dyad structure (BQN, J) or simple name/description (Uiua)
-        if (doc.monad || doc.dyad) {
+        // Check if doc has overloads array (TinyAPL), monad/dyad structure (BQN, J) or simple name/description (Uiua)
+        if (doc.overloads && doc.overloads.length > 0) {
+            // TinyAPL style: multiple overloads per glyph
+            for (const overload of doc.overloads) {
+                html += '<div class="array-keyboard-tooltip-section">';
+                html += `<div class="array-keyboard-tooltip-section-title">${this._escapeHtml(overload.name)}</div>`;
+                if (overload.description) {
+                    html += `<div class="array-keyboard-tooltip-section-desc">${this._escapeHtml(overload.description)}</div>`;
+                }
+                if (overload.example) {
+                    html += `<div class="array-keyboard-tooltip-example" style="font-family: ${this.fontFamily}">${this._escapeHtml(overload.example)}</div>`;
+                }
+                html += '</div>';
+            }
+        } else if (doc.monad || doc.dyad) {
             // BQN/J style: separate monad and dyad sections
             // If filterSection is set, only show that section
             const showMonad = doc.monad && (!filterSection || filterSection === 'monad');
@@ -3067,8 +3418,8 @@ export class ArrayKeyboard {
                 return;
             }
             
-            // Shift key: cycle through glyphs on current key (only in keyboard mode during nav)
-            if (e.key === 'Shift' && this.navActive && this.displayMode === 'keyboard' && 
+            // Shift key: cycle through glyphs on current key (only in keyboard/tinyapl mode during nav)
+            if (e.key === 'Shift' && this.navActive && (this.displayMode === 'keyboard' || this.displayMode === 'tinyapl') && 
                 !this.searchVisible && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3101,7 +3452,7 @@ export class ArrayKeyboard {
      * @param {string} key - Arrow key pressed (ArrowUp, ArrowDown, ArrowLeft, ArrowRight)
      */
     _handleArrowNavigation(key) {
-        if (this.displayMode === 'keyboard') {
+        if (this.displayMode === 'keyboard' || this.displayMode === 'tinyapl') {
             this._handleKeyboardNavigation(key);
         } else {
             this._handleCategoryNavigation(key);
@@ -3299,7 +3650,7 @@ export class ArrayKeyboard {
         
         if (this.navCol === null) return;
         
-        if (this.displayMode === 'keyboard') {
+        if (this.displayMode === 'keyboard' || this.displayMode === 'tinyapl') {
             // Keyboard mode: use row/col indices
             const rows = this.overlay.querySelectorAll('.array-keyboard-row');
             if (this.navRow === null || this.navRow >= rows.length) return;

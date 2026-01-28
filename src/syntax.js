@@ -206,6 +206,53 @@ export const syntaxRules = {
         // '←', '⇐', '∇', 'λ', '⍞', '⍺', '⍵', '⎕', '⋄' - left as default
         // Numbers pattern (Kap uses ¯ for negative)
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+    },
+    tinyapl: {
+        // Functions (blue) - primitive functions
+        // Based on https://tinyapl.rubenverg.com/
+        functions: [
+            // Arithmetic
+            '+', '-', '×', '÷', '*', '⍟', '√', '⌊', '⌈', '⸠', '⌹', '!', '|',
+            // Complex numbers
+            '⊕', '⊗', '∡', 'ℜ', 'ℑ', '⧺', 'ⵧ', '⊥', '⊤',
+            // Comparison
+            '=', '≠', '<', '≤', '≥', '>', '≡', '≢', '⊲', '⊴', '⊵', '⊳', '≈',
+            // Logic
+            '∧', '∨', '⍲', '⍱', '~',
+            // Set operations
+            '∪', '∩', '§',
+            // Property functions
+            '⍳', '⍸', '∊', '⍷', '⋷', '⋵', '⍴', 'ϼ',
+            // Array creation
+            '?', '…', '⍮', '‥', '߹',
+            // Manipulation
+            '↑', '↓', '⊂', '⊆', '⫇', '⍋', '⍒', '⌿', ',', '⍪', '⊖', '⍉',
+            // Lookup
+            '⊃', '⊇', '⌷', '⊢', '⊣',
+            // Misc
+            '⍎', '⍕', '↗', '⇂', '↾', '⊏', '⊐'
+        ],
+        // 1-modifiers (green) - operators/adverbs
+        monadic: [
+            '/', '\\', '↟', '↡', '¨', 'ᐵ', 'ᑈ', 'ᑣ', 'ᑒ', '⍣', '∙', '⊞', '⍤', '◡', '◠',
+            'ᓗ', 'ᓚ', '⍥', '⌓', '@', '⌸', '⌺', '⁖', '⍢', '∵', '⎊'
+        ],
+        // 2-modifiers (yellow) - combinators/conjunctions
+        dyadic: [
+            '⍨', '∘', '⍛', '⊸', '⟜', '⸚', '«', '»', '⇾', '⇽', '⫤', '⫣', '⊩'
+        ],
+        // Constants/number literals (purple)
+        constants: [
+            '¯', '∞', '⍬', '∻', '⦻', '∅'
+        ],
+        // Comments (grey)
+        comments: [
+            '⍝'
+        ],
+        // Syntax elements (not highlighted - left as default)
+        // '←', '→', '⍺', '⍵', '⍶', '⍹', '∇', '⋄', ':', '■', '⟨', '⟩', '⦅', '⦆', '⎕', '⍞', '⏨', 'ᴊ'
+        // Numbers pattern (TinyAPL uses ¯ for negative, ∞ for infinity, ⏨ for exponent, ᴊ for complex)
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(⏨[+-]?\d+)?(ᴊ¯?\d+\.?\d*)?/i
     }
 };
 
