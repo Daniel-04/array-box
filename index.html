@@ -449,6 +449,76 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 16px;
         }
+
+        /* Help screen */
+        .help-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-gradient);
+            z-index: 10001;
+            display: none;
+            padding: 60px 80px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .help-screen.show {
+            display: flex;
+        }
+
+        .help-screen .help-header {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 50px;
+            letter-spacing: 0.5px;
+        }
+
+        .help-screen .help-content {
+            max-width: 600px;
+        }
+
+        .help-screen .help-section {
+            margin-bottom: 40px;
+        }
+
+        .help-screen .help-section-title {
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: lowercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+        }
+
+        .help-screen .help-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 10px;
+            font-size: 14px;
+            color: var(--text-color);
+        }
+
+        .help-screen .help-key {
+            min-width: 160px;
+            color: #9CA3AF;
+        }
+
+        .help-screen .help-desc {
+            color: #9CA3AF;
+        }
+
+        .help-screen .help-footer {
+            position: fixed;
+            bottom: 40px;
+            left: 80px;
+            color: #4b5563;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -511,7 +581,60 @@
         </div>
     </div>
 
-    <div class="keyboard-hint" id="keyboardHint">ctrl+k keyboard • ctrl+space primitives</div>
+    <div class="keyboard-hint" id="keyboardHint">ctrl+k keyboard • ctrl+h help</div>
+
+    <!-- Help screen -->
+    <div class="help-screen" id="helpScreen">
+        <div class="help-inner">
+            <div class="help-header">ctrl+h to close</div>
+            <div class="help-content">
+            <div class="help-section">
+                <div class="help-section-title">box mode</div>
+                <div class="help-row">
+                    <span class="help-key">space or type</span>
+                    <span class="help-desc">select array box</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">enter</span>
+                    <span class="help-desc">evaluate code</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">shift + enter</span>
+                    <span class="help-desc">insert newline</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">ctrl + ↑ / ↓</span>
+                    <span class="help-desc">switch language</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">ctrl + k</span>
+                    <span class="help-desc">toggle keyboard overlay</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">ctrl + space</span>
+                    <span class="help-desc">open primitive search</span>
+                </div>
+            </div>
+
+            <div class="help-section">
+                <div class="help-section-title">keyboard mode</div>
+                <div class="help-row">
+                    <span class="help-key">s or type</span>
+                    <span class="help-desc">search primitives</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">↑ ↓</span>
+                    <span class="help-desc">navigate keys</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">shift</span>
+                    <span class="help-desc">cycle through docs</span>
+                </div>
+            </div>
+            </div>
+        </div>
+        <div class="help-footer">array box</div>
+    </div>
     <div class="bug-report-container" id="bugReportContainer">
         <button class="bug-report-close" onclick="document.getElementById('bugReportContainer').style.display='none'" title="Hide">×</button>
         <a href="https://github.com/codereport/array-box/issues" target="_blank" class="bug-report">Report 🐞</a>
@@ -1463,8 +1586,38 @@
         const output = document.getElementById('output');
         const container = document.querySelector('.container');
         
+        // Help screen
+        const helpScreen = document.getElementById('helpScreen');
+        
+        function toggleHelpScreen() {
+            helpScreen.classList.toggle('show');
+        }
+        
+        function isHelpScreenVisible() {
+            return helpScreen.classList.contains('show');
+        }
+        
         // Global keyboard shortcuts
         document.addEventListener('keydown', (e) => {
+            // Ctrl+H to toggle help screen
+            if (e.ctrlKey && e.key === 'h') {
+                e.preventDefault();
+                toggleHelpScreen();
+                return;
+            }
+            
+            // Escape to close help screen if visible
+            if (e.key === 'Escape' && isHelpScreenVisible()) {
+                e.preventDefault();
+                helpScreen.classList.remove('show');
+                return;
+            }
+            
+            // Don't process other shortcuts if help screen is visible
+            if (isHelpScreenVisible()) {
+                return;
+            }
+            
             // Ctrl+Up/Down to switch languages (works globally)
             if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                 e.preventDefault();
@@ -1488,6 +1641,7 @@
             if (document.activeElement !== codeInput && 
                 document.activeElement !== comboboxInputEl &&
                 !keyboardWrapper &&
+                !isHelpScreenVisible() &&
                 !e.ctrlKey && !e.metaKey && !e.altKey &&
                 e.key.length === 1) {
                 

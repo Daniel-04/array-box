@@ -1974,7 +1974,7 @@ export class ArrayKeyboard {
         
         const hintContainer = document.createElement('span');
         hintContainer.className = 'array-keyboard-hint';
-        hintContainer.textContent = `Ctrl+${this.toggleKey.toUpperCase()} to toggle`;
+        hintContainer.textContent = `ctrl+${this.toggleKey.toLowerCase()} to toggle`;
         
         // Add names hint if glyphNames are available
         if (this.glyphNames) {
@@ -3518,6 +3518,11 @@ export class ArrayKeyboard {
                     this.hide();
                     return;
                 }
+                // Ctrl+H to hide everything (keyboard, search, names, tooltip) and show help
+                if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) {
+                    this.hide();
+                    // Don't prevent default - let help screen toggle in index.html
+                }
                 // ESC to close search
                 if (e.key === 'Escape') {
                     e.preventDefault();
@@ -3550,6 +3555,12 @@ export class ArrayKeyboard {
                 e.stopPropagation();
                 this.hide();
                 return;
+            }
+            
+            // Ctrl+H to hide everything (keyboard, search, names, tooltip) and show help
+            if (e.ctrlKey && (e.key === 'h' || e.key === 'H')) {
+                this.hide();
+                // Don't prevent default - let help screen toggle in index.html
             }
             
             // 's' to toggle search (also shows names if not visible)
