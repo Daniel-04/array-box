@@ -13,7 +13,6 @@
 - Set up a statistics aggregator (one public website is up)
   - number of submissions by language
   - % of correct submissions by language
-- ctrl + space for combo box dropdown with fuzzy search
 - ctrl + h for help (put at bottom of screen as well next to ctrl + k)
   - add shift cycling
 

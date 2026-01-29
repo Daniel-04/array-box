@@ -302,6 +302,153 @@
         .keyboard-hint.hidden {
             opacity: 0;
         }
+
+        /* Ctrl+Space primitive combo box */
+        .primitive-combobox {
+            position: absolute;
+            background: #1f2937;
+            border: 3px solid #4b5563;
+            border-radius: 10px;
+            box-shadow: 0 7px 21px var(--shadow-color);
+            z-index: 10000;
+            max-height: 400px;
+            overflow: hidden;
+            display: none;
+            flex-direction: column;
+        }
+
+        .primitive-combobox.show {
+            display: flex;
+        }
+
+        .primitive-combobox-header {
+            padding: 18px 18px 18px 18px;
+            border-bottom: 2px solid #374151;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+
+        .primitive-combobox-input {
+            flex: 1;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 20px;
+            font-variant-ligatures: none;
+            padding: 8px 14px;
+            border: 2px solid #4b5563;
+            border-radius: 7px;
+            background: #111827;
+            color: var(--text-color);
+            outline: none;
+        }
+
+        .primitive-combobox-input:focus {
+            border-color: #6b7280;
+            outline: none;
+        }
+
+        .primitive-combobox-input::placeholder {
+            color: #6b7280;
+        }
+
+        .primitive-combobox-hint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #6b7280;
+        }
+
+        .primitive-combobox-list {
+            padding: 8px 0;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+        }
+
+        .primitive-combobox-item {
+            padding: 10px 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            transition: background-color 0.15s;
+        }
+
+        .primitive-combobox-item:hover,
+        .primitive-combobox-item.selected {
+            background-color: #374151;
+        }
+
+        .primitive-combobox-item.selected {
+            border-left: 3px solid #22c55e;
+            padding-left: 15px;
+        }
+
+        .primitive-combobox-glyph {
+            font-size: 26px;
+            min-width: 40px;
+            text-align: center;
+        }
+
+        .primitive-combobox-glyph.bqn {
+            font-family: 'BQN', 'Courier New', monospace;
+        }
+
+        .primitive-combobox-glyph.uiua {
+            font-family: 'Uiua', 'Courier New', monospace;
+        }
+
+        .primitive-combobox-glyph.apl {
+            font-family: 'APL', 'Courier New', monospace;
+        }
+
+        .primitive-combobox-glyph.kap {
+            font-family: 'Kap', 'Courier New', monospace;
+        }
+
+        .primitive-combobox-glyph.tinyapl {
+            font-family: 'TinyAPL', 'Courier New', monospace;
+        }
+
+        .primitive-combobox-name {
+            flex: 1;
+            color: var(--text-color);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .primitive-combobox-name em {
+            font-style: normal;
+            background: rgba(34, 197, 94, 0.3);
+            border-radius: 3px;
+            padding: 0 2px;
+        }
+
+        .primitive-combobox-shortcut {
+            font-size: 14px;
+            color: #9CA3AF;
+            white-space: nowrap;
+        }
+
+        .primitive-combobox-shortcut kbd {
+            background: #374151;
+            border: 1px solid #4b5563;
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+        }
+
+        .primitive-combobox-empty {
+            padding: 20px 18px;
+            text-align: center;
+            color: #6b7280;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+        }
     </style>
 </head>
 <body>
@@ -352,10 +499,19 @@
                 tabindex="1"
             ></div>
             <div class="output" id="output"></div>
+            <!-- Ctrl+Space primitive combo box -->
+            <div class="primitive-combobox" id="primitiveCombobox">
+                <div class="primitive-combobox-header">
+                    <input type="text" class="primitive-combobox-input" id="comboboxInput" 
+                           placeholder="Search primitives..." autocomplete="off" spellcheck="false">
+                    <span class="primitive-combobox-hint">ESC to close</span>
+                </div>
+                <div class="primitive-combobox-list" id="comboboxList"></div>
+            </div>
         </div>
     </div>
 
-    <div class="keyboard-hint" id="keyboardHint">ctrl + k for keyboard / docs</div>
+    <div class="keyboard-hint" id="keyboardHint">ctrl+k keyboard • ctrl+space primitives</div>
     <div class="bug-report-container" id="bugReportContainer">
         <button class="bug-report-close" onclick="document.getElementById('bugReportContainer').style.display='none'" title="Hide">×</button>
         <a href="https://github.com/codereport/array-box/issues" target="_blank" class="bug-report">Report 🐞</a>
@@ -724,7 +880,7 @@
     <!-- Main application module -->
     <script type="module">
         // Import from modular files
-        import { createKeyboardHandler, bqnKeymap, aplKeymap, kapKeymap, tinyaplKeymap, tinyaplKeyboard, tinyaplGlyphs, uiuaGlyphs, jGlyphs } from './src/keymap.js?v=24';
+        import { createKeyboardHandler, bqnKeymap, aplKeymap, kapKeymap, tinyaplKeymap, tinyaplKeyboard, tinyaplGlyphs, uiuaGlyphs, jGlyphs, insertText } from './src/keymap.js?v=24';
         import { syntaxRules, highlightCode, escapeHtml } from './src/syntax.js?v=24';
         import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames, jGlyphNames, tinyaplGlyphNames, bqnGlyphDocs, uiuaGlyphDocs, jGlyphDocs, kapGlyphDocs, aplGlyphDocs, tinyaplGlyphDocs } from './src/keyboard.js?v=24';
         
@@ -1327,8 +1483,10 @@
             // (when not already focused and keyboard overlay is not visible)
             const keyboardWrapper = document.querySelector('.array-keyboard-wrapper.show');
             const keyboardOverlay = keyboardWrapper ? keyboardWrapper.querySelector('.keyboard-overlay') : null;
+            const comboboxInputEl = document.getElementById('comboboxInput');
             
             if (document.activeElement !== codeInput && 
+                document.activeElement !== comboboxInputEl &&
                 !keyboardWrapper &&
                 !e.ctrlKey && !e.metaKey && !e.altKey &&
                 e.key.length === 1) {
@@ -1631,6 +1789,471 @@
                 keyboardHint.remove();
             }, 500);
         }, 10000);
+
+        // ========================================
+        // Ctrl+Space Primitive Combo Box
+        // ========================================
+        
+        const primitiveCombobox = document.getElementById('primitiveCombobox');
+        const comboboxInput = document.getElementById('comboboxInput');
+        const comboboxList = document.getElementById('comboboxList');
+        let comboboxSelectedIndex = 0;
+        let filteredPrimitives = [];
+        let savedCursorPosition = null;
+        
+        // Build reverse keymap (glyph -> shortcut) for each language
+        function buildReverseKeymap(keymap, prefixKey, language) {
+            const reverse = {};
+            
+            if (!keymap || Object.keys(keymap).length === 0) {
+                return reverse;
+            }
+            
+            if (language === 'tinyapl') {
+                // TinyAPL uses special structure with symP, symPS, symPP, symPPS
+                for (const [code, entry] of Object.entries(keymap)) {
+                    // Extract the key letter from code (e.g., 'KeyA' -> 'a')
+                    let key = '';
+                    if (code.startsWith('Key')) {
+                        key = code.slice(3).toLowerCase();
+                    } else if (code.startsWith('Digit')) {
+                        key = code.slice(5);
+                    } else if (code === 'Backquote') {
+                        key = '`';
+                    } else if (code === 'Minus') {
+                        key = '-';
+                    } else if (code === 'Equal') {
+                        key = '=';
+                    } else if (code === 'BracketLeft') {
+                        key = '[';
+                    } else if (code === 'BracketRight') {
+                        key = ']';
+                    } else if (code === 'Backslash') {
+                        key = '\\';
+                    } else if (code === 'Semicolon') {
+                        key = ';';
+                    } else if (code === 'Quote') {
+                        key = "'";
+                    } else if (code === 'Comma') {
+                        key = ',';
+                    } else if (code === 'Period') {
+                        key = '.';
+                    } else if (code === 'Slash') {
+                        key = '/';
+                    } else if (code === 'Space') {
+                        key = 'space';
+                    }
+                    
+                    if (entry.symP && !reverse[entry.symP]) {
+                        reverse[entry.symP] = `${prefixKey} ${key}`;
+                    }
+                    if (entry.symPS && !reverse[entry.symPS]) {
+                        reverse[entry.symPS] = `${prefixKey} shift+${key}`;
+                    }
+                    if (entry.symPP && !reverse[entry.symPP]) {
+                        reverse[entry.symPP] = `${prefixKey}${prefixKey} ${key}`;
+                    }
+                    if (entry.symPPS && !reverse[entry.symPPS]) {
+                        reverse[entry.symPPS] = `${prefixKey}${prefixKey} shift+${key}`;
+                    }
+                }
+            } else {
+                // Standard keymap format
+                for (const [key, glyph] of Object.entries(keymap)) {
+                    if (glyph && !reverse[glyph]) {
+                        const isShifted = key === key.toUpperCase() && key.toLowerCase() !== key;
+                        const displayKey = isShifted ? `shift+${key.toLowerCase()}` : key;
+                        reverse[glyph] = `${prefixKey} ${displayKey}`;
+                    }
+                }
+            }
+            return reverse;
+        }
+        
+        // Get input hint for languages without keymaps (Uiua, J)
+        function getInputHint(glyph, name, language) {
+            if (language === 'uiua') {
+                // For Uiua, you can type the name and it auto-completes
+                const nameParts = name.split(' ');
+                const firstName = nameParts[0].toLowerCase();
+                return `type: ${firstName}`;
+            } else if (language === 'j') {
+                // For J, just type the glyph directly
+                return 'type directly';
+            }
+            return '';
+        }
+        
+        // Get syntax class for a glyph based on current language's syntax rules
+        function getSyntaxClassForGlyph(glyph) {
+            const config = keyboardConfigs[currentLanguage];
+            if (!config || !config.syntaxRules) return '';
+            
+            const rules = config.syntaxRules;
+            
+            if (rules.comments && rules.comments.includes(glyph)) {
+                return 'syntax-comment';
+            }
+            if (rules.constants && rules.constants.includes(glyph)) {
+                return 'syntax-number';
+            }
+            if (rules.functions && rules.functions.includes(glyph)) {
+                return 'syntax-function';
+            }
+            if (rules.monadic && rules.monadic.includes(glyph)) {
+                return 'syntax-monadic';
+            }
+            if (rules.dyadic && rules.dyadic.includes(glyph)) {
+                return 'syntax-dyadic';
+            }
+            if (rules.modifier && rules.modifier.includes(glyph)) {
+                return 'syntax-modifier';
+            }
+            
+            return '';
+        }
+        
+        // Build list of primitives for current language
+        function buildPrimitivesList() {
+            const config = keyboardConfigs[currentLanguage];
+            if (!config || !config.glyphNames) return [];
+            
+            const glyphNames = config.glyphNames;
+            const keymap = config.keymap || {};
+            const prefixKey = config.prefixKey || '`';
+            const reverseKeymap = buildReverseKeymap(keymap, prefixKey, currentLanguage);
+            
+            const primitives = [];
+            for (const [glyph, name] of Object.entries(glyphNames)) {
+                // Get shortcut from keymap, or input hint for languages without keymaps
+                let shortcut = reverseKeymap[glyph];
+                if (!shortcut && (currentLanguage === 'uiua' || currentLanguage === 'j')) {
+                    shortcut = getInputHint(glyph, name, currentLanguage);
+                }
+                
+                primitives.push({
+                    glyph,
+                    name,
+                    shortcut: shortcut || ''
+                });
+            }
+            
+            // Sort by name alphabetically
+            primitives.sort((a, b) => a.name.localeCompare(b.name));
+            return primitives;
+        }
+        
+        // Fuzzy match function - returns match score and highlighted name
+        function fuzzyMatch(text, query) {
+            if (!query) return { score: 1, highlighted: text };
+            
+            const textLower = text.toLowerCase();
+            const queryLower = query.toLowerCase();
+            
+            // Check for exact substring match first (highest priority)
+            const substringIndex = textLower.indexOf(queryLower);
+            if (substringIndex !== -1) {
+                const before = text.slice(0, substringIndex);
+                const match = text.slice(substringIndex, substringIndex + query.length);
+                const after = text.slice(substringIndex + query.length);
+                return {
+                    score: 100 + (substringIndex === 0 ? 50 : 0) + (query.length / text.length * 20),
+                    highlighted: `${before}<em>${match}</em>${after}`
+                };
+            }
+            
+            // Fuzzy matching - find all query chars in order
+            let textIdx = 0;
+            let queryIdx = 0;
+            let score = 0;
+            let highlighted = '';
+            let lastMatchIdx = -1;
+            let consecutiveMatches = 0;
+            
+            while (textIdx < text.length && queryIdx < queryLower.length) {
+                if (textLower[textIdx] === queryLower[queryIdx]) {
+                    highlighted += `<em>${text[textIdx]}</em>`;
+                    score += 10;
+                    
+                    // Bonus for consecutive matches
+                    if (lastMatchIdx === textIdx - 1) {
+                        consecutiveMatches++;
+                        score += consecutiveMatches * 5;
+                    } else {
+                        consecutiveMatches = 0;
+                    }
+                    
+                    // Bonus for matching at word boundaries
+                    if (textIdx === 0 || text[textIdx - 1] === ' ' || text[textIdx - 1] === '/') {
+                        score += 15;
+                    }
+                    
+                    lastMatchIdx = textIdx;
+                    queryIdx++;
+                } else {
+                    highlighted += text[textIdx];
+                }
+                textIdx++;
+            }
+            
+            // Add remaining text
+            highlighted += text.slice(textIdx);
+            
+            // Return null if not all query chars were found
+            if (queryIdx < queryLower.length) {
+                return null;
+            }
+            
+            return { score, highlighted };
+        }
+        
+        // Filter and render primitives list
+        function filterPrimitives(query) {
+            const allPrimitives = buildPrimitivesList();
+            
+            if (!query) {
+                filteredPrimitives = allPrimitives.map(p => ({ ...p, highlighted: p.name }));
+            } else {
+                filteredPrimitives = [];
+                for (const p of allPrimitives) {
+                    // Match against name
+                    const nameMatch = fuzzyMatch(p.name, query);
+                    // Also check if query matches the glyph itself
+                    const glyphMatch = p.glyph.includes(query) ? { score: 200, highlighted: p.name } : null;
+                    
+                    const bestMatch = glyphMatch || nameMatch;
+                    if (bestMatch) {
+                        filteredPrimitives.push({
+                            ...p,
+                            score: bestMatch.score,
+                            highlighted: bestMatch.highlighted
+                        });
+                    }
+                }
+                // Sort by score descending
+                filteredPrimitives.sort((a, b) => b.score - a.score);
+            }
+            
+            renderComboboxList();
+        }
+        
+        // Render the combo box list
+        function renderComboboxList() {
+            comboboxList.innerHTML = '';
+            
+            if (filteredPrimitives.length === 0) {
+                comboboxList.innerHTML = '<div class="primitive-combobox-empty">No primitives found</div>';
+                return;
+            }
+            
+            const fontClass = languages[currentLanguage]?.fontClass || '';
+            
+            filteredPrimitives.forEach((p, index) => {
+                const item = document.createElement('div');
+                item.className = 'primitive-combobox-item' + (index === comboboxSelectedIndex ? ' selected' : '');
+                item.dataset.index = index;
+                
+                const glyphSpan = document.createElement('span');
+                const syntaxClass = getSyntaxClassForGlyph(p.glyph);
+                glyphSpan.className = 'primitive-combobox-glyph ' + fontClass + (syntaxClass ? ' ' + syntaxClass : '');
+                glyphSpan.textContent = p.glyph;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'primitive-combobox-name';
+                nameSpan.innerHTML = p.highlighted;
+                
+                const shortcutSpan = document.createElement('span');
+                shortcutSpan.className = 'primitive-combobox-shortcut';
+                if (p.shortcut) {
+                    // Format shortcut nicely: split by space and wrap each part
+                    const parts = p.shortcut.split(' ');
+                    shortcutSpan.innerHTML = parts.map(part => `<kbd>${part}</kbd>`).join(' ');
+                }
+                
+                item.appendChild(glyphSpan);
+                item.appendChild(nameSpan);
+                item.appendChild(shortcutSpan);
+                
+                item.addEventListener('click', () => {
+                    selectPrimitive(index);
+                });
+                
+                item.addEventListener('mouseenter', () => {
+                    comboboxSelectedIndex = index;
+                    updateComboboxSelection();
+                });
+                
+                comboboxList.appendChild(item);
+            });
+            
+            // Scroll selected item into view
+            scrollSelectedIntoView();
+        }
+        
+        // Update selection highlighting
+        function updateComboboxSelection() {
+            const items = comboboxList.querySelectorAll('.primitive-combobox-item');
+            items.forEach((item, index) => {
+                item.classList.toggle('selected', index === comboboxSelectedIndex);
+            });
+            scrollSelectedIntoView();
+        }
+        
+        // Scroll selected item into view
+        function scrollSelectedIntoView() {
+            const selected = comboboxList.querySelector('.primitive-combobox-item.selected');
+            if (selected) {
+                selected.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+            }
+        }
+        
+        // Select a primitive and insert it
+        function selectPrimitive(index) {
+            if (index < 0 || index >= filteredPrimitives.length) return;
+            
+            const primitive = filteredPrimitives[index];
+            const cursorPos = savedCursorPosition;
+            
+            // Hide combo box first (this resets transform but doesn't insert anything yet)
+            primitiveCombobox.classList.remove('show');
+            comboboxInput.value = '';
+            filteredPrimitives = [];
+            container.style.transform = '';
+            
+            // Focus code input and restore cursor position
+            codeInput.focus();
+            if (cursorPos !== null) {
+                setCursorPosition(codeInput, cursorPos);
+            }
+            
+            // Now insert the glyph at the restored cursor position
+            insertText(codeInput, primitive.glyph);
+            applySyntaxHighlighting();
+        }
+        
+        // Show the combo box
+        function showCombobox() {
+            // Save cursor position
+            savedCursorPosition = getCursorPosition();
+            
+            // Position the combo box below the code input
+            // Since the combo box is inside input-container (position: relative),
+            // we position it relative to that container
+            const inputRect = codeInput.getBoundingClientRect();
+            const containerRect = codeInput.parentElement.getBoundingClientRect();
+            
+            // Position below the code input, aligned to left edge
+            // Use same margin as output (24px)
+            primitiveCombobox.style.top = `${inputRect.height + 24}px`;
+            primitiveCombobox.style.left = '0';
+            primitiveCombobox.style.width = `${inputRect.width}px`;
+            primitiveCombobox.style.maxWidth = `${inputRect.width}px`;
+            
+            primitiveCombobox.classList.add('show');
+            comboboxInput.value = '';
+            comboboxSelectedIndex = 0;
+            filterPrimitives('');
+            comboboxInput.focus();
+            
+            // Center the code editor + combo box vertically (like output does)
+            requestAnimationFrame(() => {
+                const comboboxHeight = primitiveCombobox.offsetHeight;
+                const margin = 24; // Same margin as output
+                container.style.transform = `translateY(-${(comboboxHeight + margin) / 2}px)`;
+            });
+        }
+        
+        // Hide the combo box
+        function hideCombobox() {
+            primitiveCombobox.classList.remove('show');
+            comboboxInput.value = '';
+            filteredPrimitives = [];
+            
+            // Reset vertical centering
+            container.style.transform = '';
+            
+            // Restore focus to code input
+            codeInput.focus();
+        }
+        
+        // Check if combo box is visible
+        function isComboboxVisible() {
+            return primitiveCombobox.classList.contains('show');
+        }
+        
+        // Handle combo box input
+        comboboxInput.addEventListener('input', () => {
+            comboboxSelectedIndex = 0;
+            filterPrimitives(comboboxInput.value);
+        });
+        
+        // Handle combo box keyboard navigation
+        comboboxInput.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                comboboxSelectedIndex = Math.min(comboboxSelectedIndex + 1, filteredPrimitives.length - 1);
+                updateComboboxSelection();
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                comboboxSelectedIndex = Math.max(comboboxSelectedIndex - 1, 0);
+                updateComboboxSelection();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                selectPrimitive(comboboxSelectedIndex);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                hideCombobox();
+            } else if (e.key === 'Tab') {
+                e.preventDefault();
+                selectPrimitive(comboboxSelectedIndex);
+            }
+        });
+        
+        // Add Ctrl+Space handler to code input
+        codeInput.addEventListener('keydown', (e) => {
+            // Ctrl+Space to show combo box
+            if (e.ctrlKey && e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Don't show if keyboard overlay is visible
+                if (visualKeyboard && visualKeyboard.isVisible()) {
+                    return;
+                }
+                
+                if (isComboboxVisible()) {
+                    hideCombobox();
+                } else {
+                    showCombobox();
+                }
+            }
+        });
+        
+        // Close combo box when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isComboboxVisible() && 
+                !primitiveCombobox.contains(e.target) && 
+                e.target !== codeInput) {
+                hideCombobox();
+            }
+        });
+        
+        // Prevent combo box clicks from propagating
+        primitiveCombobox.addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+        
+        // Keep focus in combo box input when clicking inside the combo box
+        primitiveCombobox.addEventListener('mousedown', (e) => {
+            // If clicking on an item, let the click handler work
+            if (e.target.closest('.primitive-combobox-item')) {
+                return;
+            }
+            // Otherwise prevent default to keep focus in input
+            if (e.target !== comboboxInput) {
+                e.preventDefault();
+            }
+        });
     </script>
 </body>
 </html>
