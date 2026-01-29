@@ -162,6 +162,10 @@ export const syntaxRules = {
         constants: [
             'η', 'π', 'τ', '∞', '¯'
         ],
+        // Comments (grey)
+        comments: [
+            '#'
+        ],
         // Subscript characters (should inherit color from preceding glyph)
         subscripts: '₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₒₓₔₕₖₗₘₙₚₛₜ',
         // Numbers pattern
@@ -309,6 +313,19 @@ export function highlightCode(text, language) {
             continue;
         }
         
+        // Check for single-character comment primitives (BQN #, APL/Kap/TinyAPL ⍝)
+        // Everything from the comment character to end of line is a comment
+        if (rules.comments && rules.comments.includes(char)) {
+            // Find the end of the line
+            const lineEnd = text.indexOf('\n', i);
+            const commentEnd = lineEnd === -1 ? text.length : lineEnd;
+            const commentText = text.substring(i, commentEnd);
+            tokens.push({ type: 'comment', value: commentText });
+            lastGlyphType = 'comment';
+            i = commentEnd;
+            continue;
+        }
+        
         // Check for multi-character operators (J language)
         if (language === 'j' && rules.multiChar) {
             // Try longest matches first (3-char, then 2-char)
@@ -318,11 +335,14 @@ export function highlightCode(text, language) {
                 if (i + len > text.length) continue;
                 const substr = text.substring(i, i + len);
                 
-                // Check comments first (NB.)
+                // Check comments first (NB.) - capture rest of line as comment
                 if (rules.multiChar.comments && rules.multiChar.comments.includes(substr)) {
-                    tokens.push({ type: 'comment', value: substr });
+                    const lineEnd = text.indexOf('\n', i);
+                    const commentEnd = lineEnd === -1 ? text.length : lineEnd;
+                    const commentText = text.substring(i, commentEnd);
+                    tokens.push({ type: 'comment', value: commentText });
                     lastGlyphType = 'comment';
-                    i += len;
+                    i = commentEnd;
                     matched = true;
                     break;
                 } else if (rules.multiChar.functions.includes(substr)) {
@@ -350,11 +370,8 @@ export function highlightCode(text, language) {
         }
         
         // Check single character
-        if (rules.comments && rules.comments.includes(char)) {
-            // Comments are grey
-            tokens.push({ type: 'comment', value: char });
-            lastGlyphType = 'comment';
-        } else if (rules.constants && rules.constants.includes(char)) {
+        // Note: Single-char comments (like # or ⍝) are handled earlier with full line capture
+        if (rules.constants && rules.constants.includes(char)) {
             // Constants like ∞, ¯, π are colored like numbers (purple)
             tokens.push({ type: 'number', value: char });
             lastGlyphType = 'number';

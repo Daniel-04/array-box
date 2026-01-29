@@ -14,6 +14,8 @@
   - number of submissions by language
   - % of correct submissions by language
 - ctrl + space for combo box dropdown with fuzzy search
+- ctrl + h for help (put at bottom of screen as well next to ctrl + k)
+  - add shift cycling
 
 ### Later
 - Multi lang solve (get multiple bars)
@@ -22,4 +24,3 @@
 
 ### Fixes
 - key nav should be disabled when labels are showing
-- code editor should comment out lines after comment primitive
