@@ -3585,8 +3585,9 @@ export class ArrayKeyboard {
             
             // Arrow key navigation (works in both keyboard and category modes)
             // Don't intercept Ctrl+Arrow - that's used for language switching
+            // Disabled when labels are showing (namesVisible)
             if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && 
-                !this.searchVisible &&
+                !this.searchVisible && !this.namesVisible &&
                 !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
                 e.stopPropagation();
@@ -3595,8 +3596,9 @@ export class ArrayKeyboard {
             }
             
             // Shift key: cycle through glyphs on current key (only in keyboard/tinyapl mode during nav)
+            // Disabled when labels are showing (namesVisible)
             if (e.key === 'Shift' && this.navActive && (this.displayMode === 'keyboard' || this.displayMode === 'tinyapl') && 
-                !this.searchVisible && !e.ctrlKey && !e.altKey && !e.metaKey) {
+                !this.searchVisible && !this.namesVisible && !e.ctrlKey && !e.altKey && !e.metaKey) {
                 e.preventDefault();
                 e.stopPropagation();
                 this._cycleNavGlyph();

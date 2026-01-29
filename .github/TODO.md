@@ -22,4 +22,4 @@
 - add non-keyboard character set for APL, BQN, Kap
 
 ### Fixes
-- key nav should be disabled when labels are showing
+- ~~key nav should be disabled when labels are showing~~ ✅
