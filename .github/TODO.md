@@ -21,9 +21,9 @@
 - add non-keyboard character set for APL, BQN, Kap
 - more syntax highlighting
   - BQN / TinyAPL modifiers / functions
-- 🎯 add to the combo list idioms / common inverse operations
+- 🎯 add to the combo list idioms / common inverse operations (uiua done)
 - rip apl cart / bqn crate
-- add shortcut to select and F1 (decided on select or cursor adjacent)
+- train tacit view
 
 ### Fix 
-- ⦅⍳⍮…⦆5 for TinyAPL formats incorrectly
+- ⦅⍳⍮…⦆5 for TinyAPL formats oddly

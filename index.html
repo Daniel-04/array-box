@@ -519,6 +519,158 @@
             color: #4b5563;
             font-size: 12px;
         }
+
+        /* F1 Documentation Tooltip - fixed position to right of editor */
+        .f1-doc-tooltip {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%) translateX(35px);
+            background: #1f2937;
+            border: 2px solid #4b5563;
+            border-radius: 14px;
+            padding: 21px 24px;
+            box-shadow: 0 7px 35px rgba(0, 0, 0, 0.5);
+            width: 560px;
+            max-width: 560px;
+            max-height: 90vh;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+            z-index: 10002;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s ease-out, visibility 0.2s ease-out, transform 0.25s ease-out;
+        }
+
+        .f1-doc-tooltip.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(-50%) translateX(0);
+        }
+        
+        /* When F1 tooltip is shown, shift container left */
+        body.f1-doc-active .container {
+            transform: translateX(-300px);
+        }
+
+        .f1-doc-tooltip-header {
+            display: flex;
+            align-items: baseline;
+            gap: 18px;
+            margin-bottom: 14px;
+            padding-bottom: 11px;
+            border-bottom: 2px solid #374151;
+        }
+
+        .f1-doc-tooltip-glyph {
+            font-size: 49px;
+            line-height: 1;
+        }
+
+        .f1-doc-tooltip-type {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-variant-ligatures: none;
+            color: #9ca3af;
+            text-transform: uppercase;
+            letter-spacing: 0.9px;
+            margin-left: auto;
+            background: #374151;
+            padding: 4px 11px;
+            border-radius: 5px;
+        }
+
+        .f1-doc-tooltip-sig {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-variant-ligatures: none;
+            color: #60a5fa;
+            margin-left: 14px;
+            background: #1e3a5f;
+            padding: 4px 11px;
+            border-radius: 5px;
+        }
+
+        .f1-doc-tooltip-section {
+            margin-bottom: 18px;
+            padding-bottom: 14px;
+            border-bottom: 2px solid #374151;
+        }
+
+        .f1-doc-tooltip-section:last-of-type {
+            border-bottom: none;
+            margin-bottom: 11px;
+            padding-bottom: 0;
+        }
+
+        .f1-doc-tooltip-section-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 23px;
+            font-weight: 600;
+            font-variant-ligatures: none;
+            color: #60a5fa;
+            margin-bottom: 7px;
+        }
+
+        .f1-doc-tooltip-section-desc {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 19px;
+            font-variant-ligatures: none;
+            color: #d1d5db;
+            line-height: 1.5;
+        }
+
+        .f1-doc-tooltip-title-line {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 23px;
+            font-weight: 600;
+            font-variant-ligatures: none;
+            color: #e5e7eb;
+            margin-bottom: 11px;
+        }
+
+        .f1-doc-tooltip-desc {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 21px;
+            font-variant-ligatures: none;
+            color: #d1d5db;
+            line-height: 1.6;
+            margin-bottom: 18px;
+        }
+
+        .f1-doc-tooltip-example {
+            font-size: 21px;
+            color: #e5e7eb;
+            background: #111827;
+            padding: 18px;
+            border-radius: 7px;
+            white-space: pre-wrap;
+            overflow-x: auto;
+            margin-bottom: 14px;
+        }
+
+        .f1-doc-tooltip-link {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 18px;
+            font-variant-ligatures: none;
+            color: var(--syntax-function, #8BE9FD);
+            text-decoration: none;
+            opacity: 0.7;
+        }
+
+        .f1-doc-tooltip-link:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+        .f1-doc-tooltip-hint {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 14px;
+            color: #6b7280;
+            margin-top: 14px;
+            padding-top: 11px;
+            border-top: 1px solid #374151;
+        }
     </style>
 </head>
 <body>
@@ -580,6 +732,9 @@
             </div>
         </div>
     </div>
+    
+    <!-- F1 Documentation Tooltip - fixed position to right of editor -->
+    <div class="f1-doc-tooltip" id="f1DocTooltip"></div>
 
     <div class="keyboard-hint" id="keyboardHint">ctrl+k keyboard • ctrl+h help</div>
 
@@ -614,6 +769,10 @@
                     <span class="help-key">ctrl + space</span>
                     <span class="help-desc">open primitive search</span>
                 </div>
+                <div class="help-row">
+                    <span class="help-key">f1</span>
+                    <span class="help-desc">show documentation for glyph at cursor</span>
+                </div>
             </div>
 
             <div class="help-section">
@@ -635,6 +794,7 @@
         </div>
         <div class="help-footer">array box</div>
     </div>
+    
     <div class="bug-report-container" id="bugReportContainer">
         <button class="bug-report-close" onclick="document.getElementById('bugReportContainer').style.display='none'" title="Hide">×</button>
         <a href="https://github.com/codereport/array-box/issues" target="_blank" class="bug-report">Report 🐞</a>
@@ -1004,9 +1164,19 @@
     <script type="module">
         // Import from modular files
         import { createKeyboardHandler, bqnKeymap, aplKeymap, kapKeymap, tinyaplKeymap, tinyaplKeyboard, tinyaplGlyphs, uiuaGlyphs, jGlyphs, insertText } from './src/keymap.js?v=25';
-        import { syntaxRules, highlightCode, escapeHtml } from './src/syntax.js?v=25';
+        import { syntaxRules, highlightCode, escapeHtml, getSyntaxClass } from './src/syntax.js?v=25';
         import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames, jGlyphNames, tinyaplGlyphNames, bqnGlyphDocs, uiuaGlyphDocs, jGlyphDocs, kapGlyphDocs, aplGlyphDocs, tinyaplGlyphDocs } from './src/keyboard.js?v=25';
         import { createEditorFeaturesManager } from './src/editor-features.js?v=1';
+        
+        // Glyph documentation by language
+        const glyphDocsByLanguage = {
+            apl: aplGlyphDocs,
+            bqn: bqnGlyphDocs,
+            uiua: uiuaGlyphDocs,
+            j: jGlyphDocs,
+            kap: kapGlyphDocs,
+            tinyapl: tinyaplGlyphDocs
+        };
         
         // Keyboard configurations for each language
         const keyboardConfigs = {
@@ -1613,6 +1783,9 @@
                 helpScreen.classList.remove('show');
                 return;
             }
+            
+            // Escape to close F1 tooltip if visible (check handled by F1 tooltip code)
+            // F1 global handler is set up after F1 tooltip is initialized
             
             // Don't process other shortcuts if help screen is visible
             if (isHelpScreenVisible()) {
@@ -2451,6 +2624,271 @@
             // Otherwise prevent default to keep focus in input
             if (e.target !== comboboxInput) {
                 e.preventDefault();
+            }
+        });
+
+        // ========================================
+        // F1 Documentation Tooltip
+        // ========================================
+        
+        const f1DocTooltip = document.getElementById('f1DocTooltip');
+        let f1TooltipVisible = false;
+        
+        /**
+         * Get all known glyphs for the current language
+         * Includes functions, monadic, dyadic, modifiers, constants from syntax rules
+         * and multi-char tokens for J
+         */
+        function getAllGlyphs(language) {
+            const rules = syntaxRules[language];
+            if (!rules) return new Set();
+            
+            const glyphs = new Set();
+            
+            // Add all single-char glyphs
+            if (rules.functions) rules.functions.forEach(g => glyphs.add(g));
+            if (rules.monadic) rules.monadic.forEach(g => glyphs.add(g));
+            if (rules.dyadic) rules.dyadic.forEach(g => glyphs.add(g));
+            if (rules.modifier) rules.modifier.forEach(g => glyphs.add(g));
+            if (rules.constants) rules.constants.forEach(g => glyphs.add(g));
+            if (rules.comparison) rules.comparison.forEach(g => glyphs.add(g));
+            
+            // For J, also add multi-char tokens
+            if (language === 'j' && rules.multiChar) {
+                if (rules.multiChar.functions) rules.multiChar.functions.forEach(g => glyphs.add(g));
+                if (rules.multiChar.monadic) rules.multiChar.monadic.forEach(g => glyphs.add(g));
+                if (rules.multiChar.dyadic) rules.multiChar.dyadic.forEach(g => glyphs.add(g));
+            }
+            
+            return glyphs;
+        }
+        
+        /**
+         * Find the glyph at or before the cursor position
+         * Returns { glyph, position } or null if no glyph found
+         */
+        function findGlyphAtCursor() {
+            const text = getInputText();
+            const cursorPos = getCursorPosition();
+            
+            if (!text) return null;
+            
+            const allGlyphs = getAllGlyphs(currentLanguage);
+            const glyphDocs = glyphDocsByLanguage[currentLanguage] || {};
+            
+            // For J language, try to match multi-char tokens first (looking at chars before cursor)
+            if (currentLanguage === 'j') {
+                // Try 3-char, then 2-char matches
+                for (const len of [3, 2]) {
+                    if (cursorPos >= len) {
+                        const substr = text.substring(cursorPos - len, cursorPos);
+                        if (allGlyphs.has(substr) && glyphDocs[substr]) {
+                            return { glyph: substr, position: cursorPos - len };
+                        }
+                    }
+                }
+            }
+            
+            // Try single character at cursor position (if cursor is on a glyph)
+            if (cursorPos < text.length) {
+                const charAtCursor = text[cursorPos];
+                if (allGlyphs.has(charAtCursor) && glyphDocs[charAtCursor]) {
+                    return { glyph: charAtCursor, position: cursorPos };
+                }
+            }
+            
+            // Try character before cursor
+            if (cursorPos > 0) {
+                const charBefore = text[cursorPos - 1];
+                if (allGlyphs.has(charBefore) && glyphDocs[charBefore]) {
+                    return { glyph: charBefore, position: cursorPos - 1 };
+                }
+            }
+            
+            return null;
+        }
+        
+        /**
+         * Build tooltip HTML content for a glyph
+         */
+        function buildF1TooltipContent(glyph, doc) {
+            // Use font family from keyboard config
+            const kbConfig = keyboardConfigs[currentLanguage];
+            const fontFamily = kbConfig?.fontFamily || "'Courier New', monospace";
+            
+            // Get syntax class for glyph coloring
+            const syntaxClass = getSyntaxClass(glyph, currentLanguage);
+            
+            let html = '<div class="f1-doc-tooltip-header">';
+            html += `<span class="f1-doc-tooltip-glyph ${syntaxClass}" style="font-family: ${fontFamily}">${escapeHtml(glyph)}</span>`;
+            html += `<span class="f1-doc-tooltip-type">${escapeHtml(doc.type || 'primitive')}</span>`;
+            if (doc.signature) {
+                html += `<span class="f1-doc-tooltip-sig">${escapeHtml(doc.signature)}</span>`;
+            }
+            html += '</div>';
+            
+            // Handle different doc formats
+            if (doc.overloads && doc.overloads.length > 0) {
+                // TinyAPL style: multiple overloads
+                for (const overload of doc.overloads) {
+                    html += '<div class="f1-doc-tooltip-section">';
+                    html += `<div class="f1-doc-tooltip-section-title">${escapeHtml(overload.name)}</div>`;
+                    if (overload.description) {
+                        html += `<div class="f1-doc-tooltip-section-desc">${escapeHtml(overload.description)}</div>`;
+                    }
+                    if (overload.example) {
+                        html += `<div class="f1-doc-tooltip-example" style="font-family: ${fontFamily}">${escapeHtml(overload.example)}</div>`;
+                    }
+                    html += '</div>';
+                }
+            } else if (doc.monad || doc.dyad) {
+                // BQN/APL/J style: monad and dyad sections
+                if (doc.monad) {
+                    html += '<div class="f1-doc-tooltip-section">';
+                    html += `<div class="f1-doc-tooltip-section-title">${escapeHtml(doc.monad.name)}</div>`;
+                    if (doc.monad.description) {
+                        html += `<div class="f1-doc-tooltip-section-desc">${escapeHtml(doc.monad.description)}</div>`;
+                    }
+                    if (doc.monad.example) {
+                        html += `<div class="f1-doc-tooltip-example" style="font-family: ${fontFamily}">${escapeHtml(doc.monad.example)}</div>`;
+                    }
+                    html += '</div>';
+                }
+                if (doc.dyad) {
+                    html += '<div class="f1-doc-tooltip-section">';
+                    html += `<div class="f1-doc-tooltip-section-title">${escapeHtml(doc.dyad.name)}</div>`;
+                    if (doc.dyad.description) {
+                        html += `<div class="f1-doc-tooltip-section-desc">${escapeHtml(doc.dyad.description)}</div>`;
+                    }
+                    if (doc.dyad.example) {
+                        html += `<div class="f1-doc-tooltip-example" style="font-family: ${fontFamily}">${escapeHtml(doc.dyad.example)}</div>`;
+                    }
+                    html += '</div>';
+                }
+            } else {
+                // Uiua style: simple name and description
+                if (doc.name) {
+                    html += `<div class="f1-doc-tooltip-title-line">${escapeHtml(doc.name)}</div>`;
+                }
+                if (doc.description) {
+                    const shortDesc = doc.description.length > 300 ? 
+                        doc.description.substring(0, 297) + '...' : doc.description;
+                    html += `<div class="f1-doc-tooltip-desc">${escapeHtml(shortDesc)}</div>`;
+                }
+                if (doc.example) {
+                    html += `<div class="f1-doc-tooltip-example" style="font-family: ${fontFamily}">${escapeHtml(doc.example)}</div>`;
+                }
+            }
+            
+            // Doc link
+            if (doc.docUrl) {
+                html += `<a class="f1-doc-tooltip-link" href="${doc.docUrl}" target="_blank" rel="noopener">View full docs ↗</a>`;
+            }
+            
+            // Hint
+            html += '<div class="f1-doc-tooltip-hint">Press F1 or Escape to close</div>';
+            
+            return html;
+        }
+        
+        /**
+         * Show F1 documentation tooltip for a glyph
+         * Positions tooltip to right of container, slides container left
+         */
+        function showF1Tooltip(glyph, doc) {
+            f1DocTooltip.innerHTML = buildF1TooltipContent(glyph, doc);
+            
+            // Position tooltip to the right of where container will be
+            const containerRect = container.getBoundingClientRect();
+            const tooltipWidth = 560;
+            const gap = 28;
+            
+            // Calculate position: container center + half container width + gap
+            // After container shifts left by 300px, tooltip should be to its right
+            const containerCenterX = containerRect.left + containerRect.width / 2;
+            const newContainerRight = containerCenterX - 300 + containerRect.width / 2;
+            const tooltipLeft = newContainerRight + gap;
+            
+            f1DocTooltip.style.left = `${tooltipLeft}px`;
+            
+            // Add class to body to trigger container shift
+            document.body.classList.add('f1-doc-active');
+            f1DocTooltip.classList.add('show');
+            f1TooltipVisible = true;
+        }
+        
+        /**
+         * Hide F1 documentation tooltip
+         */
+        function hideF1Tooltip() {
+            document.body.classList.remove('f1-doc-active');
+            f1DocTooltip.classList.remove('show');
+            f1TooltipVisible = false;
+        }
+        
+        /**
+         * Check if F1 tooltip is visible
+         */
+        function isF1TooltipVisible() {
+            return f1TooltipVisible;
+        }
+        
+        // F1 key handler for code input
+        codeInput.addEventListener('keydown', (e) => {
+            if (e.key === 'F1') {
+                e.preventDefault();
+                
+                // If tooltip is visible, hide it
+                if (isF1TooltipVisible()) {
+                    hideF1Tooltip();
+                    return;
+                }
+                
+                // Don't show if other overlays are visible
+                if (visualKeyboard && visualKeyboard.isVisible()) return;
+                if (isComboboxVisible()) return;
+                if (isHelpScreenVisible()) return;
+                
+                // Find glyph at cursor
+                const found = findGlyphAtCursor();
+                if (!found) return;
+                
+                // Get documentation for the glyph
+                const glyphDocs = glyphDocsByLanguage[currentLanguage];
+                if (!glyphDocs) return;
+                
+                const doc = glyphDocs[found.glyph];
+                if (!doc) return;
+                
+                showF1Tooltip(found.glyph, doc);
+            }
+            
+            // Escape to close tooltip
+            if (e.key === 'Escape' && isF1TooltipVisible()) {
+                e.preventDefault();
+                hideF1Tooltip();
+            }
+        });
+        
+        // Close F1 tooltip when clicking outside
+        document.addEventListener('click', (e) => {
+            if (isF1TooltipVisible() && !f1DocTooltip.contains(e.target)) {
+                hideF1Tooltip();
+            }
+        });
+        
+        // Close F1 tooltip when typing
+        codeInput.addEventListener('input', () => {
+            if (isF1TooltipVisible()) {
+                hideF1Tooltip();
+            }
+        });
+        
+        // Global Escape handler for F1 tooltip (handles escape when focus is elsewhere)
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isF1TooltipVisible()) {
+                e.preventDefault();
+                hideF1Tooltip();
             }
         });
     </script>
