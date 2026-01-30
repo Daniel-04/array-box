@@ -10,9 +10,10 @@
 ## ArrayBox
 - Add k6
 - 🎯 word prefix complete
-- Set up a statistics aggregator (one public website is up)
+- 🎯 Set up a statistics aggregator (one public website is up)
   - number of submissions by language
   - % of correct submissions by language
+- 🎯 short permalinks
 
 ### Later
 - Multi lang solve (get multiple bars)
@@ -20,6 +21,7 @@
 - add non-keyboard character set for APL, BQN, Kap
 - more syntax highlighting
   - BQN / TinyAPL modifiers / functions
+- 🎯 add to the combo list idioms / common inverse operations
 
 ### Fix 
 - ⦅⍳⍮…⦆5 for TinyAPL formats incorrectly
