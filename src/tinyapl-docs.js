@@ -11,7 +11,7 @@
 export const tinyaplDocsMeta = {
     language: "TinyAPL",
     source: "https://beta.tinyapl.rubenverg.com/",
-    scrapedAt: "2026-01-31T12:31:06.264Z",
+    scrapedAt: "2026-01-31T15:57:08.411Z",
     version: "latest"
 };
 
@@ -1719,7 +1719,7 @@ export const tinyaplGlyphDocs = {
             "overloads": [
                     {
                             "name": "Right",
-                            "description": "",
+                            "description": "r is y.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/right",
                             "valence": "dyad"
@@ -1727,7 +1727,7 @@ export const tinyaplGlyphDocs = {
             ],
             "dyad": {
                     "name": "Right",
-                    "description": "",
+                    "description": "r is y.",
                     "example": ""
             }
     },
@@ -2594,28 +2594,34 @@ export const tinyaplGlyphDocs = {
             "overloads": [
                     {
                             "name": "Commute",
-                            "description": "",
+                            "description": "r is y F x.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/commute",
                             "valence": "dyad"
                     },
                     {
                             "name": "Constant",
-                            "description": "",
+                            "description": "r is n.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/constant",
                             "valence": "dyad"
                     },
                     {
                             "name": "Duplicate",
-                            "description": "",
+                            "description": "r is y F y.",
                             "example": "",
-                            "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/duplicate"
+                            "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/duplicate",
+                            "valence": "monad"
                     }
             ],
             "dyad": {
                     "name": "Commute",
-                    "description": "",
+                    "description": "r is y F x.",
+                    "example": ""
+            },
+            "monad": {
+                    "name": "Duplicate",
+                    "description": "r is y F y.",
                     "example": ""
             }
     },
@@ -3042,7 +3048,7 @@ export const tinyaplGlyphDocs = {
             "overloads": [
                     {
                             "name": "On Right",
-                            "description": "",
+                            "description": "r is F y.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/on_right",
                             "valence": "dyad"
@@ -3050,7 +3056,7 @@ export const tinyaplGlyphDocs = {
             ],
             "dyad": {
                     "name": "On Right",
-                    "description": "",
+                    "description": "r is F y.",
                     "example": ""
             }
     },

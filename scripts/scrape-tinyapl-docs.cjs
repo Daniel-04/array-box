@@ -100,9 +100,11 @@ function extractDescription(body) {
     // Remove HTML tags
     text = text.replace(/<[^>]+>/g, '');
     // Split into paragraphs and get first meaningful one
+    // Note: Some primitives have very short descriptions (e.g., "r is y F x.")
+    // so we use a low minimum length threshold
     const paragraphs = text.split(/\n\n+/)
         .map(p => p.trim())
-        .filter(p => p.length > 20 && !p.startsWith('*') && !p.startsWith('-') && !p.startsWith('|'));
+        .filter(p => p.length > 5 && !p.startsWith('*') && !p.startsWith('-') && !p.startsWith('|'));
     
     if (paragraphs.length > 0) {
         // Clean up and truncate
