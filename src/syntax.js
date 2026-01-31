@@ -33,7 +33,13 @@ export const syntaxRules = {
             '#'
         ],
         // Numbers pattern (no global flag - we check index manually)
-        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i,
+        // User-defined identifier patterns (capitalized = function, _prefix = 1-mod, _prefix_suffix_ = 2-mod)
+        identifierPatterns: {
+            twoModifier: /^_[A-Za-z][A-Za-z0-9]*_/,   // _Name_ = 2-modifier
+            oneModifier: /^_[A-Za-z][A-Za-z0-9]*/,    // _name = 1-modifier (checked after 2-mod)
+            function: /^[A-Z][A-Za-z0-9]*/            // Name = function (capitalized)
+        }
     },
     apl: {
         // Functions (blue) - primitive functions
@@ -256,7 +262,13 @@ export const syntaxRules = {
         // Syntax elements (not highlighted - left as default)
         // '←', '→', '⍺', '⍵', '⍶', '⍹', '∇', '⋄', ':', '■', '⟨', '⟩', '⦅', '⦆', '⎕', '⍞', '⏨', 'ᴊ'
         // Numbers pattern (TinyAPL uses ¯ for negative, ∞ for infinity, ⏨ for exponent, ᴊ for complex)
-        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(⏨[+-]?\d+)?(ᴊ¯?\d+\.?\d*)?/i
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(⏨[+-]?\d+)?(ᴊ¯?\d+\.?\d*)?/i,
+        // User-defined identifier patterns (capitalized = function, _prefix = 1-mod, _prefix_suffix_ = 2-mod)
+        identifierPatterns: {
+            twoModifier: /^_[A-Za-z][A-Za-z0-9]*_/,   // _Name_ = 2-modifier
+            oneModifier: /^_[A-Za-z][A-Za-z0-9]*/,    // _name = 1-modifier (checked after 2-mod)
+            function: /^[A-Z][A-Za-z0-9]*/            // Name = function (capitalized)
+        }
     }
 };
 
@@ -304,6 +316,37 @@ export function highlightCode(text, language) {
             lastGlyphType = 'number';
             i += numberMatch[0].length;
             continue;
+        }
+        
+        // Check for user-defined identifier patterns (BQN, TinyAPL)
+        // Capitalized = function, _prefix = 1-modifier, _prefix_suffix_ = 2-modifier
+        if (rules.identifierPatterns) {
+            // Check 2-modifier first (more specific pattern)
+            const twoModMatch = remainingText.match(rules.identifierPatterns.twoModifier);
+            if (twoModMatch) {
+                tokens.push({ type: 'dyadic', value: twoModMatch[0] });
+                lastGlyphType = 'dyadic';
+                i += twoModMatch[0].length;
+                continue;
+            }
+            
+            // Check 1-modifier (underscore prefix only)
+            const oneModMatch = remainingText.match(rules.identifierPatterns.oneModifier);
+            if (oneModMatch) {
+                tokens.push({ type: 'monadic', value: oneModMatch[0] });
+                lastGlyphType = 'monadic';
+                i += oneModMatch[0].length;
+                continue;
+            }
+            
+            // Check function (capitalized word)
+            const funcMatch = remainingText.match(rules.identifierPatterns.function);
+            if (funcMatch) {
+                tokens.push({ type: 'function', value: funcMatch[0] });
+                lastGlyphType = 'function';
+                i += funcMatch[0].length;
+                continue;
+            }
         }
         
         // For Uiua: Check for subscript characters - inherit color from preceding glyph

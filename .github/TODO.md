@@ -24,6 +24,3 @@
 - 🎯 add to the combo list idioms / common inverse operations (uiua done)
 - rip apl cart / bqn crate
 - train tacit view
-
-### Fix 
-- ⦅⍳⍮…⦆5 for TinyAPL formats oddly
