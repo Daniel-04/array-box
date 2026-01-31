@@ -198,27 +198,28 @@ export const kapKeymap = {
 
 /**
  * TinyAPL keymap: backtick (`) prefix with double-prefix support
- * Based on https://tinyapl.rubenverg.com/run/latest
- * 
+ * Based on https://github.com/RubenVerg/TinyAPL/blob/beta/js/index.ts
+ * Keyboard SVG: https://github.com/RubenVerg/TinyAPL/blob/beta/js/kbd.svg
+ *
  * TinyAPL uses a unique double-prefix system:
  * - prefix once + key → symP (e.g., ` + e = ∊)
  * - prefix once + shift+key → symPS (e.g., ` + E = ⍷)
  * - prefix twice + key → symPP (e.g., `` + e = ⋵)
  * - prefix twice + shift+key → symPPS (e.g., `` + E = ⋷)
- * 
+ *
  * Structure: { code, sym, symS, symP, symPS, symPP, symPPS }
  * where code is the key code, sym/symS are base keys, and symP/PS/PP/PPS are prefix mappings
  */
 export const tinyaplKeyboard = [
     // Numbers row
-    { code: 'Backquote', sym: '`', symS: '~', symP: '⍨', symPS: '⌺', symPP: '⋄', symPPS: undefined },
-    { code: 'Digit1', sym: '1', symS: '!', symP: '¨', symPS: '↗', symPP: undefined, symPPS: '⑴' },
+    { code: 'Backquote', sym: '`', symS: '~', symP: '⋄', symPS: '⍨', symPP: undefined, symPPS: '⌺' },
+    { code: 'Digit1', sym: '1', symS: '!', symP: '¨', symPS: '⨳', symPP: undefined, symPPS: '⑴' },
     { code: 'Digit2', sym: '2', symS: '@', symP: '¯', symPS: undefined, symPP: undefined, symPPS: undefined },
-    { code: 'Digit3', sym: '3', symS: '#', symP: undefined, symPS: '⍒', symPP: undefined, symPPS: undefined },
+    { code: 'Digit3', sym: '3', symS: '#', symP: '˝', symPS: '⍒', symPP: '⍫', symPPS: undefined },
     { code: 'Digit4', sym: '4', symS: '$', symP: '≤', symPS: '⍋', symPP: '⊴', symPPS: undefined },
     { code: 'Digit5', sym: '5', symS: '%', symP: '⬚', symPS: '≈', symPP: '⤺', symPPS: undefined },
     { code: 'Digit6', sym: '6', symS: '^', symP: '≥', symPS: '⍉', symPP: '⊵', symPPS: undefined },
-    { code: 'Digit7', sym: '7', symS: '&', symP: undefined, symPS: '⊖', symPP: undefined, symPPS: undefined },
+    { code: 'Digit7', sym: '7', symS: '&', symP: '⌽', symPS: undefined, symPP: undefined, symPPS: undefined },
     { code: 'Digit8', sym: '8', symS: '*', symP: '≠', symPS: '⍣', symPP: '⍟', symPPS: '∞' },
     { code: 'Digit9', sym: '9', symS: '(', symP: '∨', symPS: '⍱', symPP: '∻', symPPS: '⦋' },
     { code: 'Digit0', sym: '0', symS: ')', symP: '∧', symPS: '⍲', symPP: '⍬', symPPS: '⦌' },
@@ -226,15 +227,15 @@ export const tinyaplKeyboard = [
     { code: 'Equal', sym: '=', symS: '+', symP: '÷', symPS: '⊕', symPP: '⌹', symPPS: '⧺' },
     
     // QWERTY row
-    { code: 'KeyQ', sym: 'q', symS: 'Q', symP: undefined, symPS: undefined, symPP: '⇾', symPPS: '⇽' },
+    { code: 'KeyQ', sym: 'q', symS: 'Q', symP: '↗', symPS: undefined, symPP: '⇾', symPPS: '⇽' },
     { code: 'KeyW', sym: 'w', symS: 'W', symP: '⍵', symPS: '⍹', symPP: undefined, symPPS: undefined },
     { code: 'KeyE', sym: 'e', symS: 'E', symP: '∊', symPS: '⍷', symPP: '⋵', symPPS: '⋷' },
     { code: 'KeyR', sym: 'r', symS: 'R', symP: '⍴', symPS: '√', symPP: 'ϼ', symPPS: 'ℜ' },
     { code: 'KeyT', sym: 't', symS: 'T', symP: '⊞', symPS: '⍨', symPP: '߹', symPPS: '‥' },
-    { code: 'KeyY', sym: 'y', symS: 'Y', symP: '↑', symPS: '↟', symPP: 'ᓚ', symPPS: undefined },
-    { code: 'KeyU', sym: 'u', symS: 'U', symP: '↓', symPS: '↡', symPP: 'ᓗ', symPPS: undefined },
+    { code: 'KeyY', sym: 'y', symS: 'Y', symP: '↑', symPS: '↟', symPP: 'ᓚ', symPPS: '⥽' },
+    { code: 'KeyU', sym: 'u', symS: 'U', symP: '↓', symPS: '↡', symPP: 'ᓗ', symPPS: '⥼' },
     { code: 'KeyI', sym: 'i', symS: 'I', symP: '⍳', symPS: '⍸', symPP: '…', symPPS: 'ℑ' },
-    { code: 'KeyO', sym: 'o', symS: 'O', symP: '○', symPS: '⍥', symPP: undefined, symPPS: undefined },
+    { code: 'KeyO', sym: 'o', symS: 'O', symP: '○', symPS: '⍥', symPP: '⍜', symPPS: undefined },
     { code: 'KeyP', sym: 'p', symS: 'P', symP: '◡', symPS: '◠', symPP: '⏨', symPPS: '⌓' },
     { code: 'BracketLeft', sym: '[', symS: '{', symP: '←', symPS: '⟨', symPP: '⦅', symPPS: '⦃' },
     { code: 'BracketRight', sym: ']', symS: '}', symP: '→', symPS: '⟩', symPP: '⦆', symPPS: '⦄' },
@@ -242,7 +243,7 @@ export const tinyaplKeyboard = [
     // Home row
     { code: 'KeyA', sym: 'a', symS: 'A', symP: '⍺', symPS: '⍶', symPP: 'ɛ', symPPS: undefined },
     { code: 'KeyS', sym: 's', symS: 'S', symP: '⌈', symPS: '§', symPP: '↾', symPPS: undefined },
-    { code: 'KeyD', sym: 'd', symS: 'D', symP: '⌊', symPS: '⸠', symPP: '⇂', symPPS: undefined },
+    { code: 'KeyD', sym: 'd', symS: 'D', symP: '⌊', symPS: '⸠', symPP: '⇂', symPPS: '⩔' },
     { code: 'KeyF', sym: 'f', symS: 'F', symP: '⍛', symPS: '∡', symPP: '∠', symPPS: undefined },
     { code: 'KeyG', sym: 'g', symS: 'G', symP: '∇', symPS: '⍢', symPP: '⫇', symPPS: undefined },
     { code: 'KeyH', sym: 'h', symS: 'H', symP: '∆', symPS: '⍙', symPP: '⊸', symPPS: '⟜' },
@@ -259,14 +260,14 @@ export const tinyaplKeyboard = [
     { code: 'KeyC', sym: 'c', symS: 'C', symP: '∩', symPS: '⍝', symPP: '⟃', symPPS: '⟄' },
     { code: 'KeyV', sym: 'v', symS: 'V', symP: '∪', symPS: '⁖', symPP: '⫤', symPPS: undefined },
     { code: 'KeyB', sym: 'b', symS: 'B', symP: '⊥', symPS: '∵', symPP: '⇇', symPPS: undefined },
-    { code: 'KeyN', sym: 'n', symS: 'N', symP: '⊤', symPS: '·', symPP: '↚', symPPS: undefined },
-    { code: 'KeyM', sym: 'm', symS: 'M', symP: '«', symPS: '»', symPP: '↩', symPPS: undefined },
+    { code: 'KeyN', sym: 'n', symS: 'N', symP: '⊤', symPS: '·', symPP: '↚', symPPS: '⩓' },
+    { code: 'KeyM', sym: 'm', symS: 'M', symP: '«', symPS: '»', symPP: '↩', symPPS: '⍦' },
     { code: 'Comma', sym: ',', symS: '<', symP: '⍪', symPS: 'ᑈ', symPP: '⊲', symPPS: undefined },
     { code: 'Period', sym: '.', symS: '>', symP: '∙', symPS: 'ᐵ', symPP: '⊳', symPPS: '■' },
     { code: 'Slash', sym: '/', symS: '?', symP: '⌿', symPS: undefined, symPP: undefined, symPPS: '⍰' },
     
     // Space
-    { code: 'Space', sym: 'Space', symS: 'Space', symP: '`', symPS: '‿', symPP: undefined, symPPS: undefined }
+    { code: 'Space', sym: 'Space', symS: 'Space', symP: '‿', symPS: 'Prefix', symPP: undefined, symPPS: undefined }
 ];
 
 /**
@@ -296,21 +297,25 @@ export const tinyaplGlyphs = {
     functions: [
         '+', '-', '×', '÷', '*', '⍟', '√', '⌊', '⌈', '⸠', '⌹', '!', '|', '∨', '∧',
         '⊕', '⊗', '∡', 'ℜ', 'ℑ', '⧺', 'ⵧ', '⊥', '⊤',
-        '=', '≠', '<', '≤', '≥', '>', '≡', '≢', '⊲', '⊴', '⊵', '⊳', '≈',
+        '=', '≠', '<', '≤', '≥', '>', '≡', '≢', '⊲', '⊴', '⊵', '⊳',
         '∪', '∩', '~', '§',
-        '⍳', '⍸', '∊', '⍷', '⋷', '⋵', '⍴', '≢', 'ϼ',
+        '⍳', '⍸', '∊', '⍷', '⋷', '⋵', '⍴', 'ϼ',
         '?', '…', '⍮', '‥', '߹',
-        '↑', '↓', '⊂', '⊆', '⫇', '⍋', '⍒', '⌿', ',', '⍪', '⊖', '⍉', '∧', '∨',
-        '⊃', '⊇', '⌷', '⊢', '⊣', '⍎', '⍕', '↗', '⇂', '↾'
+        '↑', '↓', '⊂', '⊆', '⫇', '⍋', '⍒', '⌿', ',', '⍪', '⌽', '⍉',
+        '⊃', '⊇', '⌷', '⊢', '⊣', '⍎', '⍕', '↗', '⇂', '↾',
+        '⨳', '⩔', '⩓'
     ],
     // Adverbs (green) - 1-modifiers
     monadic: [
-        '/', '\\', '↟', '↡', '¨', 'ᐵ', 'ᑈ', 'ᑣ', 'ᑒ', '⍣', '∙', '⊞', '⍤', '◡', '◠',
-        'ᓗ', 'ᓚ', '⍥', '⌓', '@', '⌸', '⌺', '⁖', '⍢', '∵', '⎊'
+        '/', '\\', '¨', 'ᐵ', 'ᑈ', 'ᑣ', 'ᑒ', '∙', '⊞', '◡', '◠',
+        'ᓗ', 'ᓚ', '⌓', '⌸', '⌺', '∵', '⫤',
+        '˝', '⥼', '⥽', '⍦', '⑴', '⤺'
     ],
     // Conjunctions (yellow) - 2-modifiers/combinators
     dyadic: [
-        '⍨', '∘', '⍛', '⊸', '⟜', '⍤', '⍥', '⸚', '«', '»', '⇾', '⇽', '⫤', '⫣', '⊩'
+        '⍨', '∘', '⍛', '⊸', '⟜', '⍤', '⍥', '⸚', '«', '»', '⇾', '⇽', '⫣', '⊩',
+        '⍣', '⁖', '⍢', '⎊', '@', '≈', '⬚',
+        '○', '⍜', '⍫'
     ],
     // Special syntax
     syntax: [

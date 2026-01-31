@@ -30,3 +30,17 @@
 
 ### Fix 
 - jumpiness of logo in top left of keyboard
+ - cursor skips to begining after ENTER
+ - syntax highlighting is a little slow on larger inputs
+
+```
+⍝ These are some combinators
+_W   ← _{ ⍵ ⍹⍹ ⍵ }     ⍝ The Warbler
+_C   ← _{ ⍺ ⍹⍹ ⍵ }     ⍝ The Cardinal
+_B_  ← _{ ⍶⍶ ⍹⍹ ⍵ }_   ⍝ The BlueBird
+_B1_ ← _{ ⍶⍶ ⍺ ⍹⍹ ⍵ }_ ⍝ The Blackbird
+Sq   ← ×_W             ⍝ Square
+Del  ← -_C⌺            ⍝ Deltas
+Del ⍳5
++/⍳5
+```

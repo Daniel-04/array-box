@@ -219,7 +219,7 @@ export const syntaxRules = {
     },
     tinyapl: {
         // Functions (blue) - primitive functions
-        // Based on https://tinyapl.rubenverg.com/
+        // Based on https://beta.tinyapl.rubenverg.com/
         functions: [
             // Arithmetic
             '+', '-', '×', '÷', '*', '⍟', '√', '⌊', '⌈', '⸠', '⌹', '!', '|',
@@ -236,20 +236,27 @@ export const syntaxRules = {
             // Array creation
             '?', '…', '⍮', '‥', '߹',
             // Manipulation
-            '↑', '↓', '⊂', '⊆', '⫇', '⍋', '⍒', '⌿', ',', '⍪', '⊖', '⍉',
+            '↑', '↓', '⊂', '⊆', '⫇', '⍋', '⍒', '⌿', ',', '⍪', '⌽', '⍉',
             // Lookup
             '⊃', '⊇', '⌷', '⊢', '⊣',
             // Misc
-            '⍎', '⍕', '↗', '⇂', '↾', '⊏', '⊐'
+            '⍎', '⍕', '↗', '⇂', '↾', '⊏', '⊐',
+            // New in 0.13
+            '⨳', '⩔', '⩓'
         ],
         // 1-modifiers (green) - operators/adverbs
         monadic: [
-            '/', '\\', '↟', '↡', '¨', 'ᐵ', 'ᑈ', 'ᑣ', 'ᑒ', '⍣', '∙', '⊞', '⍤', '◡', '◠',
-            'ᓗ', 'ᓚ', '⍥', '⌓', '@', '⌸', '⌺', '⁖', '⍢', '∵', '⎊'
+            '/', '\\', '¨', 'ᐵ', 'ᑈ', 'ᑣ', 'ᑒ', '∙', '⊞', '◡', '◠',
+            'ᓗ', 'ᓚ', '⌓', '⌸', '⌺', '∵', '⫤',
+            // New in 0.13
+            '˝', '⥼', '⥽', '⍦', '⑴', '⤺'
         ],
         // 2-modifiers (yellow) - combinators/conjunctions
         dyadic: [
-            '⍨', '∘', '⍛', '⊸', '⟜', '⸚', '«', '»', '⇾', '⇽', '⫤', '⫣', '⊩'
+            '⍨', '∘', '⍛', '⊸', '⟜', '⸚', '«', '»', '⇾', '⇽', '⫣', '⊩',
+            '⍤', '⍥', '⍣', '⁖', '⍢', '⎊', '@', '≈', '⬚',
+            // New in 0.13
+            '○', '⍜', '⍫'
         ],
         // Constants/number literals (purple)
         constants: [
