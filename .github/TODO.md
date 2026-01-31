@@ -30,8 +30,8 @@
 
 ### Fix 
 - jumpiness of logo in top left of keyboard
- - cursor skips to begining after ENTER
- - syntax highlighting is a little slow on larger inputs
+- cursor skips to begining after ENTER
+- syntax highlighting is a little slow on larger inputs
 
 ```
 ⍝ These are some combinators

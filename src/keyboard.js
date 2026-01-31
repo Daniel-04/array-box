@@ -3952,6 +3952,7 @@ export class ArrayKeyboard {
     
     /**
      * Cycle through glyphs on the currently selected key
+     * Skips glyphs without documentation
      */
     _cycleNavGlyph() {
         if (!this.overlay || !this.navActive) return;
@@ -3967,8 +3968,16 @@ export class ArrayKeyboard {
         
         if (glyphs.length <= 1) return; // Nothing to cycle
         
-        // Cycle to next glyph
-        this.navGlyphIndex = (this.navGlyphIndex + 1) % glyphs.length;
+        // Find next glyph with documentation
+        const startIndex = this.navGlyphIndex;
+        for (let i = 1; i <= glyphs.length; i++) {
+            const nextIndex = (startIndex + i) % glyphs.length;
+            const g = glyphs[nextIndex]?.glyph;
+            if (g && this.glyphDocs && this.glyphDocs[g]) {
+                this.navGlyphIndex = nextIndex;
+                break;
+            }
+        }
         
         // Update tooltip
         this._showNavTooltip(keyEl);
@@ -3991,11 +4000,30 @@ export class ArrayKeyboard {
             this.navGlyphIndex = 0;
         }
         
-        const { glyph, element: targetEl } = glyphs[this.navGlyphIndex];
+        // If the current glyph has no docs, find the first one that does
+        // This auto-cycles to the first documented glyph on the key
+        let displayIndex = this.navGlyphIndex;
+        if (this.glyphDocs) {
+            const currentGlyph = glyphs[displayIndex]?.glyph;
+            if (!currentGlyph || !this.glyphDocs[currentGlyph]) {
+                // Search for first glyph with docs, starting from current index
+                for (let i = 0; i < glyphs.length; i++) {
+                    const checkIndex = (displayIndex + i) % glyphs.length;
+                    const g = glyphs[checkIndex]?.glyph;
+                    if (g && this.glyphDocs[g]) {
+                        displayIndex = checkIndex;
+                        this.navGlyphIndex = checkIndex; // Update so Shift cycling continues from here
+                        break;
+                    }
+                }
+            }
+        }
+        
+        const { glyph, element: targetEl } = glyphs[displayIndex];
         
         if (glyph && targetEl && this.glyphDocs && this.glyphDocs[glyph]) {
             // Show which glyph we're on if there are multiple
-            const glyphIndicator = glyphs.length > 1 ? `${this.navGlyphIndex + 1}/${glyphs.length}` : null;
+            const glyphIndicator = glyphs.length > 1 ? `${displayIndex + 1}/${glyphs.length}` : null;
             this._showTooltip(glyph, targetEl, null, glyphIndicator);
         } else {
             this._hideTooltip();

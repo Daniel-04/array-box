@@ -11,7 +11,7 @@
 export const tinyaplDocsMeta = {
     language: "TinyAPL",
     source: "https://beta.tinyapl.rubenverg.com/",
-    scrapedAt: "2026-01-30T19:39:00.317Z",
+    scrapedAt: "2026-01-31T12:31:06.264Z",
     version: "latest"
 };
 
