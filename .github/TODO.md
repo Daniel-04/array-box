@@ -24,3 +24,9 @@
 - 🎯 add to the combo list idioms / common inverse operations (uiua done)
 - rip apl cart / bqn crate
 - train tacit view
+
+- test out pink as 2-modifier color
+- program combinators in array langauges to test the color
+
+### Fix 
+- jumpiness of logo in top left of keyboard

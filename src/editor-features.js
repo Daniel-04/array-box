@@ -205,11 +205,13 @@ export function alignComments(text, language) {
     }
     
     // Find the maximum code length before comments
+    // Use [...str].length to count Unicode code points, not code units
+    // (BQN uses characters like 𝔽 and 𝕩 which are surrogate pairs)
     let maxCodeLength = 0;
     for (const i of inlineCommentLines) {
         const pos = commentPositions[i];
         const codePart = lines[i].substring(0, pos).trimEnd();
-        maxCodeLength = Math.max(maxCodeLength, codePart.length);
+        maxCodeLength = Math.max(maxCodeLength, [...codePart].length);
     }
     
     // Align each line (at least 1 space before comment)
@@ -219,7 +221,7 @@ export function alignComments(text, language) {
         
         const codePart = line.substring(0, pos).trimEnd();
         const commentPart = line.substring(pos);
-        const padding = Math.max(1, maxCodeLength - codePart.length + 1);
+        const padding = Math.max(1, maxCodeLength - [...codePart].length + 1);
         
         return codePart + ' '.repeat(padding) + commentPart;
     });
