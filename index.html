@@ -2196,10 +2196,58 @@
             });
         }
         
-        // Set the input text and apply syntax highlighting
+        // Get cursor position as character offset from start
+        function getCursorOffset() {
+            const sel = window.getSelection();
+            if (sel.rangeCount === 0) return 0;
+            
+            const range = sel.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(codeInput);
+            preCaretRange.setEnd(range.startContainer, range.startOffset);
+            return preCaretRange.toString().length;
+        }
+        
+        // Set cursor position by character offset
+        function setCursorOffset(offset) {
+            const sel = window.getSelection();
+            const range = document.createRange();
+            
+            // Walk through text nodes to find the right position
+            let currentOffset = 0;
+            const walker = document.createTreeWalker(codeInput, NodeFilter.SHOW_TEXT, null, false);
+            let node;
+            
+            while ((node = walker.nextNode())) {
+                const nodeLength = node.textContent.length;
+                if (currentOffset + nodeLength >= offset) {
+                    range.setStart(node, offset - currentOffset);
+                    range.collapse(true);
+                    sel.removeAllRanges();
+                    sel.addRange(range);
+                    return;
+                }
+                currentOffset += nodeLength;
+            }
+            
+            // If offset is beyond content, place at end
+            if (codeInput.lastChild) {
+                range.selectNodeContents(codeInput);
+                range.collapse(false);
+                sel.removeAllRanges();
+                sel.addRange(range);
+            }
+        }
+        
+        // Set the input text and apply syntax highlighting, preserving cursor position
         function setInputText(text) {
+            const cursorOffset = getCursorOffset();
             codeInput.textContent = text;
             applySyntaxHighlighting();
+            // Restore cursor after a microtask to ensure DOM is updated
+            queueMicrotask(() => {
+                setCursorOffset(Math.min(cursorOffset, text.length));
+            });
         }
 
         function hideOutput() {
