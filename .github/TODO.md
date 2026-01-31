@@ -19,9 +19,6 @@
 - Multi lang solve (get multiple bars)
 - 🎯 Match on names across languages
 - add non-keyboard character set for APL, BQN, Kap
-- more syntax highlighting
-  - BQN / TinyAPL modifiers / functions
-- 🎯 add to the combo list idioms / common inverse operations (uiua done)
 - rip apl cart / bqn crate
 - train tacit view
 

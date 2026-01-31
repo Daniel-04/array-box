@@ -1317,6 +1317,7 @@
         import { syntaxRules, highlightCode, escapeHtml, getSyntaxClass } from './src/syntax.js?v=26';
         import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames, jGlyphNames, tinyaplGlyphNames, bqnGlyphDocs, uiuaGlyphDocs, jGlyphDocs, kapGlyphDocs, aplGlyphDocs, tinyaplGlyphDocs } from './src/keyboard.js?v=26';
         import { createEditorFeaturesManager } from './src/editor-features.js?v=1';
+        import { translatePrimitives, clearTranslationCache } from './src/primitive-translate.js?v=2';
         
         // Glyph documentation by language
         const glyphDocsByLanguage = {
@@ -2017,6 +2018,20 @@
         });
 
         function switchLanguage(lang) {
+            const oldLang = currentLanguage;
+            
+            // Translate primitives in the code before switching
+            if (oldLang !== lang) {
+                const currentCode = getInputText();
+                if (currentCode.trim()) {
+                    const translatedCode = translatePrimitives(currentCode, oldLang, lang);
+                    if (translatedCode !== currentCode) {
+                        // Update the code input with translated code
+                        codeInput.textContent = translatedCode;
+                    }
+                }
+            }
+            
             currentLanguage = lang;
             const langConfig = languages[lang];
             
