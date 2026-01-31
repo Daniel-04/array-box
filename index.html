@@ -733,7 +733,7 @@
             font-family: 'JetBrains Mono', monospace;
             font-size: 18px;
             font-variant-ligatures: none;
-            color: var(--syntax-function, #8BE9FD);
+            color: var(--syntax-function);
             text-decoration: none;
             opacity: 0.7;
         }
@@ -1399,34 +1399,34 @@
                     monadicPervasive: {
                         glyphs: uiuaGlyphs.monadicPervasive,
                         label: 'Monadic Functions',
-                        syntaxClass: 'syntax-monadic'
+                        syntaxClass: 'syntax-uiua-function-monadic'
                     },
                     monadicArray: {
                         glyphs: uiuaGlyphs.monadicArray,
                         label: 'Monadic Functions',
-                        syntaxClass: 'syntax-monadic',
+                        syntaxClass: 'syntax-uiua-function-monadic',
                         isArray: true
                     },
                     dyadicPervasive: {
                         glyphs: uiuaGlyphs.dyadicPervasive,
                         label: 'Dyadic Functions',
-                        syntaxClass: 'syntax-function'
+                        syntaxClass: 'syntax-uiua-function-dyadic'
                     },
                     dyadicArray: {
                         glyphs: uiuaGlyphs.dyadicArray,
                         label: 'Dyadic Functions',
-                        syntaxClass: 'syntax-function',
+                        syntaxClass: 'syntax-uiua-function-dyadic',
                         isArray: true
                     },
                     monadicModifiers: {
                         glyphs: uiuaGlyphs.monadicModifiers,
                         label: '1-Modifiers',
-                        syntaxClass: 'syntax-dyadic'
+                        syntaxClass: 'syntax-uiua-modifier-monadic'
                     },
                     dyadicModifiers: {
                         glyphs: uiuaGlyphs.dyadicModifiers,
                         label: '2-Modifiers',
-                        syntaxClass: 'syntax-modifier'
+                        syntaxClass: 'syntax-uiua-modifier-dyadic'
                     },
                     constants: {
                         glyphs: uiuaGlyphs.constants,
@@ -1462,22 +1462,22 @@
                     monadic: {
                         glyphs: jGlyphs.monadic,
                         label: 'Adverbs',
-                        syntaxClass: 'syntax-monadic'
+                        syntaxClass: 'syntax-modifier-monadic'
                     },
                     adverbDigraphs: {
                         glyphs: jGlyphs.adverbDigraphs,
                         label: 'Adverbs',
-                        syntaxClass: 'syntax-monadic'
+                        syntaxClass: 'syntax-modifier-monadic'
                     },
                     dyadic: {
                         glyphs: jGlyphs.dyadic,
                         label: 'Conjunctions',
-                        syntaxClass: 'syntax-dyadic'
+                        syntaxClass: 'syntax-modifier-dyadic'
                     },
                     conjunctionDigraphs: {
                         glyphs: jGlyphs.conjunctionDigraphs,
                         label: 'Conjunctions',
-                        syntaxClass: 'syntax-dyadic'
+                        syntaxClass: 'syntax-modifier-dyadic'
                     },
                     constants: {
                         glyphs: jGlyphs.constants,
@@ -2445,27 +2445,44 @@
             if (currentLanguage === 'uiua' && glyph.length > 1) {
                 const firstChar = glyph[0];
                 if (firstChar === '°' || firstChar === '⌝') {
-                    return 'syntax-dyadic';  // Modifiers are in dyadic category for Uiua
+                    return 'syntax-uiua-modifier-monadic';  // 1-modifiers for Uiua
                 }
             }
             
+            // Shared classifications
             if (rules.comments && rules.comments.includes(glyph)) {
                 return 'syntax-comment';
             }
             if (rules.constants && rules.constants.includes(glyph)) {
                 return 'syntax-number';
             }
-            if (rules.functions && rules.functions.includes(glyph)) {
-                return 'syntax-function';
-            }
-            if (rules.monadic && rules.monadic.includes(glyph)) {
-                return 'syntax-monadic';
-            }
-            if (rules.dyadic && rules.dyadic.includes(glyph)) {
-                return 'syntax-dyadic';
-            }
-            if (rules.modifier && rules.modifier.includes(glyph)) {
-                return 'syntax-modifier';
+            
+            // Language-specific classifications
+            if (currentLanguage === 'uiua') {
+                // Uiua: monadic/dyadic functions AND monadic/dyadic modifiers
+                if (rules.monadic && rules.monadic.includes(glyph)) {
+                    return 'syntax-uiua-function-monadic';
+                }
+                if (rules.functions && rules.functions.includes(glyph)) {
+                    return 'syntax-uiua-function-dyadic';
+                }
+                if (rules.dyadic && rules.dyadic.includes(glyph)) {
+                    return 'syntax-uiua-modifier-monadic';
+                }
+                if (rules.modifier && rules.modifier.includes(glyph)) {
+                    return 'syntax-uiua-modifier-dyadic';
+                }
+            } else {
+                // Other languages: functions + monadic/dyadic modifiers
+                if (rules.functions && rules.functions.includes(glyph)) {
+                    return 'syntax-function';
+                }
+                if (rules.monadic && rules.monadic.includes(glyph)) {
+                    return 'syntax-modifier-monadic';
+                }
+                if (rules.dyadic && rules.dyadic.includes(glyph)) {
+                    return 'syntax-modifier-dyadic';
+                }
             }
             
             return '';

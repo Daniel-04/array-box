@@ -8,7 +8,7 @@
  */
 export const syntaxRules = {
     bqn: {
-        // Functions (blue) - primitive functions
+        // Functions (cyan) - primitive functions
         functions: [
             '+', '-', '×', '÷', '⋆', '√', '⌊', '⌈', '|', '¬', '∧', '∨',
             '<', '>', '≠', '=', '≤', '≥', '≡', '≢',
@@ -42,7 +42,7 @@ export const syntaxRules = {
         }
     },
     apl: {
-        // Functions (blue) - primitive functions
+        // Functions (cyan) - primitive functions
         // Categories based on APL Wiki (https://aplwiki.com/wiki/Dyalog_APL):
         // - Arithmetic: +, -, ×, ÷, |, ⌊, ⌈, *, ⍟, !, ○
         // - Logic: ~, ?, ∧, ∨, ⍲, ⍱
@@ -79,7 +79,7 @@ export const syntaxRules = {
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
     },
     j: {
-        // Functions (blue) - J verbs (single character)
+        // Functions (cyan) - J verbs (single character)
         functions: [
             '+', '-', '*', '%', '^', '$', '~', '|', ',', ';', '#',
             '{', '}', '[', ']', '"', '?', '!'
@@ -137,20 +137,20 @@ export const syntaxRules = {
         numberPattern: /^_?(\d+\.?\d*|\.\d+)([ejrx][+-]?\d+\.?\d*)?/i
     },
     uiua: {
-        // Monadic functions (green) - take 1 array argument
+        // Monadic functions (cyan) - take 1 array argument
         monadic: [
             '¬', '±', '√', '○', '⌵', '⌈', '⌊', '⧻', '△', '⇡', '⊢', '⇌', 
             '♭', '¤', '⊚', '⊛', '◴', '⍏', '⍖', '⊝', 'ℂ', '⁅',
             '⍉', '⋯', '⍘', '⚙', '⸮', '⬛'
         ],
-        // Dyadic functions (blue) - take 2 array arguments
+        // Dyadic functions (green) - take 2 array arguments
         functions: [
             '+', '-', '×', '÷', '◿', 'ⁿ', 'ₙ', '=', '≠', '<', '>', '≤', '≥',
             '↧', '↥', '∠', '∨', '⊻', '⊼', '⊽', '⊂', '⊏', '⊡', '↯', '☇',
             '↙', '↘', '↻', '⊗', '∈', '⊟', '▽', '◫', '▩', '⤸', '◠',
             '≍', '⌕', '⦷', '⨂', '⊥'
         ],
-        // 1-modifiers (yellow) - take 1 function argument
+        // 1-modifiers (pink) - take 1 function argument
         // Matches uiuaGlyphs.monadicModifiers from keymap.js (popup source of truth)
         dyadic: [
             '˙', '˜', '⊙', '⋅', '⟜', '⊸', '⤙', '⤚', '◡', '∩',
@@ -159,7 +159,7 @@ export const syntaxRules = {
             '⌅', '°', '⌝',
             '⧋', '◇'
         ],
-        // 2-modifiers (pink) - take 2+ function arguments
+        // 2-modifiers (yellow) - take 2+ function arguments
         // Matches uiuaGlyphs.dyadicModifiers from keymap.js (popup source of truth)
         modifier: [
             '⊃', '⊓', '⍜', '⍢', '⬚', '⨬'
@@ -178,7 +178,7 @@ export const syntaxRules = {
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
     },
     kap: {
-        // Functions (blue) - scalar and structural functions
+        // Functions (cyan) - scalar and structural functions
         functions: [
             // Scalar functions (arithmetic, comparison, logical)
             '+', '-', '×', '÷', '|', '⋆', '⍟', '=', '≠', '<', '>', '≤', '≥',
@@ -218,7 +218,7 @@ export const syntaxRules = {
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
     },
     tinyapl: {
-        // Functions (blue) - primitive functions
+        // Functions (cyan) - primitive functions
         // Based on https://beta.tinyapl.rubenverg.com/
         functions: [
             // Arithmetic
@@ -450,22 +450,13 @@ export function highlightCode(text, language) {
         i++;
     }
     
-    // Build HTML
+    // Build HTML - map token types to CSS classes based on language
     return tokens.map(token => {
         const escaped = escapeHtml(token.value);
-            
-        if (token.type === 'number') {
-            return `<span class="syntax-number">${escaped}</span>`;
-        } else if (token.type === 'function') {
-            return `<span class="syntax-function">${escaped}</span>`;
-        } else if (token.type === 'monadic') {
-            return `<span class="syntax-monadic">${escaped}</span>`;
-        } else if (token.type === 'modifier') {
-            return `<span class="syntax-modifier">${escaped}</span>`;
-        } else if (token.type === 'dyadic') {
-            return `<span class="syntax-dyadic">${escaped}</span>`;
-        } else if (token.type === 'comment') {
-            return `<span class="syntax-comment">${escaped}</span>`;
+        const cssClass = getTokenCssClass(token.type, language);
+        
+        if (cssClass) {
+            return `<span class="${cssClass}">${escaped}</span>`;
         } else {
             return escaped;
         }
@@ -473,11 +464,44 @@ export function highlightCode(text, language) {
 }
 
 /**
+ * Map token type to CSS class based on language
+ * Uiua has different semantics (monadic/dyadic functions AND modifiers)
+ * Other languages have functions + monadic/dyadic modifiers
+ * @param {string} tokenType - Token type from parser
+ * @param {string} language - Language identifier
+ * @returns {string|null} CSS class name or null for default
+ */
+function getTokenCssClass(tokenType, language) {
+    // Shared classes
+    if (tokenType === 'number') return 'syntax-number';
+    if (tokenType === 'comment') return 'syntax-comment';
+    if (tokenType === 'default') return null;
+    
+    if (language === 'uiua') {
+        // Uiua: distinguishes monadic/dyadic for both functions and modifiers
+        // monadic = monadic functions, functions = dyadic functions
+        // dyadic = 1-modifiers, modifier = 2-modifiers
+        if (tokenType === 'monadic') return 'syntax-uiua-function-monadic';
+        if (tokenType === 'function') return 'syntax-uiua-function-dyadic';
+        if (tokenType === 'dyadic') return 'syntax-uiua-modifier-monadic';
+        if (tokenType === 'modifier') return 'syntax-uiua-modifier-dyadic';
+    } else {
+        // Other languages (APL, BQN, J, Kap, TinyAPL)
+        // functions = all functions, monadic = 1-modifiers, dyadic = 2-modifiers
+        if (tokenType === 'function') return 'syntax-function';
+        if (tokenType === 'monadic') return 'syntax-modifier-monadic';
+        if (tokenType === 'dyadic') return 'syntax-modifier-dyadic';
+    }
+    
+    return null;
+}
+
+/**
  * Get syntax class for a single symbol
  * This is the single source of truth for syntax classification
  * @param {string} symbol - Single character to classify
  * @param {string} language - Language identifier ('bqn', 'apl', 'j', 'uiua', 'kap')
- * @returns {string} CSS class name (e.g., 'syntax-function', 'syntax-monadic', etc.)
+ * @returns {string} CSS class name (e.g., 'syntax-function', 'syntax-modifier-monadic', etc.)
  */
 export function getSyntaxClass(symbol, language) {
     if (!symbol) return 'syntax-default';
@@ -485,23 +509,40 @@ export function getSyntaxClass(symbol, language) {
     const rules = syntaxRules[language];
     if (!rules) return 'syntax-default';
     
+    // Shared classifications
     if (rules.comments && rules.comments.includes(symbol)) {
         return 'syntax-comment';
     }
     if (rules.constants && rules.constants.includes(symbol)) {
         return 'syntax-number';
     }
-    if (rules.functions && rules.functions.includes(symbol)) {
-        return 'syntax-function';
-    }
-    if (rules.monadic && rules.monadic.includes(symbol)) {
-        return 'syntax-monadic';
-    }
-    if (rules.dyadic && rules.dyadic.includes(symbol)) {
-        return 'syntax-dyadic';
-    }
-    if (rules.modifier && rules.modifier.includes(symbol)) {
-        return 'syntax-modifier';
+    
+    // Language-specific classifications
+    if (language === 'uiua') {
+        // Uiua: monadic/dyadic functions AND monadic/dyadic modifiers
+        if (rules.monadic && rules.monadic.includes(symbol)) {
+            return 'syntax-uiua-function-monadic';
+        }
+        if (rules.functions && rules.functions.includes(symbol)) {
+            return 'syntax-uiua-function-dyadic';
+        }
+        if (rules.dyadic && rules.dyadic.includes(symbol)) {
+            return 'syntax-uiua-modifier-monadic';
+        }
+        if (rules.modifier && rules.modifier.includes(symbol)) {
+            return 'syntax-uiua-modifier-dyadic';
+        }
+    } else {
+        // Other languages: functions + monadic/dyadic modifiers
+        if (rules.functions && rules.functions.includes(symbol)) {
+            return 'syntax-function';
+        }
+        if (rules.monadic && rules.monadic.includes(symbol)) {
+            return 'syntax-modifier-monadic';
+        }
+        if (rules.dyadic && rules.dyadic.includes(symbol)) {
+            return 'syntax-modifier-dyadic';
+        }
     }
     
     return 'syntax-default';

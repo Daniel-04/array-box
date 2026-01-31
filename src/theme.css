@@ -45,40 +45,45 @@
     --focus-color: #22c55e;        /* green-500 */
     --error-color: #ef4444;        /* red-500 */
     
-    /* Dracula syntax colors */
-    --syntax-function: #8BE9FD;       /* Cyan - dyadic functions */
-    --syntax-monadic: #50FA7B;        /* Green - monadic functions */
-    --syntax-dyadic: #F1FA8C;         /* Yellow - 2-modifiers */
-    --syntax-modifier: #FF79C6;       /* Pink (Dracula pink) - 2-modifiers */
-    --syntax-number: #BD93F9;         /* Purple (Dracula purple) */
-    --syntax-comment: #6272A4;        /* Dracula comment grey */
-    --syntax-default: #F8F8F2;        /* Foreground (Dracula foreground) */
+    /* Dracula color palette */
+    --dracula-cyan:    #8BE9FD;
+    --dracula-green:   #50FA7B;
+    --dracula-yellow:  #F1FA8C;
+    --dracula-pink:    #FF79C6;
+    --dracula-purple:  #BD93F9;
+    --dracula-comment: #6272A4;
+    --dracula-fg:      #F8F8F2;
+    
+    /* Syntax color assignments - SINGLE SOURCE OF TRUTH */
+    /* Shared */
+    --syntax-number:  var(--dracula-purple);
+    --syntax-comment: var(--dracula-comment);
+    --syntax-default: var(--dracula-fg);
+    
+    /* Uiua (monadic/dyadic for both functions and modifiers) */
+    --syntax-uiua-function-monadic: var(--dracula-cyan);
+    --syntax-uiua-function-dyadic:  var(--dracula-green);
+    --syntax-uiua-modifier-monadic: var(--dracula-yellow);
+    --syntax-uiua-modifier-dyadic:  var(--dracula-pink);
+    
+    /* Other languages (APL, BQN, J, Kap, TinyAPL) */
+    --syntax-function:         var(--dracula-cyan);
+    --syntax-modifier-monadic: var(--dracula-yellow);
+    --syntax-modifier-dyadic:  var(--dracula-green);
 }
 
 /* Syntax highlighting classes */
-.syntax-function {
-    color: var(--syntax-function);
-}
+.syntax-number  { color: var(--syntax-number); }
+.syntax-comment { color: var(--syntax-comment); }
 
-.syntax-monadic {
-    color: var(--syntax-monadic);
-}
+.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }
+.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); }
 
-.syntax-dyadic {
-    color: var(--syntax-dyadic);
-}
-
-.syntax-modifier {
-    color: var(--syntax-modifier);
-}
-
-.syntax-number {
-    color: var(--syntax-number);
-}
-
-.syntax-comment {
-    color: var(--syntax-comment);
-}
+.syntax-function         { color: var(--syntax-function); }
+.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
+.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); }
 
 /* Language-specific font classes */
 .font-bqn {
@@ -215,29 +220,17 @@
 }
 
 /* Syntax highlighting for keyboard symbols */
-.key-symbol.syntax-function {
-    color: var(--syntax-function);
-}
+.key-symbol.syntax-number  { color: var(--syntax-number); }
+.key-symbol.syntax-default { color: var(--syntax-default); }
 
-.key-symbol.syntax-monadic {
-    color: var(--syntax-monadic);
-}
+.key-symbol.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+.key-symbol.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }
+.key-symbol.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+.key-symbol.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); }
 
-.key-symbol.syntax-dyadic {
-    color: var(--syntax-dyadic);
-}
-
-.key-symbol.syntax-modifier {
-    color: var(--syntax-modifier);
-}
-
-.key-symbol.syntax-number {
-    color: var(--syntax-number);
-}
-
-.key-symbol.syntax-default {
-    color: var(--syntax-default);
-}
+.key-symbol.syntax-function         { color: var(--syntax-function); }
+.key-symbol.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
+.key-symbol.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); }
 
 .key-label {
     font-family: 'JetBrains Mono', monospace;
@@ -262,26 +255,14 @@
 }
 
 /* Syntax highlighting for shifted symbols */
-.key-shift-symbol.syntax-function {
-    color: var(--syntax-function);
-}
+.key-shift-symbol.syntax-number  { color: var(--syntax-number); }
+.key-shift-symbol.syntax-default { color: var(--syntax-default); }
 
-.key-shift-symbol.syntax-monadic {
-    color: var(--syntax-monadic);
-}
+.key-shift-symbol.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+.key-shift-symbol.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }
+.key-shift-symbol.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+.key-shift-symbol.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); }
 
-.key-shift-symbol.syntax-dyadic {
-    color: var(--syntax-dyadic);
-}
-
-.key-shift-symbol.syntax-modifier {
-    color: var(--syntax-modifier);
-}
-
-.key-shift-symbol.syntax-number {
-    color: var(--syntax-number);
-}
-
-.key-shift-symbol.syntax-default {
-    color: var(--syntax-default);
-}
+.key-shift-symbol.syntax-function         { color: var(--syntax-function); }
+.key-shift-symbol.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
+.key-shift-symbol.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); }

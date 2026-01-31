@@ -25,13 +25,11 @@
 - rip apl cart / bqn crate
 - train tacit view
 
-- test out pink as 2-modifier color
-- program combinators in array langauges to test the color
-
 ### Fix 
 - jumpiness of logo in top left of keyboard
 - syntax highlighting is a little slow on larger inputs
 
+#### Test Formatting Program
 ```
 ⍝ These are some combinators
 _W    ← _{ ⍵ ⍶⍶ ⍵ }            ⍝ The Warbler

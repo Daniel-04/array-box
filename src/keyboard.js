@@ -998,7 +998,7 @@ const defaultStyles = `
 
 .array-keyboard-title-link {
     font-size: 21px;
-    color: var(--syntax-function, #8BE9FD);
+    color: var(--syntax-function);
     text-decoration: none;
     opacity: 0.6;
     transition: opacity 0.2s;
@@ -1067,7 +1067,7 @@ const defaultStyles = `
 .array-keyboard-symbol {
     font-size: 35px;
     line-height: 1;
-    color: var(--syntax-function, #8BE9FD);
+    color: var(--syntax-function);
 }
 
 .array-keyboard-symbol.empty {
@@ -1080,7 +1080,7 @@ const defaultStyles = `
     top: 5px;
     left: 7px;
     line-height: 1;
-    color: var(--syntax-modifier, #FFB86C);
+    color: var(--syntax-modifier-monadic);
 }
 
 .array-keyboard-shift-symbol.empty {
@@ -1274,76 +1274,58 @@ const defaultStyles = `
 }
 
 /* Syntax highlighting for 6-quadrant glyphs */
-.array-keyboard-hexquadrant-glyph.syntax-function {
-    color: var(--syntax-function, #8BE9FD);
-}
+.array-keyboard-hexquadrant-glyph.syntax-function         { color: var(--syntax-function); }
+.array-keyboard-hexquadrant-glyph.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
+.array-keyboard-hexquadrant-glyph.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); }
+.array-keyboard-hexquadrant-glyph.syntax-number           { color: var(--syntax-number); }
+.array-keyboard-hexquadrant-glyph.syntax-comment          { color: var(--syntax-comment); }
+.array-keyboard-hexquadrant-glyph.syntax-default          { color: var(--syntax-default); }
+.array-keyboard-hexquadrant-glyph.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+.array-keyboard-hexquadrant-glyph.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }
+.array-keyboard-hexquadrant-glyph.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+.array-keyboard-hexquadrant-glyph.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); }
 
-.array-keyboard-hexquadrant-glyph.syntax-monadic {
-    color: var(--syntax-monadic, #50FA7B);
-}
-
-.array-keyboard-hexquadrant-glyph.syntax-dyadic {
-    color: var(--syntax-dyadic, #F1FA8C);
-}
-
-.array-keyboard-hexquadrant-glyph.syntax-modifier {
-    color: var(--syntax-modifier, #FF79C6);
-}
-
-.array-keyboard-hexquadrant-glyph.syntax-number {
-    color: var(--syntax-number, #BD93F9);
-}
-
-.array-keyboard-hexquadrant-glyph.syntax-comment {
-    color: var(--syntax-comment, #6272a4);
-}
-
-.array-keyboard-hexquadrant-glyph.syntax-default {
-    color: var(--syntax-default, #F8F8F2);
-}
-
-/* Syntax highlighting colors - use CSS variables with fallbacks for standalone use */
+/* Syntax highlighting for symbols and quadrant glyphs */
 .array-keyboard-symbol.syntax-function,
 .array-keyboard-shift-symbol.syntax-function,
-.array-keyboard-quadrant-glyph.syntax-function {
-    color: var(--syntax-function, #8BE9FD);
-}
+.array-keyboard-quadrant-glyph.syntax-function { color: var(--syntax-function); }
 
-.array-keyboard-symbol.syntax-monadic,
-.array-keyboard-shift-symbol.syntax-monadic,
-.array-keyboard-quadrant-glyph.syntax-monadic {
-    color: var(--syntax-monadic, #50FA7B);
-}
+.array-keyboard-symbol.syntax-modifier-monadic,
+.array-keyboard-shift-symbol.syntax-modifier-monadic,
+.array-keyboard-quadrant-glyph.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
 
-.array-keyboard-symbol.syntax-dyadic,
-.array-keyboard-shift-symbol.syntax-dyadic,
-.array-keyboard-quadrant-glyph.syntax-dyadic {
-    color: var(--syntax-dyadic, #F1FA8C);
-}
-
-.array-keyboard-symbol.syntax-modifier,
-.array-keyboard-shift-symbol.syntax-modifier,
-.array-keyboard-quadrant-glyph.syntax-modifier {
-    color: var(--syntax-modifier, #FFB86C);
-}
+.array-keyboard-symbol.syntax-modifier-dyadic,
+.array-keyboard-shift-symbol.syntax-modifier-dyadic,
+.array-keyboard-quadrant-glyph.syntax-modifier-dyadic { color: var(--syntax-modifier-dyadic); }
 
 .array-keyboard-symbol.syntax-number,
 .array-keyboard-shift-symbol.syntax-number,
-.array-keyboard-quadrant-glyph.syntax-number {
-    color: var(--syntax-number, #BD93F9);
-}
+.array-keyboard-quadrant-glyph.syntax-number { color: var(--syntax-number); }
 
 .array-keyboard-symbol.syntax-comment,
 .array-keyboard-shift-symbol.syntax-comment,
-.array-keyboard-quadrant-glyph.syntax-comment {
-    color: var(--syntax-comment, #6272A4);
-}
+.array-keyboard-quadrant-glyph.syntax-comment { color: var(--syntax-comment); }
 
 .array-keyboard-symbol.syntax-default,
 .array-keyboard-shift-symbol.syntax-default,
-.array-keyboard-quadrant-glyph.syntax-default {
-    color: var(--syntax-default, #F8F8F2);
-}
+.array-keyboard-quadrant-glyph.syntax-default { color: var(--syntax-default); }
+
+/* Uiua-specific syntax classes */
+.array-keyboard-symbol.syntax-uiua-function-monadic,
+.array-keyboard-shift-symbol.syntax-uiua-function-monadic,
+.array-keyboard-quadrant-glyph.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+
+.array-keyboard-symbol.syntax-uiua-function-dyadic,
+.array-keyboard-shift-symbol.syntax-uiua-function-dyadic,
+.array-keyboard-quadrant-glyph.syntax-uiua-function-dyadic { color: var(--syntax-uiua-function-dyadic); }
+
+.array-keyboard-symbol.syntax-uiua-modifier-monadic,
+.array-keyboard-shift-symbol.syntax-uiua-modifier-monadic,
+.array-keyboard-quadrant-glyph.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+
+.array-keyboard-symbol.syntax-uiua-modifier-dyadic,
+.array-keyboard-shift-symbol.syntax-uiua-modifier-dyadic,
+.array-keyboard-quadrant-glyph.syntax-uiua-modifier-dyadic { color: var(--syntax-uiua-modifier-dyadic); }
 
 /* Category view styles */
 .array-keyboard-overlay.category-view {
@@ -1374,13 +1356,17 @@ const defaultStyles = `
     border-bottom: 2px solid #4b5563;
 }
 
-.array-keyboard-category-title.syntax-function { color: var(--syntax-function, #8BE9FD); }
-.array-keyboard-category-title.syntax-monadic { color: var(--syntax-monadic, #50FA7B); }
-.array-keyboard-category-title.syntax-dyadic { color: var(--syntax-dyadic, #F1FA8C); }
-.array-keyboard-category-title.syntax-modifier { color: var(--syntax-modifier, #FFB86C); }
-.array-keyboard-category-title.syntax-number { color: var(--syntax-number, #BD93F9); }
-.array-keyboard-category-title.syntax-comment { color: var(--syntax-comment, #6272A4); }
-.array-keyboard-category-title.syntax-default { color: var(--syntax-default, #9CA3AF); }
+.array-keyboard-category-title.syntax-function         { color: var(--syntax-function); }
+.array-keyboard-category-title.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
+.array-keyboard-category-title.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); }
+.array-keyboard-category-title.syntax-number           { color: var(--syntax-number); }
+.array-keyboard-category-title.syntax-comment          { color: var(--syntax-comment); }
+.array-keyboard-category-title.syntax-default          { color: #9CA3AF; }
+.array-keyboard-category-title.syntax-stack            { color: var(--syntax-default); }
+.array-keyboard-category-title.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+.array-keyboard-category-title.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }
+.array-keyboard-category-title.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+.array-keyboard-category-title.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); }
 
 .array-keyboard-glyph-grid {
     display: flex;
@@ -1422,14 +1408,17 @@ const defaultStyles = `
     flex-shrink: 0;
 }
 
-.array-keyboard-legend-dot.syntax-function { background-color: var(--syntax-function, #8BE9FD); }
-.array-keyboard-legend-dot.syntax-monadic { background-color: var(--syntax-monadic, #50FA7B); }
-.array-keyboard-legend-dot.syntax-dyadic { background-color: var(--syntax-dyadic, #F1FA8C); }
-.array-keyboard-legend-dot.syntax-modifier { background-color: var(--syntax-modifier, #FFB86C); }
-.array-keyboard-legend-dot.syntax-number { background-color: var(--syntax-number, #BD93F9); }
-.array-keyboard-legend-dot.syntax-comment { background-color: var(--syntax-comment, #6272A4); }
-.array-keyboard-legend-dot.syntax-default { background-color: var(--syntax-default, #9CA3AF); }
-.array-keyboard-legend-dot.syntax-stack { background-color: var(--syntax-default, #F8F8F2); }
+.array-keyboard-legend-dot.syntax-function         { background-color: var(--syntax-function); }
+.array-keyboard-legend-dot.syntax-modifier-monadic { background-color: var(--syntax-modifier-monadic); }
+.array-keyboard-legend-dot.syntax-modifier-dyadic  { background-color: var(--syntax-modifier-dyadic); }
+.array-keyboard-legend-dot.syntax-number           { background-color: var(--syntax-number); }
+.array-keyboard-legend-dot.syntax-comment          { background-color: var(--syntax-comment); }
+.array-keyboard-legend-dot.syntax-default          { background-color: #9CA3AF; }
+.array-keyboard-legend-dot.syntax-stack            { background-color: var(--syntax-default); }
+.array-keyboard-legend-dot.syntax-uiua-function-monadic { background-color: var(--syntax-uiua-function-monadic); }
+.array-keyboard-legend-dot.syntax-uiua-function-dyadic  { background-color: var(--syntax-uiua-function-dyadic); }
+.array-keyboard-legend-dot.syntax-uiua-modifier-monadic { background-color: var(--syntax-uiua-modifier-monadic); }
+.array-keyboard-legend-dot.syntax-uiua-modifier-dyadic  { background-color: var(--syntax-uiua-modifier-dyadic); }
 
 .array-keyboard-legend-text {
     font-family: 'JetBrains Mono', monospace;
@@ -1467,14 +1456,17 @@ const defaultStyles = `
     border-color: #10B981;
 }
 
-.array-keyboard-glyph.syntax-function { color: var(--syntax-function, #8BE9FD); }
-.array-keyboard-glyph.syntax-monadic { color: var(--syntax-monadic, #50FA7B); }
-.array-keyboard-glyph.syntax-dyadic { color: var(--syntax-dyadic, #F1FA8C); }
-.array-keyboard-glyph.syntax-modifier { color: var(--syntax-modifier, #FFB86C); }
-.array-keyboard-glyph.syntax-number { color: var(--syntax-number, #BD93F9); }
-.array-keyboard-glyph.syntax-comment { color: var(--syntax-comment, #6272A4); }
-.array-keyboard-glyph.syntax-default { color: var(--syntax-default, #F8F8F2); }
-.array-keyboard-glyph.syntax-stack { color: var(--syntax-default, #F8F8F2); }
+.array-keyboard-glyph.syntax-function         { color: var(--syntax-function); }
+.array-keyboard-glyph.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); }
+.array-keyboard-glyph.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); }
+.array-keyboard-glyph.syntax-number           { color: var(--syntax-number); }
+.array-keyboard-glyph.syntax-comment          { color: var(--syntax-comment); }
+.array-keyboard-glyph.syntax-default          { color: var(--syntax-default); }
+.array-keyboard-glyph.syntax-stack            { color: var(--syntax-default); }
+.array-keyboard-glyph.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
+.array-keyboard-glyph.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }
+.array-keyboard-glyph.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); }
+.array-keyboard-glyph.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); }
 
 /* Solid border with filled background for array functions */
 .array-keyboard-glyph.array-glyph {
@@ -1525,14 +1517,17 @@ const defaultStyles = `
     pointer-events: none;
 }
 
-.array-keyboard-name-label.syntax-function { color: var(--syntax-function, #8BE9FD); border-color: color-mix(in srgb, var(--syntax-function, #8BE9FD) 25%, transparent); }
-.array-keyboard-name-label.syntax-monadic { color: var(--syntax-monadic, #50FA7B); border-color: color-mix(in srgb, var(--syntax-monadic, #50FA7B) 25%, transparent); }
-.array-keyboard-name-label.syntax-dyadic { color: var(--syntax-dyadic, #F1FA8C); border-color: color-mix(in srgb, var(--syntax-dyadic, #F1FA8C) 25%, transparent); }
-.array-keyboard-name-label.syntax-modifier { color: var(--syntax-modifier, #FFB86C); border-color: color-mix(in srgb, var(--syntax-modifier, #FFB86C) 25%, transparent); }
-.array-keyboard-name-label.syntax-number { color: var(--syntax-number, #BD93F9); border-color: color-mix(in srgb, var(--syntax-number, #BD93F9) 25%, transparent); }
-.array-keyboard-name-label.syntax-comment { color: var(--syntax-comment, #6272A4); border-color: color-mix(in srgb, var(--syntax-comment, #6272A4) 25%, transparent); }
-.array-keyboard-name-label.syntax-default { color: var(--syntax-default, #e5e7eb); border-color: color-mix(in srgb, var(--syntax-default, #e5e7eb) 25%, transparent); }
-.array-keyboard-name-label.syntax-stack { color: var(--syntax-default, #F8F8F2); border-color: color-mix(in srgb, var(--syntax-default, #F8F8F2) 25%, transparent); }
+.array-keyboard-name-label.syntax-function         { color: var(--syntax-function); border-color: color-mix(in srgb, var(--syntax-function) 25%, transparent); }
+.array-keyboard-name-label.syntax-modifier-monadic { color: var(--syntax-modifier-monadic); border-color: color-mix(in srgb, var(--syntax-modifier-monadic) 25%, transparent); }
+.array-keyboard-name-label.syntax-modifier-dyadic  { color: var(--syntax-modifier-dyadic); border-color: color-mix(in srgb, var(--syntax-modifier-dyadic) 25%, transparent); }
+.array-keyboard-name-label.syntax-number           { color: var(--syntax-number); border-color: color-mix(in srgb, var(--syntax-number) 25%, transparent); }
+.array-keyboard-name-label.syntax-comment          { color: var(--syntax-comment); border-color: color-mix(in srgb, var(--syntax-comment) 25%, transparent); }
+.array-keyboard-name-label.syntax-default          { color: #e5e7eb; border-color: color-mix(in srgb, #e5e7eb 25%, transparent); }
+.array-keyboard-name-label.syntax-stack            { color: var(--syntax-default); border-color: color-mix(in srgb, var(--syntax-default) 25%, transparent); }
+.array-keyboard-name-label.syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); border-color: color-mix(in srgb, var(--syntax-uiua-function-monadic) 25%, transparent); }
+.array-keyboard-name-label.syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); border-color: color-mix(in srgb, var(--syntax-uiua-function-dyadic) 25%, transparent); }
+.array-keyboard-name-label.syntax-uiua-modifier-monadic { color: var(--syntax-uiua-modifier-monadic); border-color: color-mix(in srgb, var(--syntax-uiua-modifier-monadic) 25%, transparent); }
+.array-keyboard-name-label.syntax-uiua-modifier-dyadic  { color: var(--syntax-uiua-modifier-dyadic); border-color: color-mix(in srgb, var(--syntax-uiua-modifier-dyadic) 25%, transparent); }
 
 /* Hint for names toggle */
 .array-keyboard-names-hint {
@@ -1580,7 +1575,7 @@ const defaultStyles = `
 }
 
 .array-keyboard-search-input:focus {
-    border-color: var(--syntax-function, #8BE9FD);
+    border-color: var(--syntax-function);
 }
 
 .array-keyboard-search-input::placeholder {
@@ -1610,7 +1605,7 @@ const defaultStyles = `
 }
 
 .array-keyboard-doc-links a {
-    color: var(--syntax-function, #8BE9FD);
+    color: var(--syntax-function);
     text-decoration: none;
     transition: opacity 0.2s;
 }
@@ -1773,7 +1768,7 @@ const defaultStyles = `
     font-family: 'JetBrains Mono', monospace;
     font-size: 18px;
     font-variant-ligatures: none;
-    color: var(--syntax-function, #8BE9FD);
+    color: var(--syntax-function);
     text-decoration: none;
     opacity: 0.7;
 }
@@ -1883,6 +1878,7 @@ export class ArrayKeyboard {
     
     /**
      * Get syntax class for a symbol
+     * Returns language-specific classes for Uiua, generic classes for other languages
      */
     _getSyntaxClass(symbol) {
         if (!symbol) return 'empty';
@@ -1890,23 +1886,40 @@ export class ArrayKeyboard {
         const rules = this.syntaxRules;
         if (!rules) return 'syntax-default';
         
+        // Shared classifications
         if (rules.comments && rules.comments.includes(symbol)) {
             return 'syntax-comment';
         }
         if (rules.constants && rules.constants.includes(symbol)) {
             return 'syntax-number';
         }
-        if (rules.functions && rules.functions.includes(symbol)) {
-            return 'syntax-function';
-        }
-        if (rules.monadic && rules.monadic.includes(symbol)) {
-            return 'syntax-monadic';
-        }
-        if (rules.dyadic && rules.dyadic.includes(symbol)) {
-            return 'syntax-dyadic';
-        }
-        if (rules.modifier && rules.modifier.includes(symbol)) {
-            return 'syntax-modifier';
+        
+        // Language-specific classifications
+        if (this.language === 'uiua') {
+            // Uiua: monadic/dyadic functions AND monadic/dyadic modifiers
+            if (rules.monadic && rules.monadic.includes(symbol)) {
+                return 'syntax-uiua-function-monadic';
+            }
+            if (rules.functions && rules.functions.includes(symbol)) {
+                return 'syntax-uiua-function-dyadic';
+            }
+            if (rules.dyadic && rules.dyadic.includes(symbol)) {
+                return 'syntax-uiua-modifier-monadic';
+            }
+            if (rules.modifier && rules.modifier.includes(symbol)) {
+                return 'syntax-uiua-modifier-dyadic';
+            }
+        } else {
+            // Other languages: functions + monadic/dyadic modifiers
+            if (rules.functions && rules.functions.includes(symbol)) {
+                return 'syntax-function';
+            }
+            if (rules.monadic && rules.monadic.includes(symbol)) {
+                return 'syntax-modifier-monadic';
+            }
+            if (rules.dyadic && rules.dyadic.includes(symbol)) {
+                return 'syntax-modifier-dyadic';
+            }
         }
         
         return 'syntax-default';
