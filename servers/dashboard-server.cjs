@@ -8,6 +8,8 @@
  */
 
 const http = require('http');
+const fs = require('fs');
+const path = require('path');
 const stats = require('./stats.cjs');
 
 const PORT = process.argv[2] ? parseInt(process.argv[2]) : 8085;
@@ -25,9 +27,9 @@ const dashboardHTML = `<!DOCTYPE html>
     <title>Array Box Dashboard</title>
     <style>
         :root {
-            --bg-primary: #1a1b26;
-            --bg-secondary: #24283b;
-            --bg-tertiary: #414868;
+            --bg-primary: #000000;
+            --bg-secondary: #1a1b26;
+            --bg-tertiary: #2a2e3f;
             --text-primary: #c0caf5;
             --text-secondary: #a9b1d6;
             --text-muted: #565f89;
@@ -178,21 +180,40 @@ const dashboardHTML = `<!DOCTYPE html>
             background: var(--bg-primary);
             border-radius: 8px;
             padding: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .language-card .logo {
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
+        }
+        
+        .language-card .logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        
+        .language-card .info {
+            flex: 1;
             text-align: center;
         }
         
         .language-card .name {
             font-weight: bold;
-            margin-bottom: 10px;
+            margin-bottom: 8px;
             font-size: 1.1rem;
         }
         
-        .language-card .name.bqn { color: var(--accent-green); }
-        .language-card .name.apl { color: var(--accent-purple); }
-        .language-card .name.j { color: var(--accent-cyan); }
-        .language-card .name.uiua { color: var(--accent-yellow); }
-        .language-card .name.kap { color: var(--accent-blue); }
-        .language-card .name.tinyapl { color: var(--accent-orange); }
+        .language-card .name.bqn { color: #2b7067; }
+        .language-card .name.apl { color: #3cb371; }
+        .language-card .name.j { color: #2196f3; }
+        .language-card .name.uiua { color: #e54ed0; }
+        .language-card .name.kap { color: #ffffff; }
+        .language-card .name.tinyapl { color: #94e044; }
         
         .language-card .count {
             font-size: 1.5rem;
@@ -227,8 +248,9 @@ const dashboardHTML = `<!DOCTYPE html>
         
         .chart-legend {
             display: flex;
+            flex-wrap: wrap;
             justify-content: center;
-            gap: 30px;
+            gap: 15px 20px;
             margin-top: 15px;
         }
         
@@ -246,8 +268,12 @@ const dashboardHTML = `<!DOCTYPE html>
             border-radius: 3px;
         }
         
-        .chart-legend .visitors .dot { background: var(--accent-blue); }
-        .chart-legend .evaluations .dot { background: var(--accent-green); }
+        .chart-legend .lang-bqn .dot { background: #2b7067; }
+        .chart-legend .lang-apl .dot { background: #3cb371; }
+        .chart-legend .lang-j .dot { background: #2196f3; }
+        .chart-legend .lang-uiua .dot { background: #e54ed0; }
+        .chart-legend .lang-kap .dot { background: #ffffff; }
+        .chart-legend .lang-tinyapl .dot { background: #94e044; }
         
         .charts-row {
             display: grid;
@@ -280,9 +306,9 @@ const dashboardHTML = `<!DOCTYPE html>
         
         .pie-legend {
             display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 10px 20px;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 8px;
             margin-top: 15px;
         }
         
@@ -300,12 +326,12 @@ const dashboardHTML = `<!DOCTYPE html>
             border-radius: 2px;
         }
         
-        .pie-legend .item.bqn .dot { background: #9ece6a; }
-        .pie-legend .item.apl .dot { background: #bb9af7; }
-        .pie-legend .item.j .dot { background: #7dcfff; }
-        .pie-legend .item.uiua .dot { background: #e0af68; }
-        .pie-legend .item.kap .dot { background: #7aa2f7; }
-        .pie-legend .item.tinyapl .dot { background: #ff9e64; }
+        .pie-legend .item.bqn .dot { background: #2b7067; }
+        .pie-legend .item.apl .dot { background: #3cb371; }
+        .pie-legend .item.j .dot { background: #2196f3; }
+        .pie-legend .item.uiua .dot { background: #e54ed0; }
+        .pie-legend .item.kap .dot { background: #ffffff; }
+        .pie-legend .item.tinyapl .dot { background: #94e044; }
         
         .pie-center-text {
             position: absolute;
@@ -456,6 +482,8 @@ const dashboardHTML = `<!DOCTYPE html>
                 <div class="section-header">
                     <h2>📈 Activity</h2>
                     <select id="timeRange" class="time-range-select">
+                        <option value="1h" selected>Last 1 Hour</option>
+                        <option value="12h">Last 12 Hours</option>
                         <option value="24h">Last 24 Hours</option>
                         <option value="1w">Last Week</option>
                         <option value="1m">Last Month</option>
@@ -467,13 +495,29 @@ const dashboardHTML = `<!DOCTYPE html>
                     <canvas id="activityChart"></canvas>
                 </div>
                 <div class="chart-legend">
-                    <div class="item visitors">
+                    <div class="item lang-bqn">
                         <span class="dot"></span>
-                        <span>Visitors</span>
+                        <span>BQN</span>
                     </div>
-                    <div class="item evaluations">
+                    <div class="item lang-apl">
                         <span class="dot"></span>
-                        <span>Evaluations</span>
+                        <span>APL</span>
+                    </div>
+                    <div class="item lang-j">
+                        <span class="dot"></span>
+                        <span>J</span>
+                    </div>
+                    <div class="item lang-uiua">
+                        <span class="dot"></span>
+                        <span>Uiua</span>
+                    </div>
+                    <div class="item lang-kap">
+                        <span class="dot"></span>
+                        <span>Kap</span>
+                    </div>
+                    <div class="item lang-tinyapl">
+                        <span class="dot"></span>
+                        <span>TinyAPL</span>
                     </div>
                 </div>
             </div>
@@ -504,8 +548,8 @@ const dashboardHTML = `<!DOCTYPE html>
         // State
         let currentStats = null;
         let eventSource = null;
-        let chartData = { visitors: [], evaluations: [] };
-        let currentTimeRange = '24h';
+        let chartData = { visitors: [], evaluations: [], evalsByLang: [] };
+        let currentTimeRange = '1h';
         
         // Format numbers with commas
         function formatNumber(n) {
@@ -538,23 +582,36 @@ const dashboardHTML = `<!DOCTYPE html>
             const languagesGrid = document.getElementById('languagesGrid');
             const languages = ['bqn', 'apl', 'j', 'uiua', 'kap', 'tinyapl'];
             const langNames = { bqn: 'BQN', apl: 'APL', j: 'J', uiua: 'Uiua', kap: 'Kap', tinyapl: 'TinyAPL' };
+            const langLogos = { 
+                bqn: '/assets/bqn.svg', 
+                apl: '/assets/apl.png', 
+                j: '/assets/j_logo.png', 
+                uiua: '/assets/uiua.png', 
+                kap: '/assets/kap.png', 
+                tinyapl: '/assets/tinyapl.svg' 
+            };
             
             languagesGrid.innerHTML = languages.map(lang => {
                 const langData = data.languages[lang] || { evaluations: 0, successes: 0, failures: 0 };
                 return \`
                     <div class="language-card">
-                        <div class="name \${lang}">\${langNames[lang]}</div>
-                        <div class="count">\${formatNumber(langData.evaluations)}</div>
-                        <div class="success-rate">
-                            <span class="success">✓ \${formatNumber(langData.successes)}</span>
-                            <span class="failure">✗ \${formatNumber(langData.failures)}</span>
+                        <div class="logo">
+                            <img src="\${langLogos[lang]}" alt="\${langNames[lang]} logo">
+                        </div>
+                        <div class="info">
+                            <div class="name \${lang}">\${langNames[lang]}</div>
+                            <div class="count">\${formatNumber(langData.evaluations)}</div>
+                            <div class="success-rate">
+                                <span class="success">✓ \${formatNumber(langData.successes)}</span>
+                                <span class="failure">✗ \${formatNumber(langData.failures)}</span>
+                            </div>
                         </div>
                     </div>
                 \`;
             }).join('');
             
             // Update chart data from the appropriate time series
-            if (currentTimeRange === '24h' && data.timeSeries?.fiveMin) {
+            if (['1h', '12h', '24h'].includes(currentTimeRange) && data.timeSeries?.fiveMin) {
                 chartData = data.timeSeries.fiveMin;
             }
             // For other ranges, we fetch separately to avoid sending too much data via SSE
@@ -581,14 +638,14 @@ const dashboardHTML = `<!DOCTYPE html>
             const outerRadius = 90;
             const innerRadius = 55; // Donut hole
             
-            // Language colors
+            // Language colors (from logos)
             const colors = {
-                bqn: '#9ece6a',
-                apl: '#bb9af7',
-                j: '#7dcfff',
-                uiua: '#e0af68',
-                kap: '#7aa2f7',
-                tinyapl: '#ff9e64'
+                bqn: '#2b7067',
+                apl: '#3cb371',
+                j: '#2196f3',
+                uiua: '#e54ed0',
+                kap: '#ffffff',
+                tinyapl: '#94e044'
             };
             
             const langNames = { bqn: 'BQN', apl: 'APL', j: 'J', uiua: 'Uiua', kap: 'Kap', tinyapl: 'TinyAPL' };
@@ -616,7 +673,7 @@ const dashboardHTML = `<!DOCTYPE html>
                 ctx.beginPath();
                 ctx.arc(centerX, centerY, outerRadius, 0, Math.PI * 2);
                 ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2, true);
-                ctx.fillStyle = '#414868';
+                ctx.fillStyle = '#2a2e3f';
                 ctx.fill();
                 
                 // Update legend
@@ -643,7 +700,7 @@ const dashboardHTML = `<!DOCTYPE html>
             // Draw inner circle (donut hole)
             ctx.beginPath();
             ctx.arc(centerX, centerY, innerRadius, 0, Math.PI * 2);
-            ctx.fillStyle = '#24283b';
+            ctx.fillStyle = '#1a1b26';
             ctx.fill();
             
             // Update legend
@@ -663,6 +720,10 @@ const dashboardHTML = `<!DOCTYPE html>
         function getTimeRangeConfig(range) {
             const now = Date.now();
             switch (range) {
+                case '1h':
+                    return { start: now - 60 * 60 * 1000, bucketSize: 60 * 1000, format: 'minute' };
+                case '12h':
+                    return { start: now - 12 * 60 * 60 * 1000, bucketSize: 30 * 60 * 1000, format: 'hour' };
                 case '24h':
                     return { start: now - 24 * 60 * 60 * 1000, bucketSize: 60 * 60 * 1000, format: 'hour' };
                 case '1w':
@@ -691,6 +752,8 @@ const dashboardHTML = `<!DOCTYPE html>
         function formatTimeLabel(timestamp, format) {
             const date = new Date(timestamp);
             switch (format) {
+                case 'minute':
+                    return date.getHours().toString().padStart(2, '0') + ':' + date.getMinutes().toString().padStart(2, '0');
                 case 'hour':
                     return date.getHours().toString().padStart(2, '0') + ':00';
                 case 'day':
@@ -703,6 +766,17 @@ const dashboardHTML = `<!DOCTYPE html>
                     return date.toLocaleDateString();
             }
         }
+        
+        // Language colors for chart (from logos)
+        const langColors = {
+            bqn: '#2b7067',
+            apl: '#3cb371',
+            j: '#2196f3',
+            uiua: '#e54ed0',
+            kap: '#ffffff',
+            tinyapl: '#94e044'
+        };
+        const langOrder = ['bqn', 'apl', 'j', 'uiua', 'kap', 'tinyapl'];
         
         // Draw the activity chart
         function drawChart() {
@@ -736,32 +810,36 @@ const dashboardHTML = `<!DOCTYPE html>
             const buckets = {};
             for (let t = start; t <= now; t += bucketSize) {
                 const bucket = Math.floor(t / bucketSize) * bucketSize;
-                buckets[bucket] = { visitors: 0, evaluations: 0 };
+                buckets[bucket] = { 
+                    bqn: 0, apl: 0, j: 0, uiua: 0, kap: 0, tinyapl: 0 
+                };
             }
             
-            // Fill in data
-            for (const point of chartData.visitors || []) {
+            // Fill in per-language evaluation data
+            for (const point of chartData.evalsByLang || []) {
                 const bucket = Math.floor(point.timestamp / bucketSize) * bucketSize;
                 if (buckets[bucket]) {
-                    buckets[bucket].visitors += point.count;
-                }
-            }
-            
-            for (const point of chartData.evaluations || []) {
-                const bucket = Math.floor(point.timestamp / bucketSize) * bucketSize;
-                if (buckets[bucket]) {
-                    buckets[bucket].evaluations += point.count;
+                    for (const lang of langOrder) {
+                        buckets[bucket][lang] += point[lang] || 0;
+                    }
                 }
             }
             
             const times = Object.keys(buckets).map(Number).sort((a, b) => a - b);
-            const visitorValues = times.map(t => buckets[t].visitors);
-            const evalValues = times.map(t => buckets[t].evaluations);
             
-            const maxValue = Math.max(1, ...visitorValues, ...evalValues);
+            // Calculate stacked totals for max value
+            const stackedTotals = times.map(t => {
+                let total = 0;
+                for (const lang of langOrder) {
+                    total += buckets[t][lang];
+                }
+                return total;
+            });
+            
+            const maxValue = Math.max(1, ...stackedTotals);
             
             // Draw grid
-            ctx.strokeStyle = '#414868';
+            ctx.strokeStyle = '#2a2e3f';
             ctx.lineWidth = 1;
             
             // Horizontal grid lines
@@ -789,39 +867,47 @@ const dashboardHTML = `<!DOCTYPE html>
                 ctx.fillText(label, x, height - 8);
             }
             
-            // Draw lines
-            function drawLine(values, color) {
-                if (values.length < 2) return;
+            // Draw stacked area chart for evaluations (bottom to top)
+            function drawStackedArea() {
+                if (times.length < 2) return;
                 
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
+                // Calculate cumulative values for stacking
+                const cumulative = times.map(() => 0);
                 
-                for (let i = 0; i < values.length; i++) {
-                    const x = padding.left + (i / (values.length - 1)) * chartWidth;
-                    const y = padding.top + chartHeight - (values[i] / maxValue) * chartHeight;
+                for (const lang of langOrder) {
+                    const values = times.map((t, i) => {
+                        const prev = cumulative[i];
+                        cumulative[i] += buckets[t][lang];
+                        return { bottom: prev, top: cumulative[i] };
+                    });
                     
-                    if (i === 0) {
-                        ctx.moveTo(x, y);
-                    } else {
+                    // Draw area for this language
+                    ctx.beginPath();
+                    
+                    // Top edge (left to right)
+                    for (let i = 0; i < values.length; i++) {
+                        const x = padding.left + (i / (values.length - 1)) * chartWidth;
+                        const y = padding.top + chartHeight - (values[i].top / maxValue) * chartHeight;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    
+                    // Bottom edge (right to left)
+                    for (let i = values.length - 1; i >= 0; i--) {
+                        const x = padding.left + (i / (values.length - 1)) * chartWidth;
+                        const y = padding.top + chartHeight - (values[i].bottom / maxValue) * chartHeight;
                         ctx.lineTo(x, y);
                     }
+                    
+                    ctx.closePath();
+                    ctx.fillStyle = langColors[lang];
+                    ctx.globalAlpha = 0.7;
+                    ctx.fill();
+                    ctx.globalAlpha = 1;
                 }
-                
-                ctx.stroke();
-                
-                // Draw area fill
-                ctx.globalAlpha = 0.1;
-                ctx.fillStyle = color;
-                ctx.lineTo(padding.left + chartWidth, padding.top + chartHeight);
-                ctx.lineTo(padding.left, padding.top + chartHeight);
-                ctx.closePath();
-                ctx.fill();
-                ctx.globalAlpha = 1;
             }
             
-            drawLine(visitorValues, '#7aa2f7');
-            drawLine(evalValues, '#9ece6a');
+            drawStackedArea();
         }
         
         // Connect to SSE stream
@@ -868,8 +954,8 @@ const dashboardHTML = `<!DOCTYPE html>
         // Handle time range selection
         document.getElementById('timeRange').addEventListener('change', (e) => {
             currentTimeRange = e.target.value;
-            if (currentTimeRange === '24h' && currentStats?.timeSeries?.fiveMin) {
-                // Use data already in memory for 24h
+            if (['1h', '12h', '24h'].includes(currentTimeRange) && currentStats?.timeSeries?.fiveMin) {
+                // Use data already in memory for short ranges
                 chartData = currentStats.timeSeries.fiveMin;
                 drawChart();
             } else {
@@ -886,6 +972,14 @@ const dashboardHTML = `<!DOCTYPE html>
             .then(res => res.json())
             .then(updateDashboard)
             .catch(console.error);
+        
+        // Poll every 10 seconds for more responsive updates
+        setInterval(() => {
+            fetch('/stats')
+                .then(res => res.json())
+                .then(updateDashboard)
+                .catch(console.error);
+        }, 10000);
     </script>
 </body>
 </html>`;
@@ -907,6 +1001,41 @@ const server = http.createServer((req, res) => {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/dashboard')) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(dashboardHTML);
+        return;
+    }
+    
+    // Serve assets (logos)
+    if (req.method === 'GET' && req.url.startsWith('/assets/')) {
+        const filename = req.url.slice('/assets/'.length);
+        // Prevent path traversal
+        if (filename.includes('..') || filename.includes('/')) {
+            res.writeHead(403);
+            res.end('Forbidden');
+            return;
+        }
+        const assetsDir = path.join(__dirname, '..', 'assets');
+        const filePath = path.join(assetsDir, filename);
+        
+        // Check if file exists
+        if (!fs.existsSync(filePath)) {
+            res.writeHead(404);
+            res.end('Not found');
+            return;
+        }
+        
+        // Determine content type
+        const ext = path.extname(filename).toLowerCase();
+        const contentTypes = {
+            '.svg': 'image/svg+xml',
+            '.png': 'image/png',
+            '.jpg': 'image/jpeg',
+            '.jpeg': 'image/jpeg',
+            '.gif': 'image/gif'
+        };
+        const contentType = contentTypes[ext] || 'application/octet-stream';
+        
+        res.writeHead(200, { 'Content-Type': contentType });
+        fs.createReadStream(filePath).pipe(res);
         return;
     }
 

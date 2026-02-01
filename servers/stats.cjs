@@ -31,17 +31,20 @@ const defaultStats = {
         // 5-minute buckets for last 24 hours
         fiveMin: {
             visitors: [],      // [{timestamp, count}]
-            evaluations: []    // [{timestamp, count}]
+            evaluations: [],   // [{timestamp, count}] - total
+            evalsByLang: []    // [{timestamp, bqn, apl, j, uiua, kap, tinyapl}]
         },
         // Hourly buckets for last week
         hourly: {
             visitors: [],
-            evaluations: []
+            evaluations: [],
+            evalsByLang: []
         },
         // Daily buckets for all time
         daily: {
             visitors: [],
-            evaluations: []
+            evaluations: [],
+            evalsByLang: []
         }
     },
     
@@ -78,10 +81,17 @@ function loadStats() {
                 const oldVisitors = stats.timeSeries?.visitors || [];
                 const oldEvals = stats.timeSeries?.evaluations || [];
                 stats.timeSeries = {
-                    fiveMin: { visitors: oldVisitors, evaluations: oldEvals },
-                    hourly: { visitors: [], evaluations: [] },
-                    daily: { visitors: [], evaluations: [] }
+                    fiveMin: { visitors: oldVisitors, evaluations: oldEvals, evalsByLang: [] },
+                    hourly: { visitors: [], evaluations: [], evalsByLang: [] },
+                    daily: { visitors: [], evaluations: [], evalsByLang: [] }
                 };
+            }
+            
+            // Ensure evalsByLang exists in all granularities
+            for (const granularity of ['fiveMin', 'hourly', 'daily']) {
+                if (!stats.timeSeries[granularity].evalsByLang) {
+                    stats.timeSeries[granularity].evalsByLang = [];
+                }
             }
             
             // Ensure sessions exists
@@ -131,6 +141,11 @@ function cleanTimeSeries() {
     stats.timeSeries.fiveMin.evaluations = stats.timeSeries.fiveMin.evaluations.filter(
         point => point.timestamp > fiveMinCutoff
     );
+    if (stats.timeSeries.fiveMin.evalsByLang) {
+        stats.timeSeries.fiveMin.evalsByLang = stats.timeSeries.fiveMin.evalsByLang.filter(
+            point => point.timestamp > fiveMinCutoff
+        );
+    }
     
     // Hourly data: keep last 7 days
     const hourlyCutoff = now - 7 * 24 * 60 * 60 * 1000;
@@ -140,6 +155,11 @@ function cleanTimeSeries() {
     stats.timeSeries.hourly.evaluations = stats.timeSeries.hourly.evaluations.filter(
         point => point.timestamp > hourlyCutoff
     );
+    if (stats.timeSeries.hourly.evalsByLang) {
+        stats.timeSeries.hourly.evalsByLang = stats.timeSeries.hourly.evalsByLang.filter(
+            point => point.timestamp > hourlyCutoff
+        );
+    }
     
     // Daily data: keep forever (all time)
 }
@@ -179,6 +199,30 @@ function addToTimeSeries(series, count = 1) {
     addToBucket('daily', series, count);
     
     cleanTimeSeries();
+}
+
+// Add to per-language evaluation bucket
+function addToLangBucket(granularity, lang, count = 1) {
+    const bucket = getBucketTimestamp(granularity);
+    const data = stats.timeSeries[granularity].evalsByLang;
+    if (!data) return;
+    
+    const lastPoint = data.slice(-1)[0];
+    
+    if (lastPoint && lastPoint.timestamp === bucket) {
+        lastPoint[lang] = (lastPoint[lang] || 0) + count;
+    } else {
+        const newPoint = { timestamp: bucket, bqn: 0, apl: 0, j: 0, uiua: 0, kap: 0, tinyapl: 0 };
+        newPoint[lang] = count;
+        data.push(newPoint);
+    }
+}
+
+// Add to all per-language time series granularities
+function addToLangTimeSeries(lang, count = 1) {
+    addToLangBucket('fiveMin', lang, count);
+    addToLangBucket('hourly', lang, count);
+    addToLangBucket('daily', lang, count);
 }
 
 // Notify all listeners of stats update
@@ -230,6 +274,8 @@ function recordEvaluation(language, success) {
     }
     
     addToTimeSeries('evaluations');
+    addToLangTimeSeries(lang);
+    hasUnsavedChanges = true;
     saveStats();
     notifyListeners();
 }
@@ -243,9 +289,9 @@ function recordPermalink() {
     notifyListeners();
 }
 
-// Get current stats (for dashboard)
+// Get current stats (for dashboard) - always reload from file to get fresh data
 function getStats() {
-    if (!stats) loadStats();
+    loadStats();  // Always reload to get latest data from other processes
     
     return {
         totalVisitors: stats.totalVisitors,
@@ -258,14 +304,22 @@ function getStats() {
     };
 }
 
-// Get time series for a specific range
+// Get time series for a specific range - always reload from file to get fresh data
 function getTimeSeriesForRange(range) {
-    if (!stats) loadStats();
+    loadStats();  // Always reload to get latest data from other processes
     
     const now = Date.now();
     let granularity, cutoff;
     
     switch (range) {
+        case '1h':
+            granularity = 'fiveMin';
+            cutoff = now - 60 * 60 * 1000;
+            break;
+        case '12h':
+            granularity = 'fiveMin';
+            cutoff = now - 12 * 60 * 60 * 1000;
+            break;
         case '24h':
             granularity = 'fiveMin';
             cutoff = now - 24 * 60 * 60 * 1000;
@@ -292,7 +346,8 @@ function getTimeSeriesForRange(range) {
     const data = stats.timeSeries[granularity];
     return {
         visitors: data.visitors.filter(p => p.timestamp > cutoff),
-        evaluations: data.evaluations.filter(p => p.timestamp > cutoff)
+        evaluations: data.evaluations.filter(p => p.timestamp > cutoff),
+        evalsByLang: (data.evalsByLang || []).filter(p => p.timestamp > cutoff)
     };
 }
 
@@ -305,8 +360,16 @@ function subscribe(callback) {
 // Initialize
 loadStats();
 
-// Auto-save every minute
-setInterval(saveStats, 60 * 1000);
+// Track if this instance has made changes (to avoid overwriting data from other processes)
+let hasUnsavedChanges = false;
+
+// Auto-save every 10 seconds, but only if this instance made changes
+setInterval(() => {
+    if (hasUnsavedChanges) {
+        saveStats();
+        hasUnsavedChanges = false;
+    }
+}, 10 * 1000);
 
 module.exports = {
     recordVisitor,
