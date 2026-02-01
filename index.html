@@ -853,6 +853,14 @@
                     <span class="help-key">f1</span>
                     <span class="help-desc">show documentation for glyph at cursor</span>
                 </div>
+                <div class="help-row">
+                    <span class="help-key">ctrl + l</span>
+                    <span class="help-desc">create permalink (copy URL)</span>
+                </div>
+                <div class="help-row">
+                    <span class="help-key">ctrl + i</span>
+                    <span class="help-desc">copy image to clipboard</span>
+                </div>
             </div>
 
             <div class="help-section">
@@ -1259,8 +1267,19 @@
                     }
                     
                     // Prepend any stdout output (from ⎕← in user code)
-                    let output = formatted.content || '';
                     let outputHtml = formatted.isHtml ? formatted.content : null;
+                    // For plain text output, use tinyaplModule.show() if we got HTML
+                    let output;
+                    if (formatted.isHtml) {
+                        try {
+                            output = await tinyaplModule.show(value);
+                        } catch (e) {
+                            output = formatted.content; // fallback to HTML if show fails
+                        }
+                    } else {
+                        output = formatted.content || '';
+                    }
+                    
                     if (outputBuffer) {
                         const prefix = outputBuffer.replace(/\n$/, '');
                         if (outputHtml) {
@@ -1899,6 +1918,8 @@
         const languageOrder = ['apl', 'bqn', 'uiua', 'j', 'kap', 'tinyapl'];
         let currentLanguage = 'apl';
         let currentKeyboardCleanup = null;
+        let lastResult = null; // Store last evaluation result for permalinks
+        let lastEvaluatedCode = null; // Track what code was evaluated to detect changes
 
         // DOM elements
         const languageButton = document.getElementById('languageButton');
@@ -1932,6 +1953,13 @@
             if (e.ctrlKey && e.key === 'l') {
                 e.preventDefault();
                 handleCreatePermalink();
+                return;
+            }
+            
+            // Ctrl+I to copy image to clipboard
+            if (e.ctrlKey && e.key === 'i') {
+                e.preventDefault();
+                handleCopyImageToClipboard();
                 return;
             }
             
@@ -2086,18 +2114,34 @@
         // Permalink functionality (server-backed short codes)
         // ========================================
         
-        const PERMALINK_SERVER = 'http://localhost:8084';
+        // Use localhost:8084 for local dev (any local address), or same origin for production
+        const isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
+        const PERMALINK_SERVER = isLocalDev ? 'http://localhost:8084' : window.location.origin;
         
         // Create a permalink via server API
         async function createPermalink() {
             const code = getInputText();
             if (!code.trim()) return null;
             
+            // Only include result if the code hasn't changed since evaluation
+            // This ensures the preview shows current code, with result only if it matches
+            let result = null;
+            let resultHtml = null;
+            const codeMatchesLastEval = lastEvaluatedCode && lastEvaluatedCode === code.trim();
+            if (codeMatchesLastEval && lastResult && lastResult.success) {
+                if (lastResult.output) result = lastResult.output;
+                if (lastResult.outputHtml) resultHtml = lastResult.outputHtml;
+            }
+            
             try {
+                const body = { lang: currentLanguage, code: code };
+                if (result) body.result = result;
+                if (resultHtml) body.resultHtml = resultHtml;
+                
                 const response = await fetch(`${PERMALINK_SERVER}/p`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ lang: currentLanguage, code: code })
+                    body: JSON.stringify(body)
                 });
                 
                 const data = await response.json();
@@ -2137,12 +2181,13 @@
             
             const shortCode = await createPermalink();
             if (shortCode) {
-                // Update URL
+                // Update URL with hash (for local navigation)
                 history.replaceState(null, '', '#' + shortCode);
                 
-                // Copy full URL to clipboard
-                const fullUrl = window.location.href;
-                navigator.clipboard.writeText(fullUrl).then(() => {
+                // Copy shareable URL with /p/ path (works with social media previews)
+                const baseUrl = window.location.origin;
+                const shareUrl = `${baseUrl}/p/${shortCode}`;
+                navigator.clipboard.writeText(shareUrl).then(() => {
                     // Show brief feedback
                     showPermalinkFeedback(shortCode);
                 }).catch(() => {
@@ -2152,6 +2197,114 @@
             } else {
                 showPermalinkError();
             }
+        }
+        
+        // Handle Ctrl+I to generate and copy vertical image to clipboard
+        async function handleCopyImageToClipboard() {
+            const code = getInputText();
+            if (!code.trim()) return;
+            
+            // Get current result if available
+            let result = null;
+            let resultHtml = null;
+            const codeMatchesLastEval = lastEvaluatedCode && lastEvaluatedCode === code.trim();
+            if (codeMatchesLastEval && lastResult && lastResult.success) {
+                if (lastResult.output) result = lastResult.output;
+                if (lastResult.outputHtml) resultHtml = lastResult.outputHtml;
+            }
+            
+            try {
+                console.log('Fetching image from:', `${PERMALINK_SERVER}/image/vertical`);
+                const response = await fetch(`${PERMALINK_SERVER}/image/vertical`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lang: currentLanguage,
+                        code: code,
+                        result: result,
+                        resultHtml: resultHtml
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errText = await response.text();
+                    console.error('Server error:', response.status, errText);
+                    throw new Error('Server error: ' + response.status);
+                }
+                
+                const blob = await response.blob();
+                console.log('Got blob:', blob.type, blob.size);
+                
+                // Ensure blob is PNG type (some browsers are picky)
+                const pngBlob = new Blob([blob], { type: 'image/png' });
+                
+                // Copy to clipboard using ClipboardItem
+                try {
+                    if (!navigator.clipboard || !navigator.clipboard.write) {
+                        throw new Error('Clipboard API not available');
+                    }
+                    await navigator.clipboard.write([
+                        new ClipboardItem({ 'image/png': pngBlob })
+                    ]);
+                    showImageCopiedFeedback();
+                } catch (clipErr) {
+                    console.error('Clipboard write failed:', clipErr.name, clipErr.message);
+                    // Fallback: download the image
+                    const url = URL.createObjectURL(pngBlob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'arraybox-code.png';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    showFeedbackMessage('Image downloaded', '#1e40af', '#dbeafe');
+                }
+            } catch (e) {
+                console.error('Error generating image:', e);
+                showImageError();
+            }
+        }
+        
+        // Show feedback when image is copied
+        function showImageCopiedFeedback() {
+            showFeedbackMessage('Image copied to clipboard', '#065f46', '#d1fae5');
+        }
+        
+        // Show error when image generation fails
+        function showImageError() {
+            showFeedbackMessage('Failed to generate image', '#991b1b', '#fecaca');
+        }
+        
+        // Show error when clipboard write fails
+        function showClipboardError() {
+            showFeedbackMessage('Clipboard not supported (try HTTPS)', '#991b1b', '#fecaca');
+        }
+        
+        // Generic feedback message helper
+        function showFeedbackMessage(message, bgColor, textColor) {
+            let feedback = document.getElementById('imageFeedback');
+            if (!feedback) {
+                feedback = document.createElement('div');
+                feedback.id = 'imageFeedback';
+                feedback.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-family: 'JetBrains Mono', monospace;
+                    font-size: 14px;
+                    z-index: 10000;
+                    opacity: 0;
+                    transition: opacity 0.3s ease;
+                `;
+                document.body.appendChild(feedback);
+            }
+            feedback.style.background = bgColor;
+            feedback.style.color = textColor;
+            feedback.textContent = message;
+            feedback.style.opacity = '1';
+            setTimeout(() => { feedback.style.opacity = '0'; }, 2000);
         }
         
         // Show error when permalink server is unavailable
@@ -2220,18 +2373,26 @@
             }, 2000);
         }
         
-        // Load state from URL hash on page load
+        // Load state from URL hash or PERMALINK_CODE on page load
         async function loadFromPermalink() {
-            const hash = window.location.hash.slice(1); // Remove leading #
-            if (!hash) return false;
+            // Check for PERMALINK_CODE (set when served from /p/:code for social media)
+            // or fall back to URL hash
+            const code = window.PERMALINK_CODE || window.location.hash.slice(1);
+            if (!code) return false;
             
-            const state = await lookupPermalink(hash);
+            const state = await lookupPermalink(code);
             if (!state) return false;
             
             // Switch language and set code
             switchLanguage(state.lang);
             setInputText(state.code);
             applySyntaxHighlighting();
+            
+            // Update URL to hash format for consistency (if we came from /p/:code)
+            if (window.PERMALINK_CODE && window.location.pathname.startsWith('/p/')) {
+                window.history.replaceState(null, '', `/#${code}`);
+            }
+            
             return true;
         }
 
@@ -2332,11 +2493,16 @@
             const code = getInputText().trim();
             if (!code) {
                 hideOutput();
+                lastResult = null;
                 return;
             }
 
             const langConfig = languages[currentLanguage];
             const result = await langConfig.evaluate(code);
+            
+            // Store result for permalinks (use plain text output)
+            lastResult = result;
+            lastEvaluatedCode = code; // Track what code produced this result
             
             // If formatted code is returned (Uiua), replace input with it
             if (result.formatted && result.formatted.trim() !== code) {
@@ -2428,6 +2594,8 @@
         function hideOutput() {
             output.classList.remove('show');
             container.style.transform = '';
+            lastResult = null;
+            lastEvaluatedCode = null;
         }
 
         // Initialize editor features (alignment, auto-expand)

@@ -1,5 +1,8 @@
 .cursor/
 
+# Node modules
+node_modules/
+
 # Rust build artifacts
 uiua-wasm/target/
 uiua-wasm/Cargo.lock
@@ -13,3 +16,6 @@ aplcore
 
 # Permalink storage (user data)
 storage/*.json
+
+# Generated OG images
+storage/og/*.png

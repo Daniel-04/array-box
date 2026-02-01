@@ -88,5 +88,9 @@
     "type": "git",
     "url": "https://github.com/codereport/array-box"
   },
-  "homepage": "https://github.com/codereport/array-box#readme"
+  "homepage": "https://github.com/codereport/array-box#readme",
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "satori": "^0.19.1"
+  }
 }
