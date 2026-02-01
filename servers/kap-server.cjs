@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
- * Local Kap Server - Executes Kap code via local Kap installation
+ * Local Kap Server - Executes Kap code via local Kap installation or Docker sandbox
  * Requires Kap JVM to be installed
  * 
- * Usage: node kap-server.cjs [port]
+ * Usage: node kap-server.cjs [port] [--sandbox|--no-sandbox]
  * Default port: 8083
+ * 
+ * With --sandbox: Uses Docker container for isolated execution (recommended for shared use)
+ * With --no-sandbox: Uses local Kap installation directly (default for local dev)
  */
 
 const http = require('http');
@@ -12,8 +15,14 @@ const { spawn } = require('child_process');
 const { execSync } = require('child_process');
 const path = require('path');
 const { homedir } = require('os');
+const sandbox = require('./sandbox.cjs');
 
 const PORT = process.argv[2] ? parseInt(process.argv[2]) : 8083;
+const USE_SANDBOX = process.argv.includes('--sandbox');
+const NO_SANDBOX = process.argv.includes('--no-sandbox');
+
+// Determine sandbox mode
+let sandboxMode = USE_SANDBOX && !NO_SANDBOX;
 
 // Find Kap executable
 function findKapExecutable() {
@@ -51,7 +60,38 @@ if (!kapExecutable) {
 
 console.log(`Using Kap executable: ${kapExecutable}`);
 
-function executeKapCode(code) {
+// Check sandbox availability on startup
+(async () => {
+    if (sandboxMode) {
+        const available = await sandbox.isSandboxAvailable('kap');
+        if (available) {
+            console.log('[Kap Server] Sandbox mode ENABLED - code runs in isolated Docker container');
+        } else {
+            console.log('[Kap Server] Sandbox requested but unavailable - falling back to direct execution');
+            sandboxMode = false;
+        }
+    } else {
+        console.log('[Kap Server] Running in direct execution mode (use --sandbox for isolation)');
+    }
+})();
+
+// Execute code in sandbox
+async function executeKapCodeSandbox(code) {
+    try {
+        const result = await sandbox.executeInSandbox('kap', code);
+        return { success: result.success, output: result.output };
+    } catch (e) {
+        if (e.message === 'SANDBOX_UNAVAILABLE') {
+            // Fall back to direct execution
+            sandboxMode = false;
+            return executeKapCodeDirect(code);
+        }
+        throw e;
+    }
+}
+
+// Execute code directly (original implementation)
+function executeKapCodeDirect(code) {
     return new Promise((resolve, reject) => {
         // Use TTY mode with no line editor for clean stdin/stdout
         const kapProcess = spawn(kapExecutable, ['--tty', '--no-lineeditor'], {
@@ -136,6 +176,14 @@ function executeKapCode(code) {
         kapProcess.stdin.write(code + '\n');
         kapProcess.stdin.end();
     });
+}
+
+// Main execution function - routes to sandbox or direct based on mode
+async function executeKapCode(code) {
+    if (sandboxMode) {
+        return executeKapCodeSandbox(code);
+    }
+    return executeKapCodeDirect(code);
 }
 
 const server = http.createServer((req, res) => {

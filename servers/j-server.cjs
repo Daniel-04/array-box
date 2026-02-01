@@ -1,17 +1,26 @@
 #!/usr/bin/env node
 /**
- * Local J Server - Executes J code via local J installation
+ * Local J Server - Executes J code via local J installation or Docker sandbox
  * Requires J to be installed and available in PATH as 'jconsole' or 'ijconsole'
  * 
- * Usage: node j-server.js [port]
+ * Usage: node j-server.js [port] [--sandbox|--no-sandbox]
  * Default port: 8080
+ * 
+ * With --sandbox: Uses Docker container for isolated execution (recommended for shared use)
+ * With --no-sandbox: Uses local J installation directly (default for local dev)
  */
 
 const http = require('http');
 const { spawn } = require('child_process');
 const { execSync } = require('child_process');
+const sandbox = require('./sandbox.cjs');
 
 const PORT = process.argv[2] ? parseInt(process.argv[2]) : 8080;
+const USE_SANDBOX = process.argv.includes('--sandbox');
+const NO_SANDBOX = process.argv.includes('--no-sandbox');
+
+// Determine sandbox mode
+let sandboxMode = USE_SANDBOX && !NO_SANDBOX;
 
 // Find J executable
 function findJExecutable() {
@@ -56,7 +65,38 @@ if (!jExecutable) {
 
 console.log(`Using J executable: ${jExecutable}`);
 
-function executeJCode(code) {
+// Check sandbox availability on startup
+(async () => {
+    if (sandboxMode) {
+        const available = await sandbox.isSandboxAvailable('j');
+        if (available) {
+            console.log('[J Server] Sandbox mode ENABLED - code runs in isolated Docker container');
+        } else {
+            console.log('[J Server] Sandbox requested but unavailable - falling back to direct execution');
+            sandboxMode = false;
+        }
+    } else {
+        console.log('[J Server] Running in direct execution mode (use --sandbox for isolation)');
+    }
+})();
+
+// Execute code in sandbox
+async function executeJCodeSandbox(code) {
+    try {
+        const result = await sandbox.executeInSandbox('j', code);
+        return result;  // Return full result with success flag
+    } catch (e) {
+        if (e.message === 'SANDBOX_UNAVAILABLE') {
+            // Fall back to direct execution
+            sandboxMode = false;
+            return { success: true, output: await executeJCodeDirect(code) };
+        }
+        throw e;
+    }
+}
+
+// Execute code directly (original implementation)
+function executeJCodeDirect(code) {
     return new Promise((resolve, reject) => {
         // J script that evaluates the code and prints the result
         const jScript = `${code}\nexit 0\n`;
@@ -124,6 +164,14 @@ function executeJCode(code) {
     });
 }
 
+// Main execution function - routes to sandbox or direct based on mode
+async function executeJCode(code) {
+    if (sandboxMode) {
+        return executeJCodeSandbox(code);
+    }
+    return executeJCodeDirect(code);
+}
+
 const server = http.createServer((req, res) => {
     // Handle CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -157,7 +205,12 @@ const server = http.createServer((req, res) => {
                 const result = await executeJCode(code);
                 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, output: result }));
+                // Result is either {success, output} object from sandbox or string from direct
+                if (typeof result === 'object' && result !== null) {
+                    res.end(JSON.stringify({ success: result.success, output: result.output }));
+                } else {
+                    res.end(JSON.stringify({ success: true, output: result }));
+                }
             } catch (error) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ 

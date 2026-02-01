@@ -32,13 +32,43 @@ node servers/server-manager.cjs
 The server manager includes a web-based dashboard that shows usage statistics in real-time:
 - Total visitors, code evaluations, and shareable links
 - Requests by language with success/failure breakdown
-- Activity graph (last 24 hours)
+- Activity graph (configurable: 24h, 1 week, 1 month, 1 year, all time)
+- Language breakdown pie chart
 
 **Access the dashboard:**
 - From your local machine: `http://localhost:8085`
 - From another device on your network: `http://<your-ip>:8085`
 
 The dashboard automatically updates as users interact with Array Box.
+
+## Docker Sandbox Mode (Recommended for Shared Use)
+
+For secure code execution, you can run the backend servers in Docker containers with strict isolation:
+
+```bash
+# Build the sandbox images (one-time setup)
+cd docker && ./build.sh
+
+# Run with sandbox mode enabled
+node servers/server-manager.cjs --sandbox
+```
+
+**Sandbox security features:**
+- Read-only filesystem
+- No network access
+- CPU and memory limits
+- Unprivileged user
+- 10-second execution timeout
+- Process limits
+
+**Performance note:** Sandbox mode has ~1-3 second overhead per request due to container startup. This is especially noticeable for Kap (JVM cold start). For faster local development, run without `--sandbox`:
+
+```bash
+# Fast mode (no sandboxing) - for personal/local use only
+node servers/server-manager.cjs
+```
+
+**Note:** Without `--sandbox`, code runs directly on your system. This is fine for personal use but not recommended if exposing the service to others.
 
 ## Using as a Library
 

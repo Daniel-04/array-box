@@ -1,10 +1,13 @@
 #!/usr/bin/env node
 /**
- * Local APL Server - Executes Dyalog APL code via local installation
+ * Local APL Server - Executes Dyalog APL code via local installation or Docker sandbox
  * Requires Dyalog APL to be installed and available as 'dyalog'
  * 
- * Usage: node apl-server.js [port]
+ * Usage: node apl-server.js [port] [--sandbox|--no-sandbox]
  * Default port: 8081
+ * 
+ * With --sandbox: Uses Docker container for isolated execution (recommended for shared use)
+ * With --no-sandbox: Uses local APL installation directly (default for local dev)
  */
 
 const http = require('http');
@@ -13,8 +16,14 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const sandbox = require('./sandbox.cjs');
 
 const PORT = process.argv[2] ? parseInt(process.argv[2]) : 8081;
+const USE_SANDBOX = process.argv.includes('--sandbox');
+const NO_SANDBOX = process.argv.includes('--no-sandbox');
+
+// Determine sandbox mode
+let sandboxMode = USE_SANDBOX && !NO_SANDBOX;
 
 // Find Dyalog executable
 function findAPLExecutable() {
@@ -48,7 +57,39 @@ if (!aplExecutable) {
 
 console.log(`Using APL executable: ${aplExecutable}`);
 
-function executeAPLCode(code) {
+// Check sandbox availability on startup
+(async () => {
+    if (sandboxMode) {
+        const available = await sandbox.isSandboxAvailable('apl');
+        if (available) {
+            console.log('[APL Server] Sandbox mode ENABLED - code runs in isolated Docker container');
+        } else {
+            console.log('[APL Server] Sandbox requested but unavailable - falling back to direct execution');
+            sandboxMode = false;
+        }
+    } else {
+        console.log('[APL Server] Running in direct execution mode (use --sandbox for isolation)');
+    }
+})();
+
+// Execute code in sandbox
+async function executeAPLCodeSandbox(code) {
+    try {
+        // Let the sandbox find the Dyalog path itself (handles symlinks properly)
+        const result = await sandbox.executeInSandbox('apl', code);
+        return result;  // Return full result with success flag
+    } catch (e) {
+        if (e.message === 'SANDBOX_UNAVAILABLE' || e.message === 'DYALOG_NOT_FOUND') {
+            // Fall back to direct execution
+            sandboxMode = false;
+            return { success: true, output: await executeAPLCodeDirect(code) };
+        }
+        throw e;
+    }
+}
+
+// Execute code directly (original implementation)
+function executeAPLCodeDirect(code) {
     return new Promise((resolve, reject) => {
         // For multiline code, we need to handle it specially in Dyalog APL
         // Enable boxing with min style (only boxes nested/enclosed arrays, not simple arrays)
@@ -176,6 +217,14 @@ function executeAPLCode(code) {
     });
 }
 
+// Main execution function - routes to sandbox or direct based on mode
+async function executeAPLCode(code) {
+    if (sandboxMode) {
+        return executeAPLCodeSandbox(code);
+    }
+    return executeAPLCodeDirect(code);
+}
+
 const server = http.createServer((req, res) => {
     // Handle CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -209,7 +258,12 @@ const server = http.createServer((req, res) => {
                 const result = await executeAPLCode(code);
                 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ success: true, output: result }));
+                // Result is either {success, output} object from sandbox or string from direct
+                if (typeof result === 'object' && result !== null) {
+                    res.end(JSON.stringify({ success: result.success, output: result.output }));
+                } else {
+                    res.end(JSON.stringify({ success: true, output: result }));
+                }
             } catch (error) {
                 res.writeHead(500, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ 

@@ -1,0 +1,31 @@
+# Kap Language Sandbox Container
+# Secure, isolated environment for executing Kap code
+
+FROM eclipse-temurin:25-jre-noble
+
+# Create non-root user for running code
+RUN useradd -m -s /bin/bash sandbox && \
+    chown -R sandbox:sandbox /home/sandbox
+
+# Download Kap (text-only client for server use) to /opt
+WORKDIR /opt
+RUN apt-get update && apt-get install -y --no-install-recommends curl unzip && \
+    curl -L -o kap.zip "https://kapdemo.dhsdevelopments.com/files/kap-jvm-text-20260128-1.zip" && \
+    unzip kap.zip && \
+    rm kap.zip && \
+    mv kap-jvm-text kap && \
+    chmod +x kap/bin/kap-jvm-text && \
+    apt-get remove -y curl unzip && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Set up environment
+ENV PATH="/opt/kap/bin:${PATH}"
+ENV HOME="/home/sandbox"
+
+# Switch to sandbox user
+USER sandbox
+WORKDIR /home/sandbox
+
+# Entry point
+ENTRYPOINT ["/opt/kap/bin/kap-jvm-text", "--tty", "--no-lineeditor"]

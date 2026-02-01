@@ -11,6 +11,12 @@ const path = require('path');
 const readline = require('readline');
 const stats = require('./stats.cjs');
 
+// Check for sandbox mode
+const SANDBOX_MODE = process.argv.includes('--sandbox');
+if (SANDBOX_MODE) {
+    console.log('[Server Manager] Sandbox mode enabled - servers will run code in Docker containers');
+}
+
 // ANSI escape codes for styling
 const ansi = {
     clear: '\x1b[2J\x1b[H',
@@ -617,7 +623,9 @@ async function main() {
     // Start J server
     servers.j.port = jExternalPort;
     const jScriptPath = path.join(__dirname, 'j-server.cjs');
-    const jProc = spawn('node', [jScriptPath, String(jInternalPort)], {
+    const jArgs = [jScriptPath, String(jInternalPort)];
+    if (SANDBOX_MODE) jArgs.push('--sandbox');
+    const jProc = spawn('node', jArgs, {
         stdio: ['ignore', 'pipe', 'pipe'],
         cwd: __dirname
     });
@@ -648,7 +656,9 @@ async function main() {
     // Start APL server
     servers.apl.port = aplExternalPort;
     const aplScriptPath = path.join(__dirname, 'apl-server.cjs');
-    const aplProc = spawn('node', [aplScriptPath, String(aplInternalPort)], {
+    const aplArgs = [aplScriptPath, String(aplInternalPort)];
+    if (SANDBOX_MODE) aplArgs.push('--sandbox');
+    const aplProc = spawn('node', aplArgs, {
         stdio: ['ignore', 'pipe', 'pipe'],
         cwd: __dirname
     });
@@ -681,7 +691,9 @@ async function main() {
     const kapExternalPort = 8083;
     servers.kap.port = kapExternalPort;
     const kapScriptPath = path.join(__dirname, 'kap-server.cjs');
-    const kapProc = spawn('node', [kapScriptPath, String(kapInternalPort)], {
+    const kapArgs = [kapScriptPath, String(kapInternalPort)];
+    if (SANDBOX_MODE) kapArgs.push('--sandbox');
+    const kapProc = spawn('node', kapArgs, {
         stdio: ['ignore', 'pipe', 'pipe'],
         cwd: __dirname
     });
