@@ -231,6 +231,18 @@ export const primitiveGroups = {
         tinyapl: '∊'
     },
     
+    // ========== ARITHMETIC ==========
+    
+    // Multiply / Times
+    multiply: {
+        apl: '×',
+        bqn: '×',
+        uiua: '×',
+        j: '*',
+        kap: '×',
+        tinyapl: '×'
+    },
+    
     // ========== MODIFIERS ==========
     
     // Reduce / Fold (modifier: insert function between elements)
