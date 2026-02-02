@@ -387,6 +387,7 @@ async function executeWithWarmContainer(language, code, options = {}) {
         
         let resolved = false;
         let aplMarkers = null;
+        let aplCodeLines = null;  // Lines to filter as echoed input (the wrapped code, not original)
         let aplSawStart = false;
         let resetDone = false;
         let errorCheckTimeout = null;
@@ -572,8 +573,8 @@ async function executeWithWarmContainer(language, code, options = {}) {
                 } else if (language === 'apl') {
                     // Filter echoed input from the END (preserves result if it matches input)
                     let lines = result.split('\n');
-                    // Get user code lines to filter echoed input
-                    const codeLines = new Set(code.split('\n').map(l => l.trim()).filter(l => l));
+                    // Use the wrapped code lines for filtering (not raw code, to avoid filtering results)
+                    const codeLines = aplCodeLines || new Set(code.split('\n').map(l => l.trim()).filter(l => l));
                     
                     // First pass: filter indented lines and system responses
                     lines = lines.filter(line => {
@@ -652,8 +653,8 @@ async function executeWithWarmContainer(language, code, options = {}) {
                     
                     // Filter echoed input from the END (preserves result if it matches input)
                     let lines = result.split('\n');
-                    // Get user code lines to filter echoed input
-                    const codeLines = new Set(code.split('\n').map(l => l.trim()).filter(l => l));
+                    // Use the wrapped code lines for filtering (not raw code, to avoid filtering results)
+                    const codeLines = aplCodeLines || new Set(code.split('\n').map(l => l.trim()).filter(l => l));
                     
                     // First pass: filter indented lines and system responses
                     lines = lines.filter(line => {
@@ -711,7 +712,36 @@ async function executeWithWarmContainer(language, code, options = {}) {
             // Then send )SIC to exit ALL suspended states (safer than →)
             // Then print end marker
             // Then clear vars and print reset marker
-            input = `]boxing on -s=min\n)SIC\n⎕←'${aplMarkers.start}'\n${code}\n)SIC\n⎕←'${aplMarkers.end}'\n⎕EX ⎕NL ¯1\n⎕←'${aplMarkers.reset}'\n`;
+            
+            // Wrap APL code so expressions produce output
+            // Filter out empty lines and comment-only lines
+            const lines = code.split('\n')
+                .map(line => line.trim())
+                .filter(line => line && !line.startsWith('⍝'));
+            
+            // Strip inline comments
+            const cleanedLines = lines.map(line => {
+                const commentIndex = line.indexOf('⍝');
+                return commentIndex >= 0 ? line.substring(0, commentIndex).trim() : line;
+            }).filter(line => line);
+            
+            let aplCode;
+            if (cleanedLines.length === 0) {
+                // Only comments - output empty
+                aplCode = `⎕←''`;
+            } else if (cleanedLines.length === 1) {
+                // Single line - wrap with ⎕← for output
+                aplCode = `⎕←${cleanedLines[0]}`;
+            } else {
+                // Multiline - wrap in a dfn and execute it
+                const joinedCode = cleanedLines.join(' ⋄ ');
+                aplCode = `⎕←{${joinedCode}}⍬`;
+            }
+            
+            // Store the wrapped code lines for filtering (so we don't filter the result as "echoed input")
+            aplCodeLines = new Set(aplCode.split('\n').map(l => l.trim()).filter(l => l));
+            
+            input = `]boxing on -s=min\n)SIC\n⎕←'${aplMarkers.start}'\n${aplCode}\n)SIC\n⎕←'${aplMarkers.end}'\n⎕EX ⎕NL ¯1\n⎕←'${aplMarkers.reset}'\n`;
         }
         
         // Set timeout

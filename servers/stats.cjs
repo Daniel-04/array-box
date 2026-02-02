@@ -32,19 +32,22 @@ const defaultStats = {
         fiveMin: {
             visitors: [],      // [{timestamp, count}]
             evaluations: [],   // [{timestamp, count}] - total
-            evalsByLang: []    // [{timestamp, bqn, apl, j, uiua, kap, tinyapl}]
+            evalsByLang: [],   // [{timestamp, bqn, apl, j, uiua, kap, tinyapl}]
+            successesByLang: [] // [{timestamp, bqn, apl, j, uiua, kap, tinyapl}] - success counts
         },
         // Hourly buckets for last week
         hourly: {
             visitors: [],
             evaluations: [],
-            evalsByLang: []
+            evalsByLang: [],
+            successesByLang: []
         },
         // Daily buckets for all time
         daily: {
             visitors: [],
             evaluations: [],
-            evalsByLang: []
+            evalsByLang: [],
+            successesByLang: []
         }
     },
     
@@ -87,10 +90,13 @@ function loadStats() {
                 };
             }
             
-            // Ensure evalsByLang exists in all granularities
+            // Ensure evalsByLang and successesByLang exist in all granularities
             for (const granularity of ['fiveMin', 'hourly', 'daily']) {
                 if (!stats.timeSeries[granularity].evalsByLang) {
                     stats.timeSeries[granularity].evalsByLang = [];
+                }
+                if (!stats.timeSeries[granularity].successesByLang) {
+                    stats.timeSeries[granularity].successesByLang = [];
                 }
             }
             
@@ -146,6 +152,11 @@ function cleanTimeSeries() {
             point => point.timestamp > fiveMinCutoff
         );
     }
+    if (stats.timeSeries.fiveMin.successesByLang) {
+        stats.timeSeries.fiveMin.successesByLang = stats.timeSeries.fiveMin.successesByLang.filter(
+            point => point.timestamp > fiveMinCutoff
+        );
+    }
     
     // Hourly data: keep last 7 days
     const hourlyCutoff = now - 7 * 24 * 60 * 60 * 1000;
@@ -157,6 +168,11 @@ function cleanTimeSeries() {
     );
     if (stats.timeSeries.hourly.evalsByLang) {
         stats.timeSeries.hourly.evalsByLang = stats.timeSeries.hourly.evalsByLang.filter(
+            point => point.timestamp > hourlyCutoff
+        );
+    }
+    if (stats.timeSeries.hourly.successesByLang) {
+        stats.timeSeries.hourly.successesByLang = stats.timeSeries.hourly.successesByLang.filter(
             point => point.timestamp > hourlyCutoff
         );
     }
@@ -218,11 +234,35 @@ function addToLangBucket(granularity, lang, count = 1) {
     }
 }
 
+// Add to per-language success bucket
+function addToSuccessBucket(granularity, lang, count = 1) {
+    const bucket = getBucketTimestamp(granularity);
+    const data = stats.timeSeries[granularity].successesByLang;
+    if (!data) return;
+    
+    const lastPoint = data.slice(-1)[0];
+    
+    if (lastPoint && lastPoint.timestamp === bucket) {
+        lastPoint[lang] = (lastPoint[lang] || 0) + count;
+    } else {
+        const newPoint = { timestamp: bucket, bqn: 0, apl: 0, j: 0, uiua: 0, kap: 0, tinyapl: 0 };
+        newPoint[lang] = count;
+        data.push(newPoint);
+    }
+}
+
 // Add to all per-language time series granularities
 function addToLangTimeSeries(lang, count = 1) {
     addToLangBucket('fiveMin', lang, count);
     addToLangBucket('hourly', lang, count);
     addToLangBucket('daily', lang, count);
+}
+
+// Add to all per-language success time series granularities
+function addToSuccessTimeSeries(lang, count = 1) {
+    addToSuccessBucket('fiveMin', lang, count);
+    addToSuccessBucket('hourly', lang, count);
+    addToSuccessBucket('daily', lang, count);
 }
 
 // Notify all listeners of stats update
@@ -269,6 +309,7 @@ function recordEvaluation(language, success) {
     
     if (success) {
         stats.languages[lang].successes++;
+        addToSuccessTimeSeries(lang);
     } else {
         stats.languages[lang].failures++;
     }
@@ -347,7 +388,8 @@ function getTimeSeriesForRange(range) {
     return {
         visitors: data.visitors.filter(p => p.timestamp > cutoff),
         evaluations: data.evaluations.filter(p => p.timestamp > cutoff),
-        evalsByLang: (data.evalsByLang || []).filter(p => p.timestamp > cutoff)
+        evalsByLang: (data.evalsByLang || []).filter(p => p.timestamp > cutoff),
+        successesByLang: (data.successesByLang || []).filter(p => p.timestamp > cutoff)
     };
 }
 

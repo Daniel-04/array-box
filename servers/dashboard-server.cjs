@@ -570,7 +570,7 @@ const dashboardHTML = `<!DOCTYPE html>
     </div>
     
     <div class="section">
-        <h2>Requests by Language</h2>
+        <h2 id="languagesTitle">Requests by Language</h2>
         <div class="languages-grid" id="languagesGrid">
             <!-- Populated by JS -->
         </div>
@@ -580,13 +580,88 @@ const dashboardHTML = `<!DOCTYPE html>
         // State
         let currentStats = null;
         let eventSource = null;
-        let chartData = { visitors: [], evaluations: [], evalsByLang: [] };
+        let chartData = { visitors: [], evaluations: [], evalsByLang: [], successesByLang: [] };
         let currentTimeRange = '1h';
         let currentViewMode = 'interval';
         
         // Format numbers with commas
         function formatNumber(n) {
             return n.toLocaleString();
+        }
+        
+        // Get time cutoff for current time range
+        function getTimeCutoff(range) {
+            const now = Date.now();
+            switch (range) {
+                case '1h': return now - 60 * 60 * 1000;
+                case '12h': return now - 12 * 60 * 60 * 1000;
+                case '24h': return now - 24 * 60 * 60 * 1000;
+                case '1w': return now - 7 * 24 * 60 * 60 * 1000;
+                case '1m': return now - 30 * 24 * 60 * 60 * 1000;
+                case '1y': return now - 365 * 24 * 60 * 60 * 1000;
+                case 'all': return 0;
+                default: return 0;
+            }
+        }
+        
+        // Aggregate time series data by language for current time window
+        function aggregateByLanguage(evalsByLang, successesByLang, cutoff) {
+            const langOrder = ['bqn', 'apl', 'tinyapl', 'j', 'uiua', 'kap'];
+            const result = {};
+            
+            for (const lang of langOrder) {
+                result[lang] = { evaluations: 0, successes: 0, failures: 0 };
+            }
+            
+            // Sum up evaluations (filtered by cutoff)
+            for (const point of evalsByLang || []) {
+                if (point.timestamp >= cutoff) {
+                    for (const lang of langOrder) {
+                        result[lang].evaluations += point[lang] || 0;
+                    }
+                }
+            }
+            
+            // Sum up successes (filtered by cutoff)
+            let hasSuccessData = false;
+            for (const point of successesByLang || []) {
+                if (point.timestamp >= cutoff) {
+                    hasSuccessData = true;
+                    for (const lang of langOrder) {
+                        result[lang].successes += point[lang] || 0;
+                    }
+                }
+            }
+            
+            // If no success data in time series, estimate from all-time success rates
+            if (!hasSuccessData && currentStats) {
+                for (const lang of langOrder) {
+                    const allTime = currentStats.languages[lang] || {};
+                    const allTimeTotal = allTime.evaluations || 0;
+                    const allTimeSuccesses = allTime.successes || 0;
+                    const successRate = allTimeTotal > 0 ? allTimeSuccesses / allTimeTotal : 0;
+                    // Estimate successes based on all-time success rate
+                    result[lang].successes = Math.round(result[lang].evaluations * successRate);
+                }
+            }
+            
+            // Calculate failures
+            for (const lang of langOrder) {
+                result[lang].failures = result[lang].evaluations - result[lang].successes;
+            }
+            
+            return result;
+        }
+        
+        // Get filtered language data based on current time range
+        function getFilteredLanguageData() {
+            if (currentTimeRange === 'all' && currentStats) {
+                // For "all time", use the all-time stats
+                return currentStats.languages;
+            }
+            // Otherwise, aggregate from time series with time cutoff
+            const cutoff = getTimeCutoff(currentTimeRange);
+            return aggregateByLanguage(chartData.evalsByLang, chartData.successesByLang, cutoff);
         }
         
         // Fetch time series data for specific range
@@ -596,22 +671,40 @@ const dashboardHTML = `<!DOCTYPE html>
                 const data = await response.json();
                 chartData = data;
                 drawChart();
+                // Update pie chart and language cards with filtered data
+                updateFilteredComponents();
             } catch (e) {
                 console.error('Error fetching time series:', e);
             }
         }
         
-        // Update the dashboard with new stats
-        function updateDashboard(data) {
-            currentStats = data;
+        // Get time range label for display
+        function getTimeRangeLabel(range) {
+            switch (range) {
+                case '1h': return 'Last Hour';
+                case '12h': return 'Last 12 Hours';
+                case '24h': return 'Last 24 Hours';
+                case '1w': return 'Last Week';
+                case '1m': return 'Last Month';
+                case '1y': return 'Last Year';
+                case 'all': return 'All Time';
+                default: return 'All Time';
+            }
+        }
+        
+        // Update pie chart and language cards with time-filtered data
+        function updateFilteredComponents() {
+            const filteredLangs = getFilteredLanguageData();
+            drawPieChart(filteredLangs);
+            updateLanguageCards(filteredLangs);
             
-            // Update totals
-            document.getElementById('totalVisitors').textContent = formatNumber(data.totalVisitors);
-            document.getElementById('totalEvaluations').textContent = formatNumber(data.totalEvaluations);
-            document.getElementById('totalPermalinks').textContent = formatNumber(data.totalPermalinks);
-            document.getElementById('activeVisitors').textContent = formatNumber(data.activeVisitors);
-            
-            // Update languages
+            // Update section title to show time range
+            const timeLabel = getTimeRangeLabel(currentTimeRange);
+            document.getElementById('languagesTitle').textContent = 'Requests by Language (' + timeLabel + ')';
+        }
+        
+        // Update language cards with given language data
+        function updateLanguageCards(languages) {
             const languagesGrid = document.getElementById('languagesGrid');
             const allLanguages = ['bqn', 'apl', 'j', 'uiua', 'kap', 'tinyapl'];
             const langNames = { bqn: 'BQN', apl: 'APL', j: 'J', uiua: 'Uiua', kap: 'Kap', tinyapl: 'TinyAPL' };
@@ -625,16 +718,17 @@ const dashboardHTML = `<!DOCTYPE html>
             };
             
             // Sort languages by total requests (most to least)
-            const languages = allLanguages.sort((a, b) => {
-                const aEvals = (data.languages[a] || {}).evaluations || 0;
-                const bEvals = (data.languages[b] || {}).evaluations || 0;
+            const sortedLanguages = [...allLanguages].sort((a, b) => {
+                const aEvals = (languages[a] || {}).evaluations || 0;
+                const bEvals = (languages[b] || {}).evaluations || 0;
                 return bEvals - aEvals;
             });
             
-            languagesGrid.innerHTML = languages.map(lang => {
-                const langData = data.languages[lang] || { evaluations: 0, successes: 0, failures: 0 };
+            languagesGrid.innerHTML = sortedLanguages.map(lang => {
+                const langData = languages[lang] || { evaluations: 0, successes: 0, failures: 0 };
                 const total = langData.evaluations || 0;
                 const successes = langData.successes || 0;
+                const failures = langData.failures || 0;
                 const percentage = total > 0 ? Math.round((successes / total) * 100) : 0;
                 // Color tiers: 95+ BQN green (default), 90-94 APL green, 80-89 TinyAPL green, 50-79 orange, <50 red
                 const percentClass = percentage < 50 ? 'critical' : 
@@ -648,16 +742,27 @@ const dashboardHTML = `<!DOCTYPE html>
                         </div>
                         <div class="info">
                             <div class="name \${lang}">\${langNames[lang]}</div>
-                            <div class="count">\${formatNumber(langData.evaluations)}</div>
+                            <div class="count">\${formatNumber(total)}</div>
                             <div class="success-rate">
-                                <span class="success">✓ \${formatNumber(langData.successes)}</span>
-                                <span class="failure">✗ \${formatNumber(langData.failures)}</span>
+                                <span class="success">✓ \${formatNumber(successes)}</span>
+                                <span class="failure">✗ \${formatNumber(failures)}</span>
                             </div>
                         </div>
                         <div class="percentage \${percentClass}">\${percentage}%</div>
                     </div>
                 \`;
             }).join('');
+        }
+        
+        // Update the dashboard with new stats
+        function updateDashboard(data) {
+            currentStats = data;
+            
+            // Update totals
+            document.getElementById('totalVisitors').textContent = formatNumber(data.totalVisitors);
+            document.getElementById('totalEvaluations').textContent = formatNumber(data.totalEvaluations);
+            document.getElementById('totalPermalinks').textContent = formatNumber(data.totalPermalinks);
+            document.getElementById('activeVisitors').textContent = formatNumber(data.activeVisitors);
             
             // Update chart data from the appropriate time series
             if (['1h', '12h', '24h'].includes(currentTimeRange) && data.timeSeries?.fiveMin) {
@@ -665,7 +770,9 @@ const dashboardHTML = `<!DOCTYPE html>
             }
             // For other ranges, we fetch separately to avoid sending too much data via SSE
             drawChart();
-            drawPieChart(data.languages);
+            
+            // Update pie chart and language cards with time-filtered data
+            updateFilteredComponents();
         }
         
         // Draw the pie chart
@@ -1009,7 +1116,8 @@ const dashboardHTML = `<!DOCTYPE html>
         window.addEventListener('resize', () => {
             if (currentStats) {
                 drawChart();
-                drawPieChart(currentStats.languages);
+                const filteredLangs = getFilteredLanguageData();
+                drawPieChart(filteredLangs);
             }
         });
         
@@ -1020,8 +1128,9 @@ const dashboardHTML = `<!DOCTYPE html>
                 // Use data already in memory for short ranges
                 chartData = currentStats.timeSeries.fiveMin;
                 drawChart();
+                updateFilteredComponents();
             } else {
-                // Fetch data for other ranges
+                // Fetch data for other ranges (this will also update filtered components)
                 fetchTimeSeriesForRange(currentTimeRange);
             }
         });
@@ -1030,6 +1139,40 @@ const dashboardHTML = `<!DOCTYPE html>
         document.getElementById('viewMode').addEventListener('change', (e) => {
             currentViewMode = e.target.value;
             drawChart();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            // Ignore if user is typing in an input
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            
+            const timeRangeSelect = document.getElementById('timeRange');
+            const viewModeSelect = document.getElementById('viewMode');
+            const options = Array.from(timeRangeSelect.options);
+            const currentIndex = options.findIndex(opt => opt.value === currentTimeRange);
+            
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                e.preventDefault();
+                let newIndex;
+                if (e.key === 'ArrowUp') {
+                    // Move to previous (shorter) time range
+                    newIndex = Math.max(0, currentIndex - 1);
+                } else {
+                    // Move to next (longer) time range
+                    newIndex = Math.min(options.length - 1, currentIndex + 1);
+                }
+                if (newIndex !== currentIndex) {
+                    timeRangeSelect.value = options[newIndex].value;
+                    timeRangeSelect.dispatchEvent(new Event('change'));
+                }
+            } else if (e.key === 'c' || e.key === 'C') {
+                // Toggle cumulative mode
+                e.preventDefault();
+                viewModeSelect.value = currentViewMode === 'interval' ? 'cumulative' : 'interval';
+                viewModeSelect.dispatchEvent(new Event('change'));
+            }
         });
         
         // Start

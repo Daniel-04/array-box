@@ -25,8 +25,7 @@
 - syntax highlighting is a little slow on larger inputs
 
 ### Web Dashboard
-- time window vs all time
-- add shortcuts to dashboard
+- expose it?
 
 #### Test Formatting Program
 ```
