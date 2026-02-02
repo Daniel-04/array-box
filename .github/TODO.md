@@ -18,10 +18,6 @@
 - train tacit view
 - add shortcut for full docs
 
-### Web Dashboard
-- true white for kap
-
-
 ### Fix 
 - jumpiness of logo in top left of keyboard
 - syntax highlighting is a little slow on larger inputs

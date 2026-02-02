@@ -388,6 +388,12 @@ const dashboardHTML = `<!DOCTYPE html>
         .section-header h2 {
             margin-bottom: 0;
         }
+
+        .chart-controls {
+            display: inline-flex;
+            gap: 10px;
+            align-items: center;
+        }
         
         .time-range-select {
             background: var(--bg-primary);
@@ -501,15 +507,21 @@ const dashboardHTML = `<!DOCTYPE html>
             <div class="activity-chart-section">
                 <div class="section-header">
                     <h2>Activity</h2>
-                    <select id="timeRange" class="time-range-select">
-                        <option value="1h" selected>Last 1 Hour</option>
-                        <option value="12h">Last 12 Hours</option>
-                        <option value="24h">Last 24 Hours</option>
-                        <option value="1w">Last Week</option>
-                        <option value="1m">Last Month</option>
-                        <option value="1y">Last Year</option>
-                        <option value="all">All Time</option>
-                    </select>
+                    <div class="chart-controls">
+                        <select id="timeRange" class="time-range-select">
+                            <option value="1h" selected>Last 1 Hour</option>
+                            <option value="12h">Last 12 Hours</option>
+                            <option value="24h">Last 24 Hours</option>
+                            <option value="1w">Last Week</option>
+                            <option value="1m">Last Month</option>
+                            <option value="1y">Last Year</option>
+                            <option value="all">All Time</option>
+                        </select>
+                        <select id="viewMode" class="time-range-select">
+                            <option value="interval" selected>Per Interval</option>
+                            <option value="cumulative">Cumulative</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="chart-container">
                     <canvas id="activityChart"></canvas>
@@ -570,6 +582,7 @@ const dashboardHTML = `<!DOCTYPE html>
         let eventSource = null;
         let chartData = { visitors: [], evaluations: [], evalsByLang: [] };
         let currentTimeRange = '1h';
+        let currentViewMode = 'interval';
         
         // Format numbers with commas
         function formatNumber(n) {
@@ -862,6 +875,19 @@ const dashboardHTML = `<!DOCTYPE html>
             }
             
             const times = Object.keys(buckets).map(Number).sort((a, b) => a - b);
+
+            if (currentViewMode === 'cumulative') {
+                const runningTotals = {};
+                for (const lang of langOrder) {
+                    runningTotals[lang] = 0;
+                }
+                for (const t of times) {
+                    for (const lang of langOrder) {
+                        runningTotals[lang] += buckets[t][lang];
+                        buckets[t][lang] = runningTotals[lang];
+                    }
+                }
+            }
             
             // Calculate stacked totals for max value
             const stackedTotals = times.map(t => {
@@ -998,6 +1024,12 @@ const dashboardHTML = `<!DOCTYPE html>
                 // Fetch data for other ranges
                 fetchTimeSeriesForRange(currentTimeRange);
             }
+        });
+
+        // Handle view mode selection
+        document.getElementById('viewMode').addEventListener('change', (e) => {
+            currentViewMode = e.target.value;
+            drawChart();
         });
         
         // Start
