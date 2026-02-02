@@ -18,6 +18,10 @@
 - train tacit view
 - add shortcut for full docs
 
+### Web Dashboard
+- true white for kap
+- reorder by color activity graph stack line
+
 
 ### Fix 
 - jumpiness of logo in top left of keyboard

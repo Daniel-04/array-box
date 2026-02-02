@@ -234,14 +234,24 @@ const dashboardHTML = `<!DOCTYPE html>
         .language-card .percentage {
             font-size: 1.8rem;
             font-weight: bold;
-            color: #4ade80;  /* Soft green */
-            text-shadow: 0 0 10px rgba(74, 222, 128, 0.4);
+            color: #2b7067;  /* BQN green for 95%+ */
+            text-shadow: 0 0 10px rgba(43, 112, 103, 0.4);
             min-width: 70px;
             text-align: right;
         }
         
+        .language-card .percentage.tier-90 {
+            color: #3cb371;  /* APL green for 90-94% */
+            text-shadow: 0 0 10px rgba(60, 179, 113, 0.4);
+        }
+        
+        .language-card .percentage.tier-80 {
+            color: #94e044;  /* TinyAPL green for 80-89% */
+            text-shadow: 0 0 10px rgba(148, 224, 68, 0.4);
+        }
+        
         .language-card .percentage.low {
-            color: #ffaa00;  /* Orange for 50-80% */
+            color: #ffaa00;  /* Orange for 50-79% */
             text-shadow: 0 0 10px rgba(255, 170, 0, 0.4);
         }
         
@@ -613,7 +623,11 @@ const dashboardHTML = `<!DOCTYPE html>
                 const total = langData.evaluations || 0;
                 const successes = langData.successes || 0;
                 const percentage = total > 0 ? Math.round((successes / total) * 100) : 0;
-                const percentClass = percentage < 50 ? 'critical' : (percentage < 80 ? 'low' : '');
+                // Color tiers: 95+ BQN green (default), 90-94 APL green, 80-89 TinyAPL green, 50-79 orange, <50 red
+                const percentClass = percentage < 50 ? 'critical' : 
+                                    percentage < 80 ? 'low' : 
+                                    percentage < 90 ? 'tier-80' : 
+                                    percentage < 95 ? 'tier-90' : '';
                 return \`
                     <div class="language-card">
                         <div class="logo">
