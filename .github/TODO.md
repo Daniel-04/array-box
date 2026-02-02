@@ -17,16 +17,16 @@
 - add non-keyboard character set for APL, BQN, Kap
 - train tacit view
 - add shortcut for full docs
+* add ctrl + shift + up/down for multi-line cursor for multi-line editing
+* add alt + up/down 
 
 ### Fix 
 - jumpiness of logo in top left of keyboard
 - syntax highlighting is a little slow on larger inputs
 
-code editor doesn't shrink when it should
-image gen for ⊂◡(⌽5‿3)⍴⍳15
-
 ### Web Dashboard
 - time window vs all time
+- add shortcuts to dashboard
 
 #### Test Formatting Program
 ```
@@ -44,12 +44,7 @@ Del   ← -_C⌺                   ⍝ Deltas
 "cat" |_B1_-_Psi_≢ "mouse" ⍝ Length abs diff
 ```
 
-* add ctrl + shift + up/down for multi-line cursor for multi-line editing
-* add alt + up/down 
-* remove certain translation like < (BQN)
+### Image Fixes (non-essential)
 * image of doublestruck letters doesn't work for BQN
-* can't type sepearat in tinyapl
 * TinyAPL strings should not be yellow (in image)
-
-## Fix
-- comment bug in bqn to something (and comma)
+* image gen for ⊂◡(⌽5‿3)⍴⍳15

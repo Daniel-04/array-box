@@ -456,7 +456,10 @@ export function createEditorFeaturesManager(elements, getLanguage, getInputText,
         // Also listen for keydown to expand proactively before the character is inserted
         codeInput.addEventListener('keydown', (e) => {
             // Only for printable characters (not modifiers, arrows, etc.)
-            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+            // Skip prefix keys (` and \) since they don't insert characters directly
+            // in array languages - they activate prefix mode for special character input
+            if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey && 
+                e.key !== '`' && e.key !== '\\') {
                 // Get current selection to find cursor position
                 const sel = window.getSelection();
                 if (sel.rangeCount > 0) {

@@ -619,9 +619,14 @@ export function createKeyboardHandler(inputElement, language) {
                     if (DEBUG) console.log('TinyAPL prefix level:', prefixLevel);
                     return;
                 } else {
-                    // Third press - insert the prefix character
+                    // Third press - insert the separator (⋄) which is symP for Backquote
+                    e.preventDefault();
                     prefixLevel = 0;
-                    return; // Let default behavior happen
+                    const entry = keymap[e.code];
+                    if (entry && entry.symP) {
+                        insertText(inputElement, entry.symP);
+                    }
+                    return;
                 }
             } else {
                 // Other languages: Simple toggle
