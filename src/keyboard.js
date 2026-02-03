@@ -400,6 +400,8 @@ export const tinyaplGlyphNames = {
     '|': 'magnitude / remainder',
     '∨': 'gcd / or / demote',
     '∧': 'lcm / and / promote',
+    '⩓': 'numerator / least common multiple',
+    '⩔': 'denominator / greatest common divisor',
     '⍲': 'nand',
     '⍱': 'nor',
     '~': 'not / difference',
@@ -479,7 +481,8 @@ export const tinyaplGlyphNames = {
     // Misc
     '⍎': 'execute',
     '⍕': 'format',
-    '↗': 'raise',
+    '↗': 'square / raises',
+    '⨳': 'raise',
     '⇂': 'minimal',
     '↾': 'maximal',
     '⍬': 'empty vector',
@@ -2780,11 +2783,205 @@ export class ArrayKeyboard {
     }
     
     /**
-     * Escape HTML special characters
+     * Convert simple LaTeX math notation to Unicode/HTML
+     * Handles common patterns from TinyAPL docs
+     */
+    _convertLatex(text) {
+        if (!text || !text.includes('$')) return text;
+        
+        // Process LaTeX inside $...$ delimiters
+        return text.replace(/\$([^$]+)\$/g, (match, latex) => {
+            let result = latex;
+            
+            // Handle \sqrt[x] y → ˣ√y
+            result = result.replace(/\\sqrt\[([^\]]+)\]\s*(\w+)/g, (m, root, arg) => `<sup>${root}</sup>√${arg}`);
+            
+            // Handle \sqrt y → √y
+            result = result.replace(/\\sqrt\s*(\w+)/g, '√$1');
+            result = result.replace(/\\sqrt\s*\{([^}]+)\}/g, '√($1)');
+            
+            // Handle \frac {x} {y} or \frac x y → x/y
+            result = result.replace(/\\frac\s*\{([^}]+)\}\s*\{([^}]+)\}/g, '($1)/($2)');
+            result = result.replace(/\\frac\s*(\w+)\s*(\w+)/g, '$1/$2');
+            
+            // Handle \binom y x → C(y,x)
+            result = result.replace(/\\binom\s*(\w+)\s*(\w+)/g, 'C($1,$2)');
+            result = result.replace(/\\binom\s*\{([^}]+)\}\s*\{([^}]+)\}/g, 'C($1,$2)');
+            
+            // Handle \left| y \right| → |y|
+            result = result.replace(/\\left\|([^|]+)\\right\|/g, '|$1|');
+            result = result.replace(/\\left\\\|([^|]+)\\right\\\|/g, '|$1|');
+            
+            // Handle \left\lceil y \right\rceil → ⌈y⌉
+            result = result.replace(/\\left\\lceil\s*([^\\]+)\s*\\right\\rceil/g, '⌈$1⌉');
+            
+            // Handle \left\lfloor y \right\rfloor → ⌊y⌋
+            result = result.replace(/\\left\\lfloor\s*([^\\]+)\s*\\right\\rfloor/g, '⌊$1⌋');
+            
+            // Handle \left[ y \right] → [y] (use non-greedy match to not consume \right)
+            result = result.replace(/\\left\[\s*(.+?)\s*\\right\]/g, '[$1]');
+            
+            // Handle superscripts y^x or y^{expr}
+            result = result.replace(/(\w)\^(\w)/g, '$1<sup>$2</sup>');
+            result = result.replace(/(\w)\^\{([^}]+)\}/g, '$1<sup>$2</sup>');
+            
+            // Handle subscripts x_y or x_{expr}
+            result = result.replace(/(\w)_(\w)(?![a-zA-Z])/g, '$1<sub>$2</sub>');
+            result = result.replace(/(\w)_\{([^}]+)\}/g, '$1<sub>$2</sub>');
+            
+            // Handle \mathop{\text{...}}(...) → name(...)
+            result = result.replace(/\\mathop\{\\text\{([^}]+)\}\}\(([^)]+)\)/g, '$1($2)');
+            result = result.replace(/\\mathop\{\\text\{([^}]+)\}\}/g, '$1');
+            
+            // Handle \text{...}
+            result = result.replace(/\\text\{([^}]+)\}/g, '$1');
+            
+            // Handle \ln y → ln y
+            result = result.replace(/\\ln\s*/g, 'ln ');
+            
+            // Handle \log_x y → log<sub>x</sub> y
+            result = result.replace(/\\log_(\w)/g, 'log<sub>$1</sub>');
+            result = result.replace(/\\log_\{([^}]+)\}/g, 'log<sub>$1</sub>');
+            
+            // Handle \max, \min
+            result = result.replace(/\\max/g, 'max');
+            result = result.replace(/\\min/g, 'min');
+            
+            // Handle \overline\lor (NOR) and \overline\land (NAND)
+            // These need to be before the simple \lor and \land replacements
+            result = result.replace(/\\overline\\lor/g, '⍱');  // NOR
+            result = result.replace(/\\overline\\land/g, '⍲'); // NAND
+            
+            // Handle \lor (OR) and \land (AND)
+            result = result.replace(/\\lor/g, '∨');
+            result = result.replace(/\\land/g, '∧');
+            
+            // Handle \Im and \Re
+            result = result.replace(/\\Im\s*/g, 'Im ');
+            result = result.replace(/\\Re\s*/g, 'Re ');
+            
+            // Handle \operatorname{Arg}
+            result = result.replace(/\\operatorname\{([^}]+)\}/g, '$1');
+            result = result.replace(/\\mathop\{([^}]+)\}/g, '$1');
+            
+            // Handle escaped brackets \[ and \] → [ and ]
+            result = result.replace(/\\\[/g, '[');
+            result = result.replace(/\\\]/g, ']');
+            
+            // Clean up remaining backslashes from simple commands
+            result = result.replace(/\\ /g, ' ');
+            
+            return result;
+        });
+    }
+    
+    /**
+     * Wrap inline code snippets with language font styling
+     * Detects patterns like r←... and expressions with array glyphs
+     */
+    _formatInlineCode(text) {
+        if (!text || !this.fontFamily) return text;
+        
+        // APL/array language glyphs that indicate code (excluding common math symbols that appear in prose)
+        const codeGlyphs = '←→⊢⊣⍳⍸∊⍷⋷⋵⍴ϼ⍋⍒⌿⍪⊖⍉⊃⊇⌷⍎⍕↗⇂↾⍬∇⋄⍝⎕⍞⁖⍣∙⊞⍤◡◠⍥⌓⌸⌺⍢∵⎊⍨∘⍛⊸⟜⸚«»⇾⇽⫤⫣⊩¨ᐵᑈᑣᑒᓗᓚ⊕⊗∡ℜℑ⧺ⵧ⊥⊤⊲⊴⊵⊳∪∩§↑↓⊂⊆⫇√⸠⌹⍲⍱⩓⩔⨳…⍮‥߹∻⬚○';
+        const codeGlyphsRegex = new RegExp(`[${codeGlyphs}]`);
+        
+        let result = text;
+        // Style for inline code: language font + subtle background highlight
+        const codeStyle = `font-family: ${this.fontFamily}; background: rgba(128, 128, 128, 0.15); padding: 0.1em 0.25em; border-radius: 3px`;
+        
+        // Process assignment patterns: r←... (most common code pattern)
+        result = result.replace(/\br←[^\s.!?,;:]+/g, (match) => {
+            return `<code style="${codeStyle}">${match}</code>`;
+        });
+        
+        // Process any sequence containing APL glyphs that looks like code
+        // Match: optional letter/number, then characters including glyphs, ending with letter/number/glyph
+        // Must contain at least one code glyph to be treated as code
+        if (codeGlyphsRegex.test(result)) {
+            // Match expressions that contain code glyphs (like x⌿⍨~x∊y, ⌊y+0.5, a⊕○⸠b)
+            const exprPattern = new RegExp(
+                `(?<!<code[^>]*>)` +  // Not already in a code tag
+                `(?<![a-zA-Z])` +      // Not preceded by letter (word boundary)
+                `([a-zA-Z0-9]?` +      // Optional starting letter/number
+                `[a-zA-Z0-9${codeGlyphs}×÷+\\-]+` +  // Characters including glyphs
+                `[a-zA-Z0-9${codeGlyphs}])` +  // Must end with letter/number/glyph
+                `(?![a-zA-Z])` +       // Not followed by letter (word boundary)
+                `(?!</code>)`,         // Not followed by closing code tag
+                'g'
+            );
+            
+            result = result.replace(exprPattern, (match, expr) => {
+                // Only wrap if it contains at least one code glyph and is 2+ chars
+                if (expr.length >= 2 && codeGlyphsRegex.test(expr)) {
+                    return `<code style="${codeStyle}">${expr}</code>`;
+                }
+                return match;
+            });
+        }
+        
+        return result;
+    }
+    
+    /**
+     * Escape HTML special characters and process LaTeX
      */
     _escapeHtml(text) {
+        // First process LaTeX to convert math notations (inside $...$)
+        let processed = this._convertLatex(text);
+        
+        // Handle escaped brackets \[ and \] that appear outside $...$ (e.g., \[x∘\]F)
+        processed = processed.replace(/\\\[/g, '[');
+        processed = processed.replace(/\\\]/g, ']');
+        
+        // Convert HTML entities like &nbsp; to regular characters before escaping
+        processed = processed.replace(/&nbsp;/g, ' ');
+        processed = processed.replace(/&amp;/g, '&');
+        processed = processed.replace(/&lt;/g, '<');
+        processed = processed.replace(/&gt;/g, '>');
+        processed = processed.replace(/&quot;/g, '"');
+        
+        // Format inline code with language font
+        processed = this._formatInlineCode(processed);
+        
+        // Check if there's any HTML tags we added (from LaTeX/code formatting)
+        const hasHtml = /<(sup|sub|code)/.test(processed);
+        
+        if (hasHtml) {
+            // Use placeholders to protect our HTML tags during escaping
+            const placeholders = [];
+            let placeholderIndex = 0;
+            
+            const addPlaceholder = (match) => {
+                const placeholder = `\x00PH${placeholderIndex++}\x00`;
+                placeholders.push(match);
+                return placeholder;
+            };
+            
+            // Replace <sup>...</sup> tags with placeholders
+            processed = processed.replace(/<sup>([^<]*)<\/sup>/g, addPlaceholder);
+            
+            // Replace <sub>...</sub> tags with placeholders
+            processed = processed.replace(/<sub>([^<]*)<\/sub>/g, addPlaceholder);
+            
+            // Replace <code style="...">...</code> tags with placeholders
+            processed = processed.replace(/<code style="[^"]*">([^<]*)<\/code>/g, addPlaceholder);
+            
+            // Escape remaining HTML
+            const div = document.createElement('div');
+            div.textContent = processed;
+            let escaped = div.innerHTML;
+            
+            // Restore placeholders with original HTML
+            placeholders.forEach((html, i) => {
+                escaped = escaped.replace(`\x00PH${i}\x00`, html);
+            });
+            
+            return escaped;
+        }
+        
         const div = document.createElement('div');
-        div.textContent = text;
+        div.textContent = processed;
         return div.innerHTML;
     }
     
@@ -2833,9 +3030,42 @@ export class ArrayKeyboard {
         const matchingKeys = new Set();
         
         // Helper function to check if name matches search filter (fuzzy)
-        const matchesFilter = (name, keyEl = null) => {
+        // Also checks doc labels (monad/dyad names and overload names)
+        const matchesFilter = (name, keyEl = null, glyph = null) => {
             if (!this.searchFilter) return true;
-            const matches = name.toLowerCase().includes(this.searchFilter);
+            const searchLower = this.searchFilter.toLowerCase();
+            
+            // Check glyphNames label
+            let matches = name.toLowerCase().includes(searchLower);
+            
+            // Also check doc labels if we have docs
+            if (!matches && glyph && this.glyphDocs && this.glyphDocs[glyph]) {
+                const doc = this.glyphDocs[glyph];
+                
+                // Check monad/dyad names
+                if (doc.monad && doc.monad.name) {
+                    matches = matches || doc.monad.name.toLowerCase().includes(searchLower);
+                }
+                if (doc.dyad && doc.dyad.name) {
+                    matches = matches || doc.dyad.name.toLowerCase().includes(searchLower);
+                }
+                
+                // Check overload names (for TinyAPL-style docs)
+                if (doc.overloads) {
+                    for (const overload of doc.overloads) {
+                        if (overload.name && overload.name.toLowerCase().includes(searchLower)) {
+                            matches = true;
+                            break;
+                        }
+                    }
+                }
+                
+                // Check simple name (for Uiua-style docs)
+                if (doc.name && doc.name.toLowerCase().includes(searchLower)) {
+                    matches = true;
+                }
+            }
+            
             if (matches && keyEl) {
                 matchingKeys.add(keyEl);
             }
@@ -2848,7 +3078,7 @@ export class ArrayKeyboard {
                 const glyph = el.textContent.trim();
                 if (this.glyphNames[glyph]) {
                     const name = this.glyphNames[glyph];
-                    if (matchesFilter(name, el)) {
+                    if (matchesFilter(name, el, glyph)) {
                         glyphElements.push({ el, glyph, name });
                     }
                 }
@@ -2871,7 +3101,7 @@ export class ArrayKeyboard {
                         const glyph = symbolEl.textContent.trim();
                         if (glyph && this.glyphNames[glyph]) {
                             const name = this.glyphNames[glyph];
-                            if (matchesFilter(name, keyEl)) {
+                            if (matchesFilter(name, keyEl, glyph)) {
                                 glyphElements.push({ 
                                     el: symbolEl, 
                                     glyph, 
@@ -2887,7 +3117,7 @@ export class ArrayKeyboard {
                         const glyph = shiftSymbolEl.textContent.trim();
                         if (glyph && this.glyphNames[glyph]) {
                             const name = this.glyphNames[glyph];
-                            if (matchesFilter(name, keyEl)) {
+                            if (matchesFilter(name, keyEl, glyph)) {
                                 glyphElements.push({ 
                                     el: shiftSymbolEl, 
                                     glyph, 
@@ -2905,7 +3135,7 @@ export class ArrayKeyboard {
                         const glyph = quadEl.textContent.trim();
                         if (glyph && this.glyphNames[glyph]) {
                             const name = this.glyphNames[glyph];
-                            if (matchesFilter(name, keyEl)) {
+                            if (matchesFilter(name, keyEl, glyph)) {
                                 // Determine if shifted based on position class (top row = shifted)
                                 const isShifted = quadEl.classList.contains('top-left') || 
                                                   quadEl.classList.contains('top-center') ||

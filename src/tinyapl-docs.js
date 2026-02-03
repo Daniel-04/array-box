@@ -11,7 +11,7 @@
 export const tinyaplDocsMeta = {
     language: "TinyAPL",
     source: "https://beta.tinyapl.rubenverg.com/",
-    scrapedAt: "2026-01-31T15:57:08.411Z",
+    scrapedAt: "2026-02-03T20:51:22.541Z",
     version: "latest"
 };
 
@@ -593,7 +593,7 @@ export const tinyaplGlyphDocs = {
             "overloads": [
                     {
                             "name": "From Pairs",
-                            "description": "r is the dictionary with entries taken from y, which is a nested vector containing either two-element vectors (as created by&nbsp;), or (singleton) dictionaries (as created by&nbsp;).",
+                            "description": "r is the dictionary with entries taken from y, which is a nested vector containing either two-element vectors (as created by Pair), or (singleton) dictionaries (as created by Key Value Pair).",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/from_pairs",
                             "valence": "monad"
@@ -608,7 +608,7 @@ export const tinyaplGlyphDocs = {
             ],
             "monad": {
                     "name": "From Pairs",
-                    "description": "r is the dictionary with entries taken from y, which is a nested vector containing either two-element vectors (as created by&nbsp;), or (singleton) dictionaries (as created by&nbsp;).",
+                    "description": "r is the dictionary with entries taken from y, which is a nested vector containing either two-element vectors (as created by Pair), or (singleton) dictionaries (as created by Key Value Pair).",
                     "example": ""
             },
             "dyad": {
@@ -1859,7 +1859,7 @@ export const tinyaplGlyphDocs = {
                     },
                     {
                             "name": "Sort Up",
-                            "description": "r is the ascending sort of the major cells of y: r←y⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                            "description": "r is the ascending sort of the major cells of y: r←y⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort Down of y.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/sort_up",
                             "valence": "monad"
@@ -1872,7 +1872,7 @@ export const tinyaplGlyphDocs = {
             },
             "monad": {
                     "name": "Sort Up",
-                    "description": "r is the ascending sort of the major cells of y: r←y⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                    "description": "r is the ascending sort of the major cells of y: r←y⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort Down of y.",
                     "example": ""
             }
     },
@@ -1883,7 +1883,7 @@ export const tinyaplGlyphDocs = {
             "overloads": [
                     {
                             "name": "Sort Down",
-                            "description": "r is the descending sort of the major cells of y: r←y⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                            "description": "r is the descending sort of the major cells of y: r←y⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort Up of y.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/sort_down",
                             "valence": "monad"
@@ -1898,7 +1898,7 @@ export const tinyaplGlyphDocs = {
             ],
             "monad": {
                     "name": "Sort Down",
-                    "description": "r is the descending sort of the major cells of y: r←y⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                    "description": "r is the descending sort of the major cells of y: r←y⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort Up of y.",
                     "example": ""
             },
             "dyad": {
@@ -2273,7 +2273,7 @@ export const tinyaplGlyphDocs = {
                     },
                     {
                             "name": "Sort By Up",
-                            "description": "r is the major cells of x sorted according to the ascending grade of y: r←x⊇⍨⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                            "description": "r is the major cells of x sorted according to the ascending grade of y: r←x⊇⍨⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort By Down of y.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/sort_by_up",
                             "valence": "dyad"
@@ -2286,7 +2286,7 @@ export const tinyaplGlyphDocs = {
             },
             "dyad": {
                     "name": "Sort By Up",
-                    "description": "r is the major cells of x sorted according to the ascending grade of y: r←x⊇⍨⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                    "description": "r is the major cells of x sorted according to the ascending grade of y: r←x⊇⍨⍋y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort By Down of y.",
                     "example": ""
             }
     },
@@ -2323,7 +2323,7 @@ export const tinyaplGlyphDocs = {
                     },
                     {
                             "name": "Sort By Down",
-                            "description": "r is the major cells of x sorted according to the descending grade of y: r←x⊇⍨⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                            "description": "r is the major cells of x sorted according to the descending grade of y: r←x⊇⍨⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort By Up of y.",
                             "example": "",
                             "docUrl": "https://beta.tinyapl.rubenverg.com/docs/primitive/sort_by_down",
                             "valence": "dyad"
@@ -2336,7 +2336,7 @@ export const tinyaplGlyphDocs = {
             },
             "dyad": {
                     "name": "Sort By Down",
-                    "description": "r is the major cells of x sorted according to the descending grade of y: r←x⊇⍨⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the&nbsp;&nbsp;of y.",
+                    "description": "r is the major cells of x sorted according to the descending grade of y: r←x⊇⍨⍒y. Supports the tolerance extra argument for the comparisons; supports the backward extra argument, which returns the Sort By Up of y.",
                     "example": ""
             }
     },

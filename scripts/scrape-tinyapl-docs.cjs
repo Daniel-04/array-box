@@ -84,6 +84,17 @@ function parseFrontmatter(content) {
 }
 
 /**
+ * Convert MDX component key to readable name (e.g., "sort_up" -> "Sort Up")
+ */
+function keyToDisplayName(key) {
+    return key
+        .replace(/_/g, ' ')
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+}
+
+/**
  * Extract description from MDX body (first paragraph or meaningful content)
  */
 function extractDescription(body) {
@@ -97,8 +108,38 @@ function extractDescription(body) {
     text = text.replace(/Also on this glyph[\s\S]*?(?=\n\n|$)/g, '');
     // Remove links but keep text
     text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, '$1');
-    // Remove HTML tags
+    
+    // Handle MDX components before removing HTML tags
+    // <primitive key="sort_up" /> -> "Sort Up"
+    text = text.replace(/<primitive\s+key="([^"]+)"\s*\/?>/gi, (match, key) => {
+        return keyToDisplayName(key);
+    });
+    // <glyph char="..." /> or <Glyph>...</Glyph> -> keep the glyph/content
+    text = text.replace(/<glyph\s+char="([^"]+)"\s*\/?>/gi, '$1');
+    text = text.replace(/<Glyph>([^<]*)<\/Glyph>/gi, '$1');
+    // <adverb key="..." /> -> display name
+    text = text.replace(/<adverb\s+key="([^"]+)"\s*\/?>/gi, (match, key) => {
+        return keyToDisplayName(key);
+    });
+    // <conjunction key="..." /> -> display name
+    text = text.replace(/<conjunction\s+key="([^"]+)"\s*\/?>/gi, (match, key) => {
+        return keyToDisplayName(key);
+    });
+    // <function key="..." /> -> display name
+    text = text.replace(/<function\s+key="([^"]+)"\s*\/?>/gi, (match, key) => {
+        return keyToDisplayName(key);
+    });
+    // Generic: any <ComponentName key="value" /> -> display name from key
+    text = text.replace(/<[A-Z][a-zA-Z]*\s+key="([^"]+)"\s*\/?>/g, (match, key) => {
+        return keyToDisplayName(key);
+    });
+    
+    // Clean up &nbsp; entities
+    text = text.replace(/&nbsp;/g, ' ');
+    
+    // Remove remaining HTML/JSX tags
     text = text.replace(/<[^>]+>/g, '');
+    
     // Split into paragraphs and get first meaningful one
     // Note: Some primitives have very short descriptions (e.g., "r is y F x.")
     // so we use a low minimum length threshold
