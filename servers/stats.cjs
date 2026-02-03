@@ -357,6 +357,14 @@ function getTimeSeriesForRange(range) {
             granularity = 'fiveMin';
             cutoff = now - 60 * 60 * 1000;
             break;
+        case '3h':
+            granularity = 'fiveMin';
+            cutoff = now - 3 * 60 * 60 * 1000;
+            break;
+        case '6h':
+            granularity = 'fiveMin';
+            cutoff = now - 6 * 60 * 60 * 1000;
+            break;
         case '12h':
             granularity = 'fiveMin';
             cutoff = now - 12 * 60 * 60 * 1000;

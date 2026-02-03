@@ -510,6 +510,8 @@ const dashboardHTML = `<!DOCTYPE html>
                     <div class="chart-controls">
                         <select id="timeRange" class="time-range-select">
                             <option value="1h" selected>Last 1 Hour</option>
+                            <option value="3h">Last 3 Hours</option>
+                            <option value="6h">Last 6 Hours</option>
                             <option value="12h">Last 12 Hours</option>
                             <option value="24h">Last 24 Hours</option>
                             <option value="1w">Last Week</option>
@@ -594,6 +596,8 @@ const dashboardHTML = `<!DOCTYPE html>
             const now = Date.now();
             switch (range) {
                 case '1h': return now - 60 * 60 * 1000;
+                case '3h': return now - 3 * 60 * 60 * 1000;
+                case '6h': return now - 6 * 60 * 60 * 1000;
                 case '12h': return now - 12 * 60 * 60 * 1000;
                 case '24h': return now - 24 * 60 * 60 * 1000;
                 case '1w': return now - 7 * 24 * 60 * 60 * 1000;
@@ -682,6 +686,8 @@ const dashboardHTML = `<!DOCTYPE html>
         function getTimeRangeLabel(range) {
             switch (range) {
                 case '1h': return 'Last Hour';
+                case '3h': return 'Last 3 Hours';
+                case '6h': return 'Last 6 Hours';
                 case '12h': return 'Last 12 Hours';
                 case '24h': return 'Last 24 Hours';
                 case '1w': return 'Last Week';
@@ -765,7 +771,7 @@ const dashboardHTML = `<!DOCTYPE html>
             document.getElementById('activeVisitors').textContent = formatNumber(data.activeVisitors);
             
             // Update chart data from the appropriate time series
-            if (['1h', '12h', '24h'].includes(currentTimeRange) && data.timeSeries?.fiveMin) {
+            if (['1h', '3h', '6h', '12h', '24h'].includes(currentTimeRange) && data.timeSeries?.fiveMin) {
                 chartData = data.timeSeries.fiveMin;
             }
             // For other ranges, we fetch separately to avoid sending too much data via SSE
@@ -878,6 +884,10 @@ const dashboardHTML = `<!DOCTYPE html>
             switch (range) {
                 case '1h':
                     return { start: now - 60 * 60 * 1000, bucketSize: 60 * 1000, format: 'minute' };
+                case '3h':
+                    return { start: now - 3 * 60 * 60 * 1000, bucketSize: 5 * 60 * 1000, format: 'minute' };
+                case '6h':
+                    return { start: now - 6 * 60 * 60 * 1000, bucketSize: 15 * 60 * 1000, format: 'hour' };
                 case '12h':
                     return { start: now - 12 * 60 * 60 * 1000, bucketSize: 30 * 60 * 1000, format: 'hour' };
                 case '24h':
@@ -1124,7 +1134,7 @@ const dashboardHTML = `<!DOCTYPE html>
         // Handle time range selection
         document.getElementById('timeRange').addEventListener('change', (e) => {
             currentTimeRange = e.target.value;
-            if (['1h', '12h', '24h'].includes(currentTimeRange) && currentStats?.timeSeries?.fiveMin) {
+            if (['1h', '3h', '6h', '12h', '24h'].includes(currentTimeRange) && currentStats?.timeSeries?.fiveMin) {
                 // Use data already in memory for short ranges
                 chartData = currentStats.timeSeries.fiveMin;
                 drawChart();
@@ -1355,7 +1365,9 @@ function generateSessionId() {
 server.listen(PORT, BIND_ADDRESS, () => {
     console.log(`Dashboard server running on http://${BIND_ADDRESS}:${PORT}`);
     if (BIND_ADDRESS === '0.0.0.0') {
-        // Show local IP for convenience
+        // Show localhost URLs
+        console.log(`  Localhost: http://localhost:${PORT} or http://127.0.0.1:${PORT}`);
+        // Show local IP for network access
         const os = require('os');
         const interfaces = os.networkInterfaces();
         for (const name of Object.keys(interfaces)) {
