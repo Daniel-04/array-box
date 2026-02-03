@@ -70,6 +70,22 @@ if (jExecutable) {
     console.log('No local J installation found - using Docker sandbox');
 }
 
+// Blocked commands for security - shell access
+const J_BLOCKED_PATTERNS = [
+    /\bshell\b/i,      // shell command
+    /2\s*!\s*:\s*0/,   // 2!:0 (spawn)
+    /2\s*!\s*:\s*1/,   // 2!:1 (shell)
+];
+
+function validateJCode(code) {
+    for (const pattern of J_BLOCKED_PATTERNS) {
+        if (pattern.test(code)) {
+            return { valid: false, error: 'Shell commands (shell, 2!:0, 2!:1) are disabled for security reasons' };
+        }
+    }
+    return { valid: true };
+}
+
 // Check sandbox availability on startup
 (async () => {
     if (sandboxMode) {
@@ -230,6 +246,14 @@ const server = http.createServer((req, res) => {
                 if (!code) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: false, output: 'No code provided' }));
+                    return;
+                }
+
+                // Validate code for blocked commands
+                const validation = validateJCode(code);
+                if (!validation.valid) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, output: validation.error }));
                     return;
                 }
 

@@ -57,6 +57,21 @@ if (!aplExecutable) {
 
 console.log(`Using APL executable: ${aplExecutable}`);
 
+// Blocked commands for security - shell access
+const APL_BLOCKED_PATTERNS = [
+    /⎕SHELL/i,
+    /⎕SH(?![A-Z])/i,  // ⎕SH but not ⎕SHOW or similar
+];
+
+function validateAPLCode(code) {
+    for (const pattern of APL_BLOCKED_PATTERNS) {
+        if (pattern.test(code)) {
+            return { valid: false, error: 'Shell commands (⎕SH, ⎕SHELL) are disabled for security reasons' };
+        }
+    }
+    return { valid: true };
+}
+
 // Check sandbox availability on startup
 (async () => {
     if (sandboxMode) {
@@ -252,6 +267,14 @@ const server = http.createServer((req, res) => {
                 if (!code) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
                     res.end(JSON.stringify({ success: false, output: 'No code provided' }));
+                    return;
+                }
+
+                // Validate code for blocked commands
+                const validation = validateAPLCode(code);
+                if (!validation.valid) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify({ success: false, output: validation.error }));
                     return;
                 }
 
