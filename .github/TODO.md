@@ -40,11 +40,13 @@ Del   ← -_C⌺                   ⍝ Deltas
 "cat" |_B1_-_Psi_≢ "mouse" ⍝ Length abs diff
 ```
 
+TinyAPL Test
+["hello⍘nworld!"‿⎕Unicode⋄⟨"a":"b"⋄"c":17⟩‿(⎕Import"std:math/polynomial")]
+
 ### Image Fixes (non-essential)
 * image of doublestruck letters doesn't work for BQN
 * TinyAPL strings should not be yellow (in image)
 * image gen for ⊂◡(⌽5‿3)⍴⍳15
 
-
-* move f1 to bottom
-* when you load from a permalink evaluate
+* •listSys formatting in BQN
+* string formatting
