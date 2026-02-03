@@ -40,7 +40,7 @@ for arg in "$@"; do
             echo "  --rust    Install Rust toolchain"
             echo "  -h        Show this help"
             echo ""
-            echo "Without options, installs: wget, curl, nodejs, npm, docker"
+            echo "Without options, installs: wget, curl, nodejs, npm, docker, cloudflared"
             echo "With --all or --rust, also installs Rust toolchain"
             exit 0
             ;;
@@ -183,6 +183,25 @@ main() {
     install_apt_package "docker.io" "docker"
     if check_cmd docker; then
         configure_docker_user "$real_user"
+    fi
+    echo ""
+    
+    # Cloudflared (for secure tunneling)
+    echo "Cloudflared (tunnel):"
+    if check_cmd cloudflared; then
+        echo -e "  ${GREEN}✓${NC} cloudflared already installed"
+        SKIPPED+=("cloudflared")
+    else
+        echo -e "  ${BLUE}→${NC} Installing cloudflared..."
+        if curl -L --output /tmp/cloudflared.deb https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64.deb 2>/dev/null && \
+           dpkg -i /tmp/cloudflared.deb > /dev/null 2>&1; then
+            rm -f /tmp/cloudflared.deb
+            echo -e "  ${GREEN}✓${NC} cloudflared installed"
+            INSTALLED+=("cloudflared")
+        else
+            echo -e "  ${RED}✗${NC} Failed to install cloudflared"
+            FAILED+=("cloudflared")
+        fi
     fi
     echo ""
     

@@ -9,6 +9,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
+    <!-- Backend configuration (edit config.js to set your tunnel URL) -->
+    <script src="config.js"></script>
+    
     <!-- Theme CSS with variables and syntax highlighting classes -->
     <link rel="stylesheet" href="src/theme.css">
     
@@ -1702,7 +1705,7 @@
                     const duration = Math.round(performance.now() - startTime);
                     
                     // Log to server manager (fire and forget)
-                    fetch('http://localhost:8082/log', {
+                    fetch(`${ArrayBoxConfig.getServiceUrl('log')}/log`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
@@ -1747,7 +1750,7 @@
                         const duration = Math.round(performance.now() - startTime);
                         
                         // Log to server manager (fire and forget)
-                        fetch('http://localhost:8082/log', {
+                        fetch(`${ArrayBoxConfig.getServiceUrl('log')}/log`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -1777,8 +1780,8 @@
                 fontClass: 'j',
                 evaluate: async (code) => {
                     try {
-                        // Connect to local J server
-                        const response = await fetch('http://localhost:8080/eval', {
+                        // Connect to J server
+                        const response = await fetch(`${ArrayBoxConfig.getServiceUrl('j')}/eval`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1799,7 +1802,7 @@
                         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                             return { 
                                 success: false, 
-                                output: 'Cannot connect to local J server. Please make sure the J server is running on http://localhost:8080' 
+                                output: `Cannot connect to J server at ${ArrayBoxConfig.getServiceUrl('j')}. Please make sure the backend is running.` 
                             };
                         }
                         return { 
@@ -1815,8 +1818,8 @@
                 fontClass: 'apl',
                 evaluate: async (code) => {
                     try {
-                        // Connect to local APL server
-                        const response = await fetch('http://localhost:8081/eval', {
+                        // Connect to APL server
+                        const response = await fetch(`${ArrayBoxConfig.getServiceUrl('apl')}/eval`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1837,7 +1840,7 @@
                         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                             return { 
                                 success: false, 
-                                output: 'Cannot connect to local APL server. Please make sure the APL server is running on http://localhost:8081' 
+                                output: `Cannot connect to APL server at ${ArrayBoxConfig.getServiceUrl('apl')}. Please make sure the backend is running.` 
                             };
                         }
                         return { 
@@ -1853,8 +1856,8 @@
                 fontClass: 'kap',
                 evaluate: async (code) => {
                     try {
-                        // Connect to local Kap server
-                        const response = await fetch('http://localhost:8083/eval', {
+                        // Connect to Kap server
+                        const response = await fetch(`${ArrayBoxConfig.getServiceUrl('kap')}/eval`, {
                             method: 'POST',
                             headers: {
                                 'Content-Type': 'application/json',
@@ -1875,7 +1878,7 @@
                         if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
                             return { 
                                 success: false, 
-                                output: 'Cannot connect to local Kap server. Please make sure the Kap server is running on http://localhost:8083\n\nRun: node servers/kap-server.cjs' 
+                                output: `Cannot connect to Kap server at ${ArrayBoxConfig.getServiceUrl('kap')}. Please make sure the backend is running.` 
                             };
                         }
                         return { 
@@ -1916,7 +1919,7 @@
                         const duration = Math.round(performance.now() - startTime);
                         
                         // Log to server manager (fire and forget)
-                        fetch('http://localhost:8082/log', {
+                        fetch(`${ArrayBoxConfig.getServiceUrl('log')}/log`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify({
@@ -2137,9 +2140,8 @@
         // Permalink functionality (server-backed short codes)
         // ========================================
         
-        // Use localhost:8084 for local dev (any local address), or same origin for production
-        const isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].includes(window.location.hostname);
-        const PERMALINK_SERVER = isLocalDev ? 'http://localhost:8084' : window.location.origin;
+        // Get permalink server URL from config
+        const PERMALINK_SERVER = ArrayBoxConfig.getServiceUrl('permalink');
         
         // Create a permalink via server API
         async function createPermalink() {
@@ -2170,7 +2172,7 @@
                 const data = await response.json();
                 if (data.success) {
                     // Track permalink creation for dashboard stats
-                    fetch('http://localhost:8082/permalink', {
+                    fetch(`${ArrayBoxConfig.getServiceUrl('log')}/permalink`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: '{}'
@@ -2245,8 +2247,9 @@
             }
             
             try {
-                console.log('Fetching image from:', `${PERMALINK_SERVER}/image/vertical`);
-                const response = await fetch(`${PERMALINK_SERVER}/image/vertical`, {
+                const imageUrl = `${ArrayBoxConfig.getServiceUrl('image')}/image/vertical`;
+                console.log('Fetching image from:', imageUrl);
+                const response = await fetch(imageUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2754,7 +2757,7 @@
                 sessionId = Math.random().toString(36).substring(2) + Date.now().toString(36);
                 localStorage.setItem('arraybox_session', sessionId);
             }
-            fetch('http://localhost:8082/visitor', {
+            fetch(`${ArrayBoxConfig.getServiceUrl('log')}/visitor`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ sessionId })
