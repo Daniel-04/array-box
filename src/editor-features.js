@@ -15,7 +15,7 @@ export const assignmentOperators = {
     j: ['=.', '=:'],       // local, global assignment
     uiua: ['←', '↚'],      // binding, private binding
     kap: ['←', '⇐'],
-    tinyapl: ['←', '→']
+    tinyapl: ['←', '⇇', '↚', '↩']
 };
 
 /**

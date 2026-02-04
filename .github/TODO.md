@@ -46,9 +46,6 @@ TinyAPL Test
 ### Image Fixes (non-essential)
 * image of doublestruck letters doesn't work for BQN
 * TinyAPL strings should not be yellow (in image)
-* image gen for ⊂◡(⌽5‿3)⍴⍳15
 
 * •listSys formatting in BQN
 * string formatting
-
-Update README for contributing
