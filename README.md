@@ -1,4 +1,17 @@
-# Array Box
+# <p align="center">ArrayBox</p>
+
+<p align="center">
+    <a href="https://github.com/codereport/array-box/issues" alt="contributions welcome">
+        <img src="https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat" /></a>
+    <a href="https://lbesson.mit-license.org/" alt="MIT license">
+        <img src="https://img.shields.io/badge/License-MIT-blue.svg" /></a>        
+    <a href="https://github.com/codereport?tab=followers" alt="GitHub followers">
+        <img src="https://img.shields.io/github/followers/codereport.svg?style=social&label=Follow" /></a>
+    <a href="https://GitHub.com/codereport/array-box/stargazers/" alt="GitHub stars">
+        <img src="https://img.shields.io/github/stars/codereport/array-box.svg?style=social&label=Star" /></a>
+    <a href="https://twitter.com/code_report" alt="Twitter">
+        <img src="https://img.shields.io/twitter/follow/code_report.svg?style=social&label=@code_report" /></a>
+</p>
 
 <img width="2560" height="1440" alt="image" src="https://github.com/user-attachments/assets/9ecdee78-7cf6-4458-841f-f9f347043d02" />
 
