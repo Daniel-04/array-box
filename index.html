@@ -608,6 +608,71 @@
             font-size: 12px;
         }
 
+        /* Fonts screen */
+        .fonts-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: var(--bg-gradient);
+            z-index: 10001;
+            display: none;
+            padding: 60px 80px;
+            overflow-y: auto;
+            font-family: 'JetBrains Mono', monospace;
+            font-variant-ligatures: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .fonts-screen.show {
+            display: flex;
+        }
+
+        .fonts-screen .fonts-header {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 50px;
+            letter-spacing: 0.5px;
+        }
+
+        .fonts-screen .fonts-content {
+            max-width: 400px;
+        }
+
+        .fonts-screen .fonts-title {
+            color: #6b7280;
+            font-size: 12px;
+            text-transform: lowercase;
+            letter-spacing: 1px;
+            margin-bottom: 24px;
+        }
+
+        .fonts-screen .font-row {
+            display: flex;
+            align-items: baseline;
+            margin-bottom: 14px;
+            font-size: 14px;
+        }
+
+        .fonts-screen .font-lang {
+            min-width: 120px;
+            color: #9CA3AF;
+        }
+
+        .fonts-screen .font-name {
+            color: var(--text-color);
+        }
+
+        .fonts-screen .fonts-footer {
+            position: fixed;
+            bottom: 40px;
+            left: 80px;
+            color: #4b5563;
+            font-size: 12px;
+        }
+
         /* F1 Documentation Tooltip - fixed position to right of editor */
         .f1-doc-tooltip {
             position: fixed;
@@ -854,6 +919,10 @@
                     <span class="help-desc">toggle keyboard overlay</span>
                 </div>
                 <div class="help-row">
+                    <span class="help-key">ctrl + b</span>
+                    <span class="help-desc">show fonts</span>
+                </div>
+                <div class="help-row">
                     <span class="help-key">ctrl + space</span>
                     <span class="help-desc">open primitive search</span>
                 </div>
@@ -893,6 +962,41 @@
             </div>
         </div>
         <div class="help-footer">array box</div>
+    </div>
+
+    <!-- Fonts screen -->
+    <div class="fonts-screen" id="fontsScreen">
+        <div class="fonts-inner">
+            <div class="fonts-header">ctrl+b to close</div>
+            <div class="fonts-content">
+                <div class="fonts-title">fonts</div>
+                <div class="font-row">
+                    <span class="font-lang">APL</span>
+                    <span class="font-name">APL385</span>
+                </div>
+                <div class="font-row">
+                    <span class="font-lang">BQN</span>
+                    <span class="font-name">BQN386</span>
+                </div>
+                <div class="font-row">
+                    <span class="font-lang">Uiua</span>
+                    <span class="font-name">Uiua386</span>
+                </div>
+                <div class="font-row">
+                    <span class="font-lang">J</span>
+                    <span class="font-name">JetBrains Mono</span>
+                </div>
+                <div class="font-row">
+                    <span class="font-lang">Kap</span>
+                    <span class="font-name">APL387</span>
+                </div>
+                <div class="font-row">
+                    <span class="font-lang">TinyAPL</span>
+                    <span class="font-name">APL387</span>
+                </div>
+            </div>
+            <div class="fonts-footer">array box</div>
+        </div>
     </div>
     
     <div class="bug-report-container" id="bugReportContainer">
@@ -1777,12 +1881,30 @@
             return helpScreen.classList.contains('show');
         }
         
+        // Fonts screen
+        const fontsScreen = document.getElementById('fontsScreen');
+        
+        function toggleFontsScreen() {
+            fontsScreen.classList.toggle('show');
+        }
+        
+        function isFontsScreenVisible() {
+            return fontsScreen.classList.contains('show');
+        }
+        
         // Global keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             // Ctrl+H to toggle help screen
             if (e.ctrlKey && e.key === 'h') {
                 e.preventDefault();
                 toggleHelpScreen();
+                return;
+            }
+            
+            // Ctrl+B to toggle fonts screen
+            if (e.ctrlKey && e.key === 'b') {
+                e.preventDefault();
+                toggleFontsScreen();
                 return;
             }
             
@@ -1807,11 +1929,18 @@
                 return;
             }
             
+            // Escape to close fonts screen if visible
+            if (e.key === 'Escape' && isFontsScreenVisible()) {
+                e.preventDefault();
+                fontsScreen.classList.remove('show');
+                return;
+            }
+            
             // Escape to close F1 tooltip if visible (check handled by F1 tooltip code)
             // F1 global handler is set up after F1 tooltip is initialized
             
-            // Don't process other shortcuts if help screen is visible
-            if (isHelpScreenVisible()) {
+            // Don't process other shortcuts if help or fonts screen is visible
+            if (isHelpScreenVisible() || isFontsScreenVisible()) {
                 return;
             }
             
