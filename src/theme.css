@@ -51,6 +51,7 @@
     --dracula-yellow:  #F1FA8C;
     --dracula-pink:    #FF79C6;
     --dracula-purple:  #BD93F9;
+    --dracula-red:     #FF5555;
     --dracula-comment: #6272A4;
     --dracula-fg:      #F8F8F2;
     
@@ -59,6 +60,8 @@
     --syntax-number:  var(--dracula-purple);
     --syntax-comment: var(--dracula-comment);
     --syntax-default: var(--dracula-fg);
+    --syntax-string:  var(--dracula-yellow);
+    --syntax-string-incomplete: var(--dracula-red);
     
     /* Uiua (monadic/dyadic for both functions and modifiers) */
     --syntax-uiua-function-monadic: var(--dracula-cyan);
@@ -75,6 +78,8 @@
 /* Syntax highlighting classes */
 .syntax-number  { color: var(--syntax-number); }
 .syntax-comment { color: var(--syntax-comment); }
+.syntax-string  { color: var(--syntax-string); }
+.syntax-string-incomplete { color: var(--syntax-string-incomplete); }
 
 .syntax-uiua-function-monadic { color: var(--syntax-uiua-function-monadic); }
 .syntax-uiua-function-dyadic  { color: var(--syntax-uiua-function-dyadic); }

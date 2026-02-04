@@ -15,6 +15,16 @@
 export const primitiveGroups = {
     // ========== SYNTAX ==========
     
+    // String delimiters
+    stringDelimiter: {
+        apl: "'",
+        bqn: '"',
+        uiua: '"',
+        j: "'",
+        kap: "'",
+        tinyapl: '"'
+    },
+    
     // Comments
     comment: {
         apl: '⍝',

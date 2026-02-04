@@ -8,6 +8,9 @@
  */
 export const syntaxRules = {
     bqn: {
+        // String delimiter (double quote) - BQN uses " for strings, ' for characters
+        stringDelimiter: '"',
+        charDelimiter: "'",
         // Functions (cyan) - primitive functions
         functions: [
             '+', '-', '×', '÷', '⋆', '√', '⌊', '⌈', '|', '¬', '∧', '∨',
@@ -42,6 +45,8 @@ export const syntaxRules = {
         }
     },
     apl: {
+        // String delimiter (single quote) - APL uses ' for strings, doubled for escape: 'it''s'
+        stringDelimiter: "'",
         // Functions (cyan) - primitive functions
         // Categories based on APL Wiki (https://aplwiki.com/wiki/Dyalog_APL):
         // - Arithmetic: +, -, ×, ÷, |, ⌊, ⌈, *, ⍟, !, ○
@@ -137,6 +142,9 @@ export const syntaxRules = {
         numberPattern: /^_?(\d+\.?\d*|\.\d+)([ejrx][+-]?\d+\.?\d*)?/i
     },
     uiua: {
+        // String delimiter (double quote) - Uiua uses " for strings, @ for character literals
+        stringDelimiter: '"',
+        charPrefix: '@',
         // Monadic functions (cyan) - take 1 array argument
         monadic: [
             '¬', '±', '√', '○', '⌵', '⌈', '⌊', '⧻', '△', '⇡', '⊢', '⇌', 
@@ -178,6 +186,8 @@ export const syntaxRules = {
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
     },
     kap: {
+        // String delimiter (single quote) - Kap uses ' for strings like APL
+        stringDelimiter: "'",
         // Functions (cyan) - scalar and structural functions
         functions: [
             // Scalar functions (arithmetic, comparison, logical)
@@ -218,6 +228,8 @@ export const syntaxRules = {
         numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
     },
     tinyapl: {
+        // String delimiters - TinyAPL uses both ' (char vectors) and " (strings with escapes)
+        stringDelimiters: ["'", '"'],
         // Functions (cyan) - primitive functions
         // Based on https://beta.tinyapl.rubenverg.com/
         functions: [
@@ -327,6 +339,96 @@ export function highlightCode(text, language) {
             });
             lastGlyphType = 'number';
             i += numberMatch[0].length;
+            continue;
+        }
+        
+        // Check for strings (skip for J language - strings are heavily used for functions)
+        // Support both single stringDelimiter and array of stringDelimiters
+        const stringDelimiters = rules.stringDelimiters || (rules.stringDelimiter ? [rules.stringDelimiter] : []);
+        if (language !== 'j' && stringDelimiters.includes(char)) {
+            const delimiter = char;
+            let stringEnd = i + 1;
+            let isComplete = false;
+            
+            // For single-quote delimiters (APL, Kap), doubled quotes are escapes
+            // For double-quote delimiters (BQN, Uiua) and TinyAPL strings, backslash/⍘ is escape
+            // TinyAPL: ' uses doubled escapes, " uses ⍘ escape
+            const useDoubleEscape = delimiter === "'" && language !== 'bqn';
+            const escapeChar = language === 'tinyapl' && delimiter === '"' ? '⍘' : '\\';
+            
+            while (stringEnd < text.length) {
+                const c = text[stringEnd];
+                if (c === delimiter) {
+                    if (useDoubleEscape && stringEnd + 1 < text.length && text[stringEnd + 1] === delimiter) {
+                        // Doubled delimiter is escape, skip both
+                        stringEnd += 2;
+                        continue;
+                    }
+                    // Found closing delimiter
+                    isComplete = true;
+                    stringEnd++; // Include the closing delimiter
+                    break;
+                } else if (!useDoubleEscape && c === escapeChar && stringEnd + 1 < text.length) {
+                    // Escape character, skip next character
+                    stringEnd += 2;
+                } else if (c === '\n') {
+                    // Newline typically ends an incomplete string (except in multiline strings)
+                    break;
+                } else {
+                    stringEnd++;
+                }
+            }
+            
+            const stringValue = text.substring(i, stringEnd);
+            tokens.push({
+                type: isComplete ? 'string' : 'string-incomplete',
+                value: stringValue
+            });
+            lastGlyphType = isComplete ? 'string' : 'string-incomplete';
+            i = stringEnd;
+            continue;
+        }
+        
+        // Check for BQN character literals ('x')
+        if (language === 'bqn' && rules.charDelimiter && char === rules.charDelimiter) {
+            // BQN character literal: 'x' (single char after ')
+            // The quote itself plus one character
+            let charEnd = i + 1;
+            let isComplete = false;
+            
+            if (charEnd < text.length && text[charEnd] !== '\n') {
+                charEnd++; // Include the character
+                isComplete = true;
+            }
+            
+            const charValue = text.substring(i, charEnd);
+            tokens.push({
+                type: isComplete ? 'string' : 'string-incomplete',
+                value: charValue
+            });
+            lastGlyphType = isComplete ? 'string' : 'string-incomplete';
+            i = charEnd;
+            continue;
+        }
+        
+        // Check for Uiua character literals (@x)
+        if (language === 'uiua' && rules.charPrefix && char === rules.charPrefix) {
+            // Uiua character literal: @x (single char after @)
+            let charEnd = i + 1;
+            let isComplete = false;
+            
+            if (charEnd < text.length && text[charEnd] !== '\n' && text[charEnd] !== ' ') {
+                charEnd++; // Include the character
+                isComplete = true;
+            }
+            
+            const charValue = text.substring(i, charEnd);
+            tokens.push({
+                type: isComplete ? 'string' : 'string-incomplete',
+                value: charValue
+            });
+            lastGlyphType = isComplete ? 'string' : 'string-incomplete';
+            i = charEnd;
             continue;
         }
         
@@ -492,6 +594,8 @@ function getTokenCssClass(tokenType, language) {
     // Shared classes
     if (tokenType === 'number') return 'syntax-number';
     if (tokenType === 'comment') return 'syntax-comment';
+    if (tokenType === 'string') return 'syntax-string';
+    if (tokenType === 'string-incomplete') return 'syntax-string-incomplete';
     if (tokenType === 'default') return null;
     
     if (language === 'uiua') {
