@@ -362,6 +362,61 @@ export function calculateContentWidth(element, text) {
 }
 
 /**
+ * Calculate the visual width needed for the result/output
+ * Uses a temporary clone to measure rendered width without constraints
+ * @param {HTMLElement} outputElement - The output element
+ * @returns {number} - Required width in pixels for the full container
+ */
+export function calculateResultWidth(outputElement) {
+    if (!outputElement || !outputElement.classList.contains('show')) {
+        return 0;
+    }
+    
+    // Create a temporary clone to measure without constraints
+    const clone = outputElement.cloneNode(true);
+    
+    // Apply styles to ensure accurate measurement
+    const computedStyle = window.getComputedStyle(outputElement);
+    clone.style.position = 'absolute';
+    clone.style.left = '-9999px';
+    clone.style.top = '-9999px';
+    clone.style.right = 'auto';
+    clone.style.width = 'auto';
+    clone.style.maxWidth = 'none';
+    clone.style.visibility = 'hidden';
+    clone.style.display = 'block'; // Ensure it's displayed
+    clone.style.padding = computedStyle.padding;
+    clone.style.border = computedStyle.border;
+    clone.style.fontFamily = computedStyle.fontFamily;
+    clone.style.fontSize = computedStyle.fontSize;
+    clone.style.whiteSpace = computedStyle.whiteSpace;
+    
+    // Append to body temporarily
+    document.body.appendChild(clone);
+    
+    // Force a reflow to ensure measurements are accurate
+    void clone.offsetWidth;
+    
+    // Get the actual scroll width (content + padding, but not border)
+    // scrollWidth gives us the minimum width needed for the content
+    const resultContentWithPadding = clone.scrollWidth;
+    
+    // Remove the clone
+    document.body.removeChild(clone);
+    
+    // Account for:
+    // - scrollWidth includes padding (35px each side = 70px) but NOT border
+    // - border: 3px each side = 6px
+    // - language selector: ~184px (same as code input)
+    // - container gap: 18px
+    const borders = 6;
+    const languageSelectorWidth = 184;
+    const containerGap = 18;
+    
+    return resultContentWithPadding + borders + languageSelectorWidth + containerGap;
+}
+
+/**
  * Auto-expand container width based on content
  * @param {HTMLElement} container - The container element
  * @param {HTMLElement} inputContainer - The input container element
@@ -381,6 +436,43 @@ export function autoExpandWidth(container, inputContainer, codeInput, text, opti
     const targetWidth = Math.min(maxWidth, Math.max(minWidth, contentWidth + padding));
     
     // Only expand, don't shrink below base width (unless content is smaller)
+    const newWidth = Math.max(baseWidth, targetWidth);
+    
+    container.style.maxWidth = `${newWidth}px`;
+}
+
+/**
+ * Auto-expand container width based on both code and result content
+ * Uses the maximum of code width and result width
+ * @param {HTMLElement} container - The container element
+ * @param {HTMLElement} codeInput - The code input element
+ * @param {HTMLElement} outputElement - The output element
+ * @param {string} codeText - The current code text content
+ * @param {object} options - Configuration options
+ */
+export function autoExpandWidthForCodeAndResult(container, codeInput, outputElement, codeText, options = {}) {
+    const {
+        minWidth = 500,      // Minimum container width
+        maxWidth = 1600,     // Maximum container width  
+        baseWidth = 875,     // Default/base width
+        padding = 20         // Extra padding (~1 character headroom at 42px font)
+    } = options;
+    
+    // Calculate code width
+    const codeWidth = calculateContentWidth(codeInput, codeText);
+    
+    // Calculate result width (if output is visible)
+    const resultWidth = calculateResultWidth(outputElement);
+    
+    // Use the maximum of code width and result width
+    const contentWidth = Math.max(codeWidth, resultWidth);
+    
+    // For results, use less padding since calculateResultWidth already accounts for everything
+    // For code-only, use normal padding
+    const extraPadding = resultWidth > 0 ? 0 : padding;
+    const targetWidth = Math.min(maxWidth, Math.max(minWidth, contentWidth + extraPadding));
+    
+    // Use the maximum of base width and target width
     const newWidth = Math.max(baseWidth, targetWidth);
     
     container.style.maxWidth = `${newWidth}px`;
@@ -422,12 +514,20 @@ export function createEditorFeaturesManager(elements, getLanguage, getInputText,
     
     /**
      * Handle width auto-expansion
+     * Considers both code and result width if result is visible
      */
     function handleAutoExpand() {
         if (!autoExpandEnabled) return;
         
         const text = getInputText();
-        autoExpandWidth(container, inputContainer, codeInput, text);
+        
+        // If output is visible, use combined width calculation
+        // Otherwise, just use code width
+        if (output && output.classList.contains('show')) {
+            autoExpandWidthForCodeAndResult(container, codeInput, output, text);
+        } else {
+            autoExpandWidth(container, inputContainer, codeInput, text);
+        }
     }
     
     /**
@@ -649,7 +749,9 @@ export default {
     alignAssignments,
     alignComments,
     calculateContentWidth,
+    calculateResultWidth,
     autoExpandWidth,
+    autoExpandWidthForCodeAndResult,
     createEditorFeaturesManager,
     toggleComment,
     moveLines

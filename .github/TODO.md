@@ -16,7 +16,6 @@
   - rip apl cart / bqn crate (Adam's idea)
 - add non-keyboard character set for APL, BQN, Kap
 - train tacit view
-- add shortcut for full docs
 - add ctrl + shift + up/down for multi-line cursor for multi-line editing
 - add alt + up/down
 

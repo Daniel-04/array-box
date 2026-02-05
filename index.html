@@ -1337,7 +1337,7 @@
         import { createKeyboardHandler, bqnKeymap, aplKeymap, kapKeymap, tinyaplKeymap, tinyaplKeyboard, tinyaplGlyphs, uiuaGlyphs, jGlyphs, insertText } from './src/keymap.js?v=26';
         import { syntaxRules, highlightCode, escapeHtml, getSyntaxClass } from './src/syntax.js?v=26';
         import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames, jGlyphNames, tinyaplGlyphNames, bqnGlyphDocs, uiuaGlyphDocs, jGlyphDocs, kapGlyphDocs, aplGlyphDocs, tinyaplGlyphDocs } from './src/keyboard.js?v=26';
-        import { createEditorFeaturesManager, toggleComment, commentTokens } from './src/editor-features.js?v=2';
+        import { createEditorFeaturesManager, toggleComment, commentTokens, autoExpandWidthForCodeAndResult } from './src/editor-features.js?v=2';
         import { translatePrimitives, clearTranslationCache } from './src/primitive-translate.js?v=2';
         
         // Glyph documentation by language
@@ -2643,17 +2643,49 @@
             }
             output.className = `output show ${langConfig.fontClass} ${result.success ? '' : 'error'}`;
             
-            // Dynamically adjust font size to fit content, then center
+            // Dynamically adjust font size first, then calculate width once at final size
             requestAnimationFrame(() => {
                 // Reset to default font size (scaled 1.75x)
                 let fontSize = 42;
                 const minFontSize = 10;
                 output.style.fontSize = `${fontSize}px`;
                 
+                // Reset overflow-x to hidden initially
+                output.style.overflowX = 'hidden';
+                
+                // Temporarily make container very wide to allow accurate font size calculation
+                // This prevents the bounce from width changes affecting font size calculation
+                container.style.maxWidth = '9999px';
+                
+                // Force a reflow to apply the wide width
+                void container.offsetWidth;
+                void output.offsetWidth;
+                
                 // Reduce font size until content fits or we hit minimum
+                // Now we can measure accurately since container is wide
                 while (output.scrollWidth > output.clientWidth && fontSize > minFontSize) {
                     fontSize -= 1;
                     output.style.fontSize = `${fontSize}px`;
+                }
+                
+                // Force a reflow to ensure font size is applied before width calculation
+                void output.offsetWidth;
+                
+                // Now calculate and set the final container width based on the final font size
+                // This happens in the same frame to avoid bounce
+                const codeText = getInputText();
+                autoExpandWidthForCodeAndResult(container, codeInput, output, codeText);
+                
+                // Force a reflow to ensure container width is applied
+                void container.offsetWidth;
+                void output.offsetWidth;
+                
+                // Check if content still doesn't fit even after font reduction and width increase
+                // If so, enable horizontal scrolling
+                if (output.scrollWidth > output.clientWidth) {
+                    output.style.overflowX = 'auto';
+                } else {
+                    output.style.overflowX = 'hidden';
                 }
                 
                 // Move container up by half the output height to keep input+output centered
@@ -2722,8 +2754,12 @@
             output.classList.remove('show');
             loadingIndicator.classList.remove('show');
             container.style.transform = '';
+            output.style.overflowX = 'hidden'; // Reset overflow when hiding
             lastResult = null;
             lastEvaluatedCode = null;
+            // Recalculate width based on code only (no result)
+            const codeText = getInputText();
+            editorFeatures.handleAutoExpand();
         }
 
         // Initialize editor features (alignment, auto-expand)
