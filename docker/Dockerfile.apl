@@ -4,6 +4,11 @@
 # NOTE: Dyalog APL requires a license. This Dockerfile assumes you have
 # Dyalog installed on your host and will mount it into the container.
 # The installation will be mounted at /opt/dyalog at runtime.
+#
+# Security is provided by:
+# 1. Docker container isolation (no network, read-only fs, limited resources)
+# 2. Safe3.dyalog token whitelist (blocks ⍎, ⎕SH, ⎕CMD, ⎕NA, etc.)
+# 3. Execution in isolated namespace
 
 FROM debian:bookworm-slim
 
@@ -17,6 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN useradd -m -s /bin/bash sandbox && \
     mkdir -p /home/sandbox && \
     chown -R sandbox:sandbox /home/sandbox
+
+# Copy Safe3.dyalog for secure execution
+COPY Safe3.dyalog /opt/Safe3.dyalog
 
 # Set up environment
 ENV HOME="/home/sandbox"

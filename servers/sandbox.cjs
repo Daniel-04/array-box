@@ -357,7 +357,70 @@ async function getWarmContainer(language, options = {}) {
     });
     
     console.log(`[Sandbox] Warm container for ${language} ready`);
+    
+    // For APL, load Safe3.dyalog for secure execution
+    if (language === 'apl') {
+        await loadSafe3(container);
+    }
+    
     return container;
+}
+
+/**
+ * Load Safe3.dyalog into APL container for secure execution
+ * Safe3 provides application-level sandboxing via token whitelisting
+ * This blocks ⍎ (execute), ⎕SH, ⎕CMD, ⎕NA and other dangerous operations
+ */
+async function loadSafe3(container) {
+    return new Promise((resolve) => {
+        let output = '';
+        let resolved = false;
+        const SAFE3_LOADED_MARKER = '___SAFE3_LOADED___';
+        
+        const onData = (data) => {
+            output += data.toString();
+            if (output.includes(SAFE3_LOADED_MARKER)) {
+                if (!resolved) {
+                    resolved = true;
+                    container.stdout.removeListener('data', onData);
+                    container.stderr.removeListener('data', onStderr);
+                    console.log('[Sandbox] Safe3.dyalog loaded successfully');
+                    resolve();
+                }
+            }
+        };
+        
+        const onStderr = (data) => {
+            output += data.toString();
+            if (output.includes(SAFE3_LOADED_MARKER)) {
+                if (!resolved) {
+                    resolved = true;
+                    container.stdout.removeListener('data', onData);
+                    container.stderr.removeListener('data', onStderr);
+                    console.log('[Sandbox] Safe3.dyalog loaded successfully');
+                    resolve();
+                }
+            }
+        };
+        
+        container.stdout.on('data', onData);
+        container.stderr.on('data', onStderr);
+        
+        // Load Safe3.dyalog and configure timeout
+        const timeoutSeconds = Math.floor(CONFIG.timeout / 1000);
+        container.stdin.write(`⎕FIX 'file:///opt/Safe3.dyalog'\nSafe3.DefaultTimeout←${timeoutSeconds}\n⎕←'${SAFE3_LOADED_MARKER}'\n`);
+        
+        // Timeout fallback
+        setTimeout(() => {
+            if (!resolved) {
+                resolved = true;
+                container.stdout.removeListener('data', onData);
+                container.stderr.removeListener('data', onStderr);
+                console.warn('[Sandbox] Safe3.dyalog load timeout - continuing anyway');
+                resolve();
+            }
+        }, 5000);
+    });
 }
 
 /**
@@ -707,41 +770,23 @@ async function executeWithWarmContainer(language, code, options = {}) {
             input = `${code}\n⊢"${END_MARKER}"\n`;
         } else if (language === 'apl') {
             aplMarkers = createAplMarkers();
-            // Run code
-            // Enable boxing with min style (only boxes nested/enclosed arrays, not simple arrays)
-            // Then send )SIC to exit ALL suspended states (safer than →)
-            // Then print end marker
-            // Then clear vars and print reset marker
+            // Use Safe3.Exec for secure execution
+            // Safe3 provides:
+            // - Token whitelisting (blocks ⍎, ⎕SH, ⎕CMD, ⎕NA, etc.)
+            // - Wrapped ⍎ that validates code before execution
+            // - Execution in isolated namespace
+            // - Timeout enforcement
             
-            // Wrap APL code so expressions produce output
-            // Filter out empty lines and comment-only lines
-            const lines = code.split('\n')
-                .map(line => line.trim())
-                .filter(line => line && !line.startsWith('⍝'));
+            // Escape single quotes in user code for APL string
+            // APL escapes quotes by doubling them: 'it''s' 
+            const escapedCode = code.replace(/'/g, "''");
             
-            // Strip inline comments
-            const cleanedLines = lines.map(line => {
-                const commentIndex = line.indexOf('⍝');
-                return commentIndex >= 0 ? line.substring(0, commentIndex).trim() : line;
-            }).filter(line => line);
+            // Store for filtering
+            aplCodeLines = new Set([`Safe3.Exec`]);
             
-            let aplCode;
-            if (cleanedLines.length === 0) {
-                // Only comments - output empty
-                aplCode = `⎕←''`;
-            } else if (cleanedLines.length === 1) {
-                // Single line - wrap with ⎕← for output
-                aplCode = `⎕←${cleanedLines[0]}`;
-            } else {
-                // Multiline - wrap in a dfn and execute it
-                const joinedCode = cleanedLines.join(' ⋄ ');
-                aplCode = `⎕←{${joinedCode}}⍬`;
-            }
-            
-            // Store the wrapped code lines for filtering (so we don't filter the result as "echoed input")
-            aplCodeLines = new Set(aplCode.split('\n').map(l => l.trim()).filter(l => l));
-            
-            input = `]boxing on -s=min\n)SIC\n⎕←'${aplMarkers.start}'\n${aplCode}\n)SIC\n⎕←'${aplMarkers.end}'\n⎕EX ⎕NL ¯1\n⎕←'${aplMarkers.reset}'\n`;
+            // Build Safe3.Exec call wrapped in :Trap to catch security errors
+            // Without :Trap, ⎕SIGNAL from Safe3 would prevent end markers from printing
+            input = `]boxing on -s=min\n)SIC\n⎕←'${aplMarkers.start}'\n:Trap 0 ⋄ ⎕←Safe3.Exec '${escapedCode}' ⋄ :Else ⋄ ⎕←⎕DMX.EM,': ',⎕DMX.Message ⋄ :EndTrap\n)SIC\n⎕←'${aplMarkers.end}'\n⎕←'${aplMarkers.reset}'\n`;
         }
         
         // Set timeout
@@ -982,23 +1027,13 @@ function executeInSandbox(language, code, options = {}) {
             input = `${code}\nexit 0\n`;
         } else if (language === 'apl') {
             // APL-specific preprocessing for mapl (batch mode)
-            // Enable boxing with min style (only boxes nested/enclosed arrays, not simple arrays)
-            const lines = code.split('\n')
-                .map(line => line.trim())
-                .filter(line => line && !line.startsWith('⍝'));
-            const cleanedLines = lines.map(line => {
-                const commentIndex = line.indexOf('⍝');
-                return commentIndex >= 0 ? line.substring(0, commentIndex).trim() : line;
-            }).filter(line => line);
+            // Use Safe3.Exec for secure execution
+            const escapedCode = code.replace(/'/g, "''");
+            const timeoutSeconds = Math.floor(timeout / 1000);
             
-            if (cleanedLines.length === 0) {
-                input = `]boxing on -s=min\n''\n`;
-            } else if (cleanedLines.length === 1) {
-                input = `]boxing on -s=min\n${cleanedLines[0]}\n`;
-            } else {
-                // For multiline, execute each line
-                input = `]boxing on -s=min\n` + cleanedLines.join('\n') + '\n';
-            }
+            // Load Safe3, configure timeout, enable boxing, execute safely
+            // Wrap in :Trap to catch security errors and still produce output
+            input = `⎕FIX 'file:///opt/Safe3.dyalog'\nSafe3.DefaultTimeout←${timeoutSeconds}\n]boxing on -s=min\n:Trap 0 ⋄ ⎕←Safe3.Exec '${escapedCode}' ⋄ :Else ⋄ ⎕←⎕DMX.EM,': ',⎕DMX.Message ⋄ :EndTrap\n`;
         } else if (language === 'kap') {
             input = code + '\n';
         }

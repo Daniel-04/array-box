@@ -57,16 +57,32 @@ if (!aplExecutable) {
 
 console.log(`Using APL executable: ${aplExecutable}`);
 
-// Blocked commands for security - shell access
+// Security: In sandbox mode, Safe3.dyalog provides comprehensive security
+// via token whitelisting. This blocks ⍎ (execute), ⎕SH, ⎕CMD, ⎕NA, and
+// any attempt to bypass via ⎕UCS character construction.
+//
+// The blocklist below is a secondary defense for direct execution mode.
 const APL_BLOCKED_PATTERNS = [
-    /⎕SHELL/i,
-    /⎕SH(?![A-Z])/i,  // ⎕SH but not ⎕SHOW or similar
+    /⎕SH\b/i,
+    /⎕SHELL\b/i,
+    /⎕CMD\b/i,
+    /⎕NA\b/i,
 ];
 
 function validateAPLCode(code) {
+    // In sandbox mode, Safe3 handles all validation via whitelist
+    // This blocklist is just for direct mode (which is NOT secure)
+    if (sandboxMode) {
+        return { valid: true };
+    }
+    
     for (const pattern of APL_BLOCKED_PATTERNS) {
         if (pattern.test(code)) {
-            return { valid: false, error: 'Shell commands (⎕SH, ⎕SHELL) are disabled for security reasons' };
+            const match = code.match(pattern);
+            return { 
+                valid: false, 
+                error: `NOT PERMITTED: ${match ? match[0] : 'System function'} is disabled` 
+            };
         }
     }
     return { valid: true };

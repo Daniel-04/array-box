@@ -366,11 +366,17 @@ if docker info > /dev/null 2>&1; then
         # Kap requires JVM
         build_image "kap"
         
-        # APL note
+        # APL - requires Dyalog to be mounted, includes Safe3 for security
+        build_image "apl"
+        
         echo "=========================================="
         echo "Note: APL sandbox requires Dyalog APL to be"
         echo "mounted from your host system at runtime."
-        echo "See docker/Dockerfile.apl for details."
+        echo ""
+        echo "Security is provided by Safe3.dyalog:"
+        echo "  - Token whitelist (blocks ⍎, ⎕SH, ⎕CMD, ⎕NA)"
+        echo "  - Blocks ⎕UCS+⍎ bypass attacks"
+        echo "  - Execution in isolated namespace"
         echo "=========================================="
         
         echo ""
