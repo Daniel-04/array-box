@@ -9,6 +9,9 @@ const path = require('path');
 
 const STATS_FILE = path.join(__dirname, '..', 'storage', 'stats.json');
 
+// Max recent evaluations to keep
+const MAX_RECENT_EVALS = 50;
+
 // Default stats structure
 const defaultStats = {
     // Totals
@@ -25,6 +28,9 @@ const defaultStats = {
         kap: { evaluations: 0, successes: 0, failures: 0 },
         tinyapl: { evaluations: 0, successes: 0, failures: 0 }
     },
+    
+    // Recent evaluations log (newest first)
+    recentEvaluations: [],
     
     // Time series data at multiple granularities
     timeSeries: {
@@ -98,6 +104,11 @@ function loadStats() {
                 if (!stats.timeSeries[granularity].successesByLang) {
                     stats.timeSeries[granularity].successesByLang = [];
                 }
+            }
+            
+            // Ensure recentEvaluations exists
+            if (!stats.recentEvaluations) {
+                stats.recentEvaluations = [];
             }
             
             // Ensure sessions exists
@@ -296,7 +307,7 @@ function recordVisitor(sessionId) {
 }
 
 // Record an evaluation
-function recordEvaluation(language, success) {
+function recordEvaluation(language, success, code, duration) {
     if (!stats) loadStats();
     
     const lang = language.toLowerCase();
@@ -312,6 +323,18 @@ function recordEvaluation(language, success) {
         addToSuccessTimeSeries(lang);
     } else {
         stats.languages[lang].failures++;
+    }
+    
+    // Add to recent evaluations log
+    stats.recentEvaluations.unshift({
+        timestamp: Date.now(),
+        language: lang,
+        success: !!success,
+        code: (code || '').substring(0, 200),  // Truncate long code
+        duration: duration || null
+    });
+    if (stats.recentEvaluations.length > MAX_RECENT_EVALS) {
+        stats.recentEvaluations = stats.recentEvaluations.slice(0, MAX_RECENT_EVALS);
     }
     
     addToTimeSeries('evaluations');
@@ -341,8 +364,15 @@ function getStats() {
         languages: stats.languages,
         timeSeries: stats.timeSeries,
         activeVisitors: Object.keys(stats.sessions).length,
+        recentEvaluations: (stats.recentEvaluations || []).slice(0, 20),
         lastUpdated: stats.lastUpdated
     };
+}
+
+// Get recent evaluations (for dashboard)
+function getRecentEvaluations(count = 20) {
+    if (!stats) loadStats();
+    return (stats.recentEvaluations || []).slice(0, count);
 }
 
 // Get time series for a specific range - always reload from file to get fresh data
@@ -426,6 +456,7 @@ module.exports = {
     recordEvaluation,
     recordPermalink,
     getStats,
+    getRecentEvaluations,
     getTimeSeriesForRange,
     subscribe,
     loadStats

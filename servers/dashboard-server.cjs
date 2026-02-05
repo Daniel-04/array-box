@@ -26,6 +26,13 @@ const dashboardHTML = `<!DOCTYPE html>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>⬢ ArrayBox Dashboard</title>
     <style>
+        @font-face { font-family: 'BQN'; src: url('/fonts/BQN386.ttf') format('truetype'); }
+        @font-face { font-family: 'APL'; src: url('/fonts/APL387.ttf') format('truetype'); }
+        @font-face { font-family: 'J'; src: url('/fonts/Apl385.ttf') format('truetype'); }
+        @font-face { font-family: 'Uiua'; src: url('/fonts/Uiua386.ttf') format('truetype'); }
+        @font-face { font-family: 'Kap'; src: url('/fonts/APL387.ttf') format('truetype'); }
+        @font-face { font-family: 'TinyAPL'; src: url('/fonts/APL387.ttf') format('truetype'); }
+        
         :root {
             --bg-primary: #000000;
             --bg-secondary: #1a1b26;
@@ -53,7 +60,20 @@ const dashboardHTML = `<!DOCTYPE html>
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .dashboard-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .dashboard-main {
+            flex: 1;
+            min-width: 0;
             padding: 20px;
+            transition: flex 0.25s ease;
         }
         
         .header {
@@ -77,6 +97,15 @@ const dashboardHTML = `<!DOCTYPE html>
             font-size: 0.9rem;
         }
         
+        .status-bar {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+        
         .connection-status {
             display: inline-flex;
             align-items: center;
@@ -84,7 +113,6 @@ const dashboardHTML = `<!DOCTYPE html>
             padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.8rem;
-            margin-top: 10px;
         }
         
         .connection-status.connected {
@@ -103,6 +131,46 @@ const dashboardHTML = `<!DOCTYPE html>
             border-radius: 50%;
             background: currentColor;
             animation: pulse 2s infinite;
+        }
+        
+        .server-indicators {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .server-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(86, 95, 137, 0.2);
+            color: var(--text-muted);
+            transition: all 0.3s ease;
+        }
+        
+        .server-indicator.up {
+            background: rgba(158, 206, 106, 0.15);
+            color: var(--accent-green);
+        }
+        
+        .server-indicator.down {
+            background: rgba(247, 118, 142, 0.15);
+            color: var(--accent-red);
+        }
+        
+        .server-indicator .srv-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: currentColor;
+        }
+        
+        .server-indicator.up .srv-dot {
+            animation: pulse 3s infinite;
         }
         
         @keyframes pulse {
@@ -151,6 +219,8 @@ const dashboardHTML = `<!DOCTYPE html>
             border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
+            min-width: 0;
+            overflow: hidden;
         }
         
         .section h2 {
@@ -263,11 +333,13 @@ const dashboardHTML = `<!DOCTYPE html>
         .chart-container {
             height: 450px;
             position: relative;
+            overflow: hidden;
         }
         
         #activityChart {
             width: 100%;
             height: 100%;
+            display: block;
         }
         
         .chart-legend {
@@ -303,6 +375,7 @@ const dashboardHTML = `<!DOCTYPE html>
             display: grid;
             grid-template-columns: 1fr 300px;
             gap: 20px;
+            min-width: 0;
         }
         
         @media (max-width: 900px) {
@@ -466,20 +539,159 @@ const dashboardHTML = `<!DOCTYPE html>
             padding: 40px;
         }
         
+        /* Evals panel (inline, pushes content) */
+        .eval-panel {
+            width: 0;
+            overflow: hidden;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--bg-tertiary);
+            transition: width 0.25s ease;
+            flex-shrink: 0;
+        }
+        
+        .eval-panel.visible {
+            width: 600px;
+        }
+        
+        .eval-panel-inner {
+            width: 600px;
+            padding: 20px;
+            overflow-y: auto;
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            box-sizing: border-box;
+        }
+        
+        .eval-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+        
+        .eval-panel-header h2 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        
+        
+        .eval-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .eval-table th {
+            text-align: left;
+            padding: 10px 12px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--bg-tertiary);
+        }
+        
+        .eval-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(42, 46, 63, 0.5);
+            font-size: 0.9rem;
+            vertical-align: top;
+        }
+        
+        .eval-table tr:hover td {
+            background: rgba(42, 46, 63, 0.3);
+        }
+        
+        .eval-table .eval-status {
+            white-space: nowrap;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .eval-table .eval-status .icon { margin-right: 4px; }
+        .eval-table .eval-status .icon.success { color: var(--accent-green); }
+        .eval-table .eval-status .icon.failure { color: var(--accent-red); }
+        
+        .eval-table .eval-status .dur { font-size: 0.8rem; }
+        .eval-table .eval-status .dur.bqn { color: #2b7067; }
+        .eval-table .eval-status .dur.apl { color: #3cb371; }
+        .eval-table .eval-status .dur.j { color: #2196f3; }
+        .eval-table .eval-status .dur.uiua { color: #e54ed0; }
+        .eval-table .eval-status .dur.kap { color: #ffffff; }
+        .eval-table .eval-status .dur.tinyapl { color: #94e044; }
+        
+        .eval-table .eval-code {
+            font-family: monospace;
+            font-size: 1.6rem;
+            color: var(--text-secondary);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .eval-table .eval-code.lang-bqn { font-family: 'BQN', monospace; }
+        .eval-table .eval-code.lang-apl { font-family: 'APL', monospace; }
+        .eval-table .eval-code.lang-j { font-family: 'J', monospace; }
+        .eval-table .eval-code.lang-uiua { font-family: 'Uiua', monospace; }
+        .eval-table .eval-code.lang-kap { font-family: 'Kap', monospace; }
+        .eval-table .eval-code.lang-tinyapl { font-family: 'TinyAPL', monospace; }
+        
+        .eval-table .eval-time {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            white-space: nowrap;
+        }
+        
+        .eval-no-data {
+            text-align: center;
+            color: var(--text-muted);
+            padding: 60px 20px;
+            font-size: 1rem;
+        }
+        
+        
         @media (max-width: 600px) {
-            body { padding: 10px; }
+            .dashboard-main { padding: 10px; }
             .header h1 { font-size: 1.8rem; }
             .stat-card .value { font-size: 2rem; }
+            .status-bar { gap: 8px; }
+            .server-indicator { padding: 3px 7px; font-size: 0.7rem; }
+            .eval-panel.visible { width: 90vw; }
+            .eval-panel-inner { width: 90vw; }
         }
     </style>
 </head>
 <body>
+    <div class="dashboard-layout">
+    <div class="dashboard-main">
     <div class="header">
         <h1>⬢ ArrayBox Dashboard</h1>
         <p class="subtitle">Real-time usage statistics</p>
-        <div id="connectionStatus" class="connection-status disconnected">
-            <span class="dot"></span>
-            <span class="text">Connecting...</span>
+        <div class="status-bar">
+            <div id="connectionStatus" class="connection-status disconnected">
+                <span class="dot"></span>
+                <span class="text">Connecting...</span>
+            </div>
+            <div class="server-indicators" id="serverIndicators">
+                <div class="server-indicator" id="srv-j" title="J Server (port 8080)">
+                    <span class="srv-dot"></span>
+                    <span>J</span>
+                </div>
+                <div class="server-indicator" id="srv-apl" title="APL Server (port 8081)">
+                    <span class="srv-dot"></span>
+                    <span>APL</span>
+                </div>
+                <div class="server-indicator" id="srv-kap" title="Kap Server (port 8083)">
+                    <span class="srv-dot"></span>
+                    <span>Kap</span>
+                </div>
+                <div class="server-indicator" id="srv-permalink" title="Permalink Server (port 8084)">
+                    <span class="srv-dot"></span>
+                    <span>Link</span>
+                </div>
+            </div>
         </div>
     </div>
     
@@ -578,6 +790,22 @@ const dashboardHTML = `<!DOCTYPE html>
         </div>
     </div>
     
+    </div><!-- end dashboard-main -->
+    
+    <!-- Evals panel -->
+    <div class="eval-panel" id="evalPanel">
+        <div class="eval-panel-inner">
+            <div class="eval-panel-header">
+                <h2>Evals</h2>
+            </div>
+            <div id="evalTableContainer">
+                <div class="eval-no-data">No evaluations recorded yet.</div>
+            </div>
+        </div>
+    </div>
+    
+    </div><!-- end dashboard-layout -->
+    
     <script>
         // State
         let currentStats = null;
@@ -585,6 +813,8 @@ const dashboardHTML = `<!DOCTYPE html>
         let chartData = { visitors: [], evaluations: [], evalsByLang: [], successesByLang: [] };
         let currentTimeRange = '1h';
         let currentViewMode = 'interval';
+        let evalPanelVisible = false;
+        let evals = [];
         
         // Format numbers with commas
         function formatNumber(n) {
@@ -770,6 +1000,14 @@ const dashboardHTML = `<!DOCTYPE html>
             document.getElementById('totalPermalinks').textContent = formatNumber(data.totalPermalinks);
             document.getElementById('activeVisitors').textContent = formatNumber(data.activeVisitors);
             
+            // Update recent evaluations if available in SSE data
+            if (data.recentEvaluations) {
+                evals = data.recentEvaluations;
+                if (evalPanelVisible) {
+                    renderEvalTable();
+                }
+            }
+            
             // Update chart data from the appropriate time series
             if (['1h', '3h', '6h', '12h', '24h'].includes(currentTimeRange) && data.timeSeries?.fiveMin) {
                 chartData = data.timeSeries.fiveMin;
@@ -948,6 +1186,11 @@ const dashboardHTML = `<!DOCTYPE html>
         function drawChart() {
             const canvas = document.getElementById('activityChart');
             const ctx = canvas.getContext('2d');
+            
+            // Reset canvas size so parent can reflow freely
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            
             const rect = canvas.parentElement.getBoundingClientRect();
             
             // Set canvas size for retina displays
@@ -1089,6 +1332,113 @@ const dashboardHTML = `<!DOCTYPE html>
             drawStackedArea();
         }
         
+        // Server health check
+        function fetchServerStatus() {
+            fetch('/servers')
+                .then(res => res.json())
+                .then(data => {
+                    for (const [key, info] of Object.entries(data)) {
+                        const el = document.getElementById('srv-' + key);
+                        if (el) {
+                            el.className = 'server-indicator ' + info.status;
+                            el.title = info.name + ' (port ' + info.port + ') - ' + info.status.toUpperCase();
+                        }
+                    }
+                })
+                .catch(() => {
+                    // If we can't reach the dashboard server itself, mark all as unknown
+                    for (const key of ['j', 'apl', 'kap', 'permalink']) {
+                        const el = document.getElementById('srv-' + key);
+                        if (el) {
+                            el.className = 'server-indicator';
+                        }
+                    }
+                });
+        }
+        
+        // Evals
+        function fetchEvals() {
+            fetch('/evals')
+                .then(res => res.json())
+                .then(data => {
+                    evals = data;
+                    if (evalPanelVisible) {
+                        renderEvalTable();
+                    }
+                })
+                .catch(console.error);
+        }
+        
+        function renderEvalTable() {
+            const container = document.getElementById('evalTableContainer');
+            
+            if (!evals || evals.length === 0) {
+                container.innerHTML = '<div class="eval-no-data">No evaluations recorded yet.</div>';
+                return;
+            }
+            
+            let html = '<table class="eval-table">';
+            html += '<thead><tr><th>Time</th><th>Status</th><th>Code</th></tr></thead>';
+            html += '<tbody>';
+            
+            for (const ev of evals) {
+                const date = new Date(ev.timestamp);
+                let hours = date.getHours();
+                const ampm = hours >= 12 ? 'pm' : 'am';
+                hours = hours % 12 || 12;
+                const timeStr = hours + ':' + 
+                               date.getMinutes().toString().padStart(2, '0') + ':' + 
+                               date.getSeconds().toString().padStart(2, '0') + ' ' + ampm;
+                const lang = ev.language || 'unknown';
+                const success = ev.success;
+                const duration = ev.duration ? ev.duration + 'ms' : '';
+                const code = (ev.code || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                const icon = success ? '✓' : '✗';
+                const iconClass = success ? 'success' : 'failure';
+                
+                html += '<tr>';
+                html += '<td class="eval-time">' + timeStr + '</td>';
+                html += '<td class="eval-status"><span class="icon ' + iconClass + '">' + icon + '</span>';
+                if (duration) {
+                    html += ' <span class="dur ' + lang + '">' + duration + '</span>';
+                }
+                html += '</td>';
+                html += '<td class="eval-code lang-' + lang + '">' + (code || '<em style="color:var(--text-muted)">no code</em>') + '</td>';
+                html += '</tr>';
+            }
+            
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+        
+        function redrawCharts() {
+            if (currentStats) {
+                drawChart();
+                const filteredLangs = getFilteredLanguageData();
+                drawPieChart(filteredLangs);
+            }
+        }
+        
+        function toggleEvalPanel() {
+            evalPanelVisible = !evalPanelVisible;
+            const panel = document.getElementById('evalPanel');
+            if (evalPanelVisible) {
+                fetchEvals();
+                panel.classList.add('visible');
+            } else {
+                panel.classList.remove('visible');
+            }
+            // Continuously redraw charts during the transition so they track the resize
+            const start = performance.now();
+            function animateRedraw(now) {
+                redrawCharts();
+                if (now - start < 300) {
+                    requestAnimationFrame(animateRedraw);
+                }
+            }
+            requestAnimationFrame(animateRedraw);
+        }
+        
         // Connect to SSE stream
         function connect() {
             if (eventSource) {
@@ -1123,13 +1473,7 @@ const dashboardHTML = `<!DOCTYPE html>
         }
         
         // Handle window resize
-        window.addEventListener('resize', () => {
-            if (currentStats) {
-                drawChart();
-                const filteredLangs = getFilteredLanguageData();
-                drawPieChart(filteredLangs);
-            }
-        });
+        window.addEventListener('resize', redrawCharts);
         
         // Handle time range selection
         document.getElementById('timeRange').addEventListener('change', (e) => {
@@ -1182,6 +1526,16 @@ const dashboardHTML = `<!DOCTYPE html>
                 e.preventDefault();
                 viewModeSelect.value = currentViewMode === 'interval' ? 'cumulative' : 'interval';
                 viewModeSelect.dispatchEvent(new Event('change'));
+            } else if (e.key === 't' || e.key === 'T') {
+                // Toggle evals panel
+                e.preventDefault();
+                toggleEvalPanel();
+            } else if (e.key === 'Escape') {
+                // Close panel if open
+                if (evalPanelVisible) {
+                    e.preventDefault();
+                    toggleEvalPanel();
+                }
             }
         });
         
@@ -1194,12 +1548,23 @@ const dashboardHTML = `<!DOCTYPE html>
             .then(updateDashboard)
             .catch(console.error);
         
+        // Fetch server status immediately and every 15 seconds
+        fetchServerStatus();
+        setInterval(fetchServerStatus, 15000);
+        
+        // Fetch recent evals initially
+        fetchEvals();
+        
         // Poll every 10 seconds for more responsive updates
         setInterval(() => {
             fetch('/stats')
                 .then(res => res.json())
                 .then(updateDashboard)
                 .catch(console.error);
+            // Also refresh recent evals if overlay is visible
+            if (evalPanelVisible) {
+                fetchEvals();
+            }
         }, 10000);
     </script>
 </body>
@@ -1222,6 +1587,28 @@ const server = http.createServer((req, res) => {
     if (req.method === 'GET' && (req.url === '/' || req.url === '/dashboard')) {
         res.writeHead(200, { 'Content-Type': 'text/html' });
         res.end(dashboardHTML);
+        return;
+    }
+    
+    // Serve fonts
+    if (req.method === 'GET' && req.url.startsWith('/fonts/')) {
+        const filename = req.url.slice('/fonts/'.length);
+        if (filename.includes('..') || filename.includes('/')) {
+            res.writeHead(403);
+            res.end('Forbidden');
+            return;
+        }
+        const fontsDir = path.join(__dirname, '..', 'fonts');
+        const filePath = path.join(fontsDir, filename);
+        
+        if (!fs.existsSync(filePath)) {
+            res.writeHead(404);
+            res.end('Not found');
+            return;
+        }
+        
+        res.writeHead(200, { 'Content-Type': 'font/ttf', 'Cache-Control': 'public, max-age=31536000' });
+        fs.createReadStream(filePath).pipe(res);
         return;
     }
     
@@ -1274,6 +1661,63 @@ const server = http.createServer((req, res) => {
         const data = stats.getTimeSeriesForRange(range);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify(data));
+        return;
+    }
+
+    // Server health check endpoint
+    if (req.method === 'GET' && req.url === '/servers') {
+        const serverChecks = [
+            { name: 'J', key: 'j', port: 8080 },
+            { name: 'APL', key: 'apl', port: 8081 },
+            { name: 'Kap', key: 'kap', port: 8083 },
+            { name: 'Permalink', key: 'permalink', port: 8084 }
+        ];
+        
+        const results = {};
+        let pending = serverChecks.length;
+        
+        for (const svc of serverChecks) {
+            const checkReq = http.request({
+                hostname: 'localhost',
+                port: svc.port,
+                path: '/',
+                method: 'GET',
+                timeout: 2000
+            }, (checkRes) => {
+                results[svc.key] = { name: svc.name, status: 'up', port: svc.port };
+                if (--pending === 0) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(results));
+                }
+            });
+            
+            checkReq.on('error', () => {
+                results[svc.key] = { name: svc.name, status: 'down', port: svc.port };
+                if (--pending === 0) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(results));
+                }
+            });
+            
+            checkReq.on('timeout', () => {
+                checkReq.destroy();
+                results[svc.key] = { name: svc.name, status: 'down', port: svc.port };
+                if (--pending === 0) {
+                    res.writeHead(200, { 'Content-Type': 'application/json' });
+                    res.end(JSON.stringify(results));
+                }
+            });
+            
+            checkReq.end();
+        }
+        return;
+    }
+    
+    // Evals endpoint
+    if (req.method === 'GET' && req.url === '/evals') {
+        const recent = stats.getRecentEvaluations(20);
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(recent));
         return;
     }
 
@@ -1334,7 +1778,7 @@ const server = http.createServer((req, res) => {
         req.on('end', () => {
             try {
                 const data = JSON.parse(body);
-                stats.recordEvaluation(data.language, data.success);
+                stats.recordEvaluation(data.language, data.success, data.code, data.duration);
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ ok: true }));
             } catch (e) {

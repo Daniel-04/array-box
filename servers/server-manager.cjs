@@ -217,7 +217,7 @@ function logRequest(serverKey, type, code, success, duration) {
     
     // Record to persistent stats for web dashboard
     if (type === 'eval') {
-        stats.recordEvaluation(serverKey, success);
+        stats.recordEvaluation(serverKey, success, code, duration);
     }
     
     renderDashboard();
