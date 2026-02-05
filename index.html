@@ -995,6 +995,10 @@
                     <span class="help-key">f1</span>
                     <span class="help-desc">show documentation for glyph at cursor</span>
                 </div>
+                <div class="help-row">
+                    <span class="help-key">ctrl + shift + ↑ / ↓</span>
+                    <span class="help-desc">cycle through input history</span>
+                </div>
             </div>
 
             <div class="help-section">
@@ -1916,6 +1920,11 @@
         let currentLanguage = 'apl';
         let currentKeyboardCleanup = null;
         let lastResult = null; // Store last evaluation result for permalinks
+        
+        // Input history for cycling through previous evaluations
+        const codeHistory = [];
+        let historyIndex = -1; // -1 means not browsing history
+        let currentUnsavedCode = ''; // Save current input when starting to browse
         let lastEvaluatedCode = null; // Track what code was evaluated to detect changes
 
         // DOM elements
@@ -2048,7 +2057,8 @@
             }
             
             // Ctrl+Up/Down to switch languages (works globally)
-            if (e.ctrlKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
+            // Skip if Shift is pressed - that's for input history cycling
+            if (e.ctrlKey && !e.shiftKey && (e.key === 'ArrowUp' || e.key === 'ArrowDown')) {
                 e.preventDefault();
                 const currentIndex = languageOrder.indexOf(currentLanguage);
                 let newIndex;
@@ -2587,6 +2597,14 @@
             lastResult = result;
             lastEvaluatedCode = code; // Track what code produced this result
             
+            // Add to input history (avoid duplicating consecutive identical entries)
+            if (codeHistory.length === 0 || codeHistory[codeHistory.length - 1] !== code) {
+                codeHistory.push(code);
+            }
+            // Reset history browsing state
+            historyIndex = -1;
+            currentUnsavedCode = '';
+            
             // If formatted code is returned (Uiua), replace input with it
             if (result.formatted && result.formatted.trim() !== code) {
                 setInputText(result.formatted.trim());
@@ -2738,6 +2756,53 @@
                         setCursorOffset(result.selStart);
                     }, 60);
                 }
+                return;
+            }
+            
+            // Ctrl+Shift+Up to go to previous input in history
+            if (e.ctrlKey && e.shiftKey && e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (codeHistory.length === 0) return;
+                
+                // Save current input when starting to browse
+                if (historyIndex === -1) {
+                    currentUnsavedCode = getInputText();
+                    historyIndex = codeHistory.length;
+                    
+                    // If current input matches the last history entry, skip it
+                    // (user just evaluated and wants to see the previous expression)
+                    if (codeHistory[codeHistory.length - 1] === currentUnsavedCode.trim()) {
+                        historyIndex--;
+                    }
+                }
+                
+                // Move to previous entry if possible
+                if (historyIndex > 0) {
+                    historyIndex--;
+                    setInputText(codeHistory[historyIndex]);
+                    editorFeatures.handleAutoExpand();
+                    hideOutput();
+                }
+                return;
+            }
+            
+            // Ctrl+Shift+Down to go to next input in history
+            if (e.ctrlKey && e.shiftKey && e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (historyIndex === -1) return; // Not browsing history
+                
+                historyIndex++;
+                
+                if (historyIndex >= codeHistory.length) {
+                    // Return to unsaved input
+                    historyIndex = -1;
+                    setInputText(currentUnsavedCode);
+                    currentUnsavedCode = '';
+                } else {
+                    setInputText(codeHistory[historyIndex]);
+                }
+                editorFeatures.handleAutoExpand();
+                hideOutput();
                 return;
             }
             
