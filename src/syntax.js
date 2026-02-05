@@ -432,6 +432,42 @@ export function highlightCode(text, language) {
             continue;
         }
         
+        // Check for system functions (⎕Name) in APL-family languages (APL, TinyAPL, Kap)
+        // These are highlighted as functions including the leading ⎕
+        if ((language === 'apl' || language === 'tinyapl' || language === 'kap') && char === '⎕') {
+            // Match ⎕ followed by alphanumeric identifier (system function name)
+            const sysMatch = remainingText.match(/^⎕[A-Za-z][A-Za-z0-9]*/);
+            if (sysMatch) {
+                tokens.push({ type: 'function', value: sysMatch[0] });
+                lastGlyphType = 'function';
+                i += sysMatch[0].length;
+                continue;
+            }
+            // Just ⎕ alone - still a function (I/O)
+            tokens.push({ type: 'function', value: char });
+            lastGlyphType = 'function';
+            i++;
+            continue;
+        }
+        
+        // Check for system functions (•Name) in BQN
+        // These are highlighted as functions including the leading •
+        if (language === 'bqn' && char === '•') {
+            // Match • followed by alphanumeric identifier (system function name)
+            const sysMatch = remainingText.match(/^•[A-Za-z][A-Za-z0-9]*/);
+            if (sysMatch) {
+                tokens.push({ type: 'function', value: sysMatch[0] });
+                lastGlyphType = 'function';
+                i += sysMatch[0].length;
+                continue;
+            }
+            // Just • alone - still a function
+            tokens.push({ type: 'function', value: char });
+            lastGlyphType = 'function';
+            i++;
+            continue;
+        }
+        
         // Check for user-defined identifier patterns (BQN, TinyAPL)
         // Capitalized = function, _prefix = 1-modifier, _prefix_suffix_ = 2-modifier
         if (rules.identifierPatterns) {
