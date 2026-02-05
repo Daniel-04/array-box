@@ -2178,8 +2178,8 @@
             // Update keyboard overlay for new language
             updateKeyboardForLanguage(lang);
             
-            // Re-apply syntax highlighting for new language
-            applySyntaxHighlighting();
+            // Re-apply syntax highlighting for new language (immediate to prevent flicker)
+            applySyntaxHighlightingImmediate();
             
             // Clear output
             hideOutput();
@@ -2538,6 +2538,30 @@
         let highlightTimeout = null;
         let highlightAnimationFrame = null;
         
+        // Immediate syntax highlighting (no debounce) - use for bulk updates like history/language switch
+        function applySyntaxHighlightingImmediate() {
+            // Cancel any pending debounced highlight
+            if (highlightTimeout) {
+                clearTimeout(highlightTimeout);
+                highlightTimeout = null;
+            }
+            if (highlightAnimationFrame) {
+                cancelAnimationFrame(highlightAnimationFrame);
+                highlightAnimationFrame = null;
+            }
+            
+            const cursorPos = getCursorPosition();
+            const text = getInputText();
+            const highlighted = highlightCode(text, currentLanguage);
+            
+            // Only update if content actually changed
+            if (codeInput.innerHTML !== highlighted) {
+                codeInput.innerHTML = highlighted;
+                // Restore cursor position
+                setCursorPosition(codeInput, cursorPos);
+            }
+        }
+        
         function applySyntaxHighlighting() {
             // Clear any pending timeout
             if (highlightTimeout) {
@@ -2686,7 +2710,8 @@
         function setInputText(text) {
             const cursorOffset = getCursorOffset();
             codeInput.textContent = text;
-            applySyntaxHighlighting();
+            // Use immediate highlighting to prevent flicker when cycling history
+            applySyntaxHighlightingImmediate();
             // Restore cursor after a microtask to ensure DOM is updated
             queueMicrotask(() => {
                 setCursorOffset(Math.min(cursorOffset, text.length));
@@ -2751,11 +2776,10 @@
                 const result = toggleComment(text, currentLanguage, selStart, selEnd);
                 if (result.text !== text) {
                     codeInput.textContent = result.text;
-                    applySyntaxHighlighting();
-                    // Set cursor after syntax highlighting completes (50ms debounce + buffer)
-                    setTimeout(() => {
-                        setCursorOffset(result.selStart);
-                    }, 60);
+                    // Use immediate highlighting to prevent flicker
+                    applySyntaxHighlightingImmediate();
+                    // Set cursor immediately since highlighting is synchronous
+                    setCursorOffset(result.selStart);
                 }
                 return;
             }
