@@ -16,3 +16,9 @@ storage/*.json
 
 # Generated OG images
 storage/og/*.png
+
+# Uiua WASM build artifacts / type declarations
+wasm/uiua/
+wasm/package.json
+wasm/uiua_wasm.d.ts
+wasm/uiua_wasm_bg.wasm.d.ts
