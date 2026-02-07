@@ -675,10 +675,6 @@ const dashboardHTML = `<!DOCTYPE html>
                 <span class="text">Connecting...</span>
             </div>
             <div class="server-indicators" id="serverIndicators">
-                <div class="server-indicator" id="srv-j" title="J Server (port 8080)">
-                    <span class="srv-dot"></span>
-                    <span>J</span>
-                </div>
                 <div class="server-indicator" id="srv-apl" title="APL Server (port 8081)">
                     <span class="srv-dot"></span>
                     <span>APL</span>
@@ -1347,7 +1343,7 @@ const dashboardHTML = `<!DOCTYPE html>
                 })
                 .catch(() => {
                     // If we can't reach the dashboard server itself, mark all as unknown
-                    for (const key of ['j', 'apl', 'kap', 'permalink']) {
+                    for (const key of ['apl', 'kap', 'permalink']) {
                         const el = document.getElementById('srv-' + key);
                         if (el) {
                             el.className = 'server-indicator';
@@ -1667,7 +1663,6 @@ const server = http.createServer((req, res) => {
     // Server health check endpoint
     if (req.method === 'GET' && req.url === '/servers') {
         const serverChecks = [
-            { name: 'J', key: 'j', port: 8080 },
             { name: 'APL', key: 'apl', port: 8081 },
             { name: 'Kap', key: 'kap', port: 8083 },
             { name: 'Permalink', key: 'permalink', port: 8084 }
