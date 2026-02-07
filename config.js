@@ -42,6 +42,7 @@ const ArrayBoxConfig = {
             // So we return /api which becomes /api/image/vertical
             const routes = {
                 apl: `${backendUrl}/api/apl`,
+                j: `${backendUrl}/api/j`,
                 kap: `${backendUrl}/api/kap`,
                 log: `${backendUrl}/api/log`,
                 permalink: `${backendUrl}/api`,  // Becomes /api/p when /p is appended
