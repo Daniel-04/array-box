@@ -21,9 +21,9 @@ echo "============================================"
 echo ""
 
 # ============================================================
-# Step 1: Clone jsource at 9.6.2
+# Step 1: Clone jsource
 # ============================================================
-echo "=== Step 1: Cloning jsource 9.6.2 ==="
+echo "=== Step 1: Cloning jsource ==="
 if [ ! -d jsource ]; then
     git clone --depth 1 --branch master https://github.com/jsoftware/jsource.git
 fi
@@ -145,14 +145,14 @@ echo ""
 echo "=== Step 5: Creating emj.c entry point ==="
 
 cat > "$WORK/emj.c" << 'EMJC_EOF'
-/* emj.c - J 9.6 WASM entry point for Array Box
- * Adapted from jsoftware/j-playground emj.c for J 9.6 API
+/* emj.c - J WASM entry point for Array Box
+ * Adapted from jsoftware/j-playground emj.c for J API
  */
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-/* Forward declarations matching J 9.6 API */
+/* Forward declarations matching J API */
 typedef void* J;
 typedef long long I;
 typedef char C;
@@ -246,7 +246,7 @@ echo ""
 # ============================================================
 echo "=== Step 6: Creating emj.ijs ==="
 cat > "$WORK/emj.ijs" << 'EMJIJS_EOF'
-NB. J 9.6 WASM initialization for Array Box
+NB. J WASM initialization for Array Box
 NB. Loaded after stdlib
 NB. output capture setup
 output_jrx_ =: ''
@@ -297,5 +297,5 @@ ls -lh "$OUTPUT/"
 
 echo ""
 echo "============================================"
-echo "  J 9.6 WASM build complete!"
+echo "  J WASM build complete!"
 echo "============================================"

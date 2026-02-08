@@ -1,14 +1,15 @@
 # Third-Party Licenses
 
-This project includes documentation scraped from the following open-source projects.
+This project includes interpreters, WASM runtimes, and documentation from the following open-source projects.
 
 ---
 
-## BQN Documentation
+## BQN
 
-The BQN primitive documentation in `src/bqn-docs.js` is derived from the BQN project.
+The BQN JavaScript interpreter (`bqn.js`) is loaded from CDN and runs entirely client-side. The primitive documentation in `src/bqn-docs.js` is derived from the BQN project.
 
-**Source:** https://mlochbaum.github.io/BQN/help/  
+**Interpreter:** https://cdn.jsdelivr.net/gh/mlochbaum/BQN@master/docs/bqn.js  
+**Documentation source:** https://mlochbaum.github.io/BQN/help/  
 **Repository:** https://github.com/mlochbaum/BQN  
 **License:** ISC License
 
@@ -32,11 +33,12 @@ OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
 ---
 
-## Uiua Documentation
+## Uiua
 
-The Uiua primitive documentation in `src/uiua-docs.js` is derived from the Uiua project.
+The Uiua WASM interpreter in `wasm/` is built from source from the Uiua project and runs entirely client-side. The primitive documentation in `src/uiua-docs.js` is also derived from the Uiua project.
 
-**Source:** https://www.uiua.org/docs  
+**Build script:** `scripts/update-uiua-wasm.sh`  
+**Documentation source:** https://www.uiua.org/docs  
 **Repository:** https://github.com/uiua-lang/uiua  
 **License:** MIT License
 
@@ -66,38 +68,54 @@ SOFTWARE.
 
 ---
 
-## J Language Documentation
+## J
 
-The J primitive documentation in `src/j-docs.js` is derived from the J Wiki (NuVoc).
+The J WASM interpreter in `wasm/j/` is built from source from the J language (jsource) project by Jsoftware, compiled to WebAssembly using Emscripten. The primitive documentation in `src/j-docs.js` is derived from the J Wiki (NuVoc).
 
-**Source:** https://code.jsoftware.com/wiki/NuVoc  
-**License:** Creative Commons Attribution-ShareAlike (CC BY-SA)
+**Build script:** `scripts/build-j96-wasm.sh`  
+**Repository:** https://github.com/jsoftware/jsource  
+**Documentation source:** https://code.jsoftware.com/wiki/NuVoc  
+**Interpreter license:** GPL-3.0 License  
+**Documentation license:** Creative Commons Attribution-ShareAlike (CC BY-SA)
 
 The J Wiki content is available under the Creative Commons Attribution-ShareAlike license.
-This means you are free to:
-
-- **Share** — copy and redistribute the material in any medium or format
-- **Adapt** — remix, transform, and build upon the material for any purpose, even commercially
-
-Under the following terms:
-
-- **Attribution** — You must give appropriate credit, provide a link to the license, and indicate if changes were made.
-- **ShareAlike** — If you remix, transform, or build upon the material, you must distribute your contributions under the same license as the original.
-
 Full license text: https://creativecommons.org/licenses/by-sa/4.0/
+
+```
+GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007
+
+Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
+Everyone is permitted to copy and distribute verbatim copies
+of this license document, but changing it is not allowed.
+
+[Truncated for brevity - Full text available at https://www.gnu.org/licenses/gpl-3.0.txt]
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+```
 
 ---
 
-## Kap Documentation
+## Kap
 
-The Kap primitive documentation in `src/kap-docs.js` is derived from the Kap project reference documentation.
+The Kap client-side interpreter in `wasm/kap/` is built from source from the Kap array language project, compiled to JavaScript via Kotlin/JS (Kotlin Multiplatform). The primitive documentation in `src/kap-docs.js` is derived from the Kap project reference documentation.
 
-**Source:** https://kapdemo.dhsdevelopments.com/reference.html  
+**Build script:** `scripts/build-kap-js.sh`  
 **Repository:** https://codeberg.org/loke/array  
+**Website:** https://kapdemo.dhsdevelopments.com/  
+**Documentation source:** https://kapdemo.dhsdevelopments.com/reference.html  
 **License:** MIT License
 
 ```
-Copyright (c) 2020-2024 Elias Martenson
+Copyright (c) 2020-2026 Elias Martenson
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -120,7 +138,7 @@ SOFTWARE.
 
 ---
 
-## Dyalog APL Documentation
+## Dyalog APL
 
 The Dyalog APL primitive documentation in `src/apl-docs.js` is derived from the official Dyalog documentation.
 
@@ -145,8 +163,9 @@ Full license text: https://creativecommons.org/licenses/by/4.0/
 
 ## TinyAPL
 
-The TinyAPL WASM interpreter in `tinyapl-wasm/` and documentation in `src/tinyapl-docs.js` are derived from the TinyAPL project.
+The TinyAPL WASM interpreter in `wasm/tinyapl/` and documentation in `src/tinyapl-docs.js` are derived from the TinyAPL project.
 
+**Build script:** `scripts/update-tinyapl-wasm.sh`  
 **Source:** https://tinyapl.rubenverg.com/  
 **Repository:** https://github.com/RubenVerg/tinyapl  
 **License:** MIT License
@@ -205,35 +224,4 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-```
-
----
-
-## J WASM (J 9.03)
-
-The J WASM interpreter in `wasm/j/` is derived from the J Playground project by Jsoftware.
-
-**Source:** https://jsoftware.github.io/j-playground/bin/html/  
-**Repository:** https://github.com/jsoftware/j-playground  
-**License:** GPL-3.0 License
-
-```
-GNU GENERAL PUBLIC LICENSE
-Version 3, 29 June 2007
-
-Copyright (C) 2007 Free Software Foundation, Inc. <https://fsf.org/>
-Everyone is permitted to copy and distribute verbatim copies
-of this license document, but changing it is not allowed.
-
-[Truncated for brevity - Full text available at https://www.gnu.org/licenses/gpl-3.0.txt]
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
 ```

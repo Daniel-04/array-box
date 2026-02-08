@@ -37,7 +37,7 @@ node servers/server-manager.cjs
 
 **Note:** 
 - **BQN**, **Uiua**, **TinyAPL**, and **J** run entirely in the browser (no server required)
-  - J uses WASM for client-side execution (J 9.03)
+  - J uses WASM for client-side execution
 - **APL** and **Kap** require local installations and are managed by the server manager
 
 ## Real-time Dashboard
