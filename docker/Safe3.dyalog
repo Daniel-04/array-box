@@ -154,7 +154,7 @@
                   :If 2≤≢⎕FMT safeExpr
                       :If '∇'=⊃safeExpr
                           :If ≡space.⎕FX ⎕FMT safeExpr
-                              ⎕SIGNAL 85
+                              :If i=⊃⌽⍳⍴exprs ⋄ ⎕SIGNAL 85 ⋄ :EndIf ⍝ only signal shy on the last expression
                           :Else
                               space.résult←'defn error'
                           :EndIf
@@ -162,13 +162,13 @@
                           safeExpr,⍨←'__sessionínput__',lf,'⎕EX⍬⍴⎕SI',lf←⎕UCS 10
                           space.⎕FX ⎕FMT safeExpr
                           space.__sessionínput__
-                          ⎕SIGNAL 85
+                          :If i=⊃⌽⍳⍴exprs ⋄ ⎕SIGNAL 85 ⋄ :EndIf ⍝ only signal shy on the last expression
                       :Else
                           safeExpr←'''[^'']+''' '(⍝.*)?\n'⎕R'&' ' ⋄ '⍠'Mode' 'D'⊢safeExpr
-                          space.résult←shy space.(85⌶)safeExpr
+                          space.résult←(shy∧i=⊃⌽⍳⍴exprs)space.(85⌶)safeExpr ⍝ only enforce shy on the last expression
                       :EndIf
                   :Else
-                      space.résult←shy space.(85⌶)safeExpr
+                      space.résult←(shy∧i=⊃⌽⍳⍴exprs)space.(85⌶)safeExpr ⍝ only enforce shy on the last expression
                   :EndIf
               :EndIf
           :EndFor

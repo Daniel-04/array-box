@@ -175,6 +175,57 @@ async function ensureImage(language) {
 
 // End marker for detecting when output is complete
 const END_MARKER = '___ARRAYBOX_END_' + Math.random().toString(36).slice(2) + '___';
+
+/**
+ * Prepare multi-line APL code for embedding in a single-quoted APL string.
+ * - Escapes single quotes (' → '')
+ * - Joins lines with ⋄ (diamond), stripping comments so they don't swallow the ⋄
+ * - Preserves comments on the last line (they're harmless at the end)
+ */
+function escapeAplCode(code) {
+    const lines = code.split('\n');
+    const processed = [];
+    for (let i = 0; i < lines.length; i++) {
+        let line = lines[i].trimEnd();
+        if (!line) continue; // skip blank lines
+        // For all lines except the last non-blank one, strip trailing comments
+        // so that joining with ⋄ doesn't put the next statement inside a comment.
+        // A comment starts at ⍝ that is outside a string literal.
+        if (i < lines.length - 1) {
+            line = stripAplComment(line);
+            if (!line) continue; // line was only a comment
+        }
+        processed.push(line);
+    }
+    // Escape single quotes for APL string embedding, then join with ⋄
+    return processed.join(' ⋄ ').replace(/'/g, "''");
+}
+
+/**
+ * Strip trailing APL comment (⍝...) from a line, respecting string literals.
+ * Returns the line without the comment portion.
+ */
+function stripAplComment(line) {
+    let inString = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (ch === "'") {
+            if (inString) {
+                // Check for escaped quote ''
+                if (i + 1 < line.length && line[i + 1] === "'") {
+                    i++; // skip the escaped quote
+                } else {
+                    inString = false;
+                }
+            } else {
+                inString = true;
+            }
+        } else if (ch === '⍝' && !inString) {
+            return line.slice(0, i).trimEnd();
+        }
+    }
+    return line;
+}
 const APL_ERROR_REGEX = /(VALUE|DOMAIN|RANK|LENGTH|SYNTAX|INDEX|NONCE|LIMIT|DEFN|STACK|FILE|SYSTEM|INTERRUPT) ERROR/;
 
 function createAplMarkers() {
@@ -792,9 +843,8 @@ async function executeWithWarmContainer(language, code, options = {}) {
             // - Execution in isolated namespace
             // - Timeout enforcement
             
-            // Escape single quotes in user code for APL string
-            // APL escapes quotes by doubling them: 'it''s' 
-            const escapedCode = code.replace(/'/g, "''");
+            // Escape quotes and join lines with ⋄ so code fits in a single APL string
+            const escapedCode = escapeAplCode(code);
             
             // Store for filtering
             aplCodeLines = new Set([`Safe3.Exec`]);
@@ -1060,7 +1110,7 @@ function executeInSandbox(language, code, options = {}) {
         } else if (language === 'apl') {
             // APL-specific preprocessing for mapl (batch mode)
             // Use Safe3.Exec for secure execution
-            const escapedCode = code.replace(/'/g, "''");
+            const escapedCode = escapeAplCode(code);
             const timeoutSeconds = Math.floor(timeout / 1000);
             
             // Load Safe3, configure timeout, enable boxing, execute safely
