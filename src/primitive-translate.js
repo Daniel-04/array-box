@@ -3,6 +3,13 @@
  * 
  * Translates primitives between array languages based on their MONADIC definitions only.
  * When switching languages, corresponding primitives are automatically converted.
+ * 
+ * Also handles array literal translation across languages:
+ *   APL/Kap:    1 2 3    ¯1 2 ¯3    1.5 ¯2.5 3
+ *   BQN:        1‿2‿3   ¯1‿2‿¯3   1.5‿¯2.5‿3
+ *   TinyAPL:    1‿2‿3   ¯1‿2‿¯3   1.5‿¯2.5‿3
+ *   Uiua:       1_2_3   ¯1_2_¯3   1.5_¯2.5_3
+ *   J:          1 2 3   _1 2 _3    1.5 _2.5 3
  */
 
 /**
@@ -266,6 +273,299 @@ export const primitiveGroups = {
     }
 };
 
+// ========== ARRAY LITERAL TRANSLATION ==========
+
+/**
+ * Language-specific configuration for array literals.
+ * 
+ * separator: what goes between elements in an array literal
+ *   - ' ' for space-separated (APL, Kap, J)
+ *   - '‿' for ligature (BQN, TinyAPL)
+ *   - '_' for underscore (Uiua)
+ * 
+ * negative: prefix for negative numbers
+ *   - '¯' (high minus) for APL, BQN, Uiua, Kap, TinyAPL
+ *   - '_' (underscore) for J
+ * 
+ * numberPattern: regex to match a single number literal in that language
+ *   Must NOT have the global flag. Used for per-element matching.
+ */
+const arrayLiteralConfig = {
+    apl: {
+        separator: ' ',
+        negative: '¯',
+        // APL: ¯?digits with optional decimal and exponent
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+    },
+    bqn: {
+        separator: '‿',
+        negative: '¯',
+        // BQN: same as APL but uses ‿ separator
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+    },
+    uiua: {
+        separator: '_',
+        negative: '¯',
+        // Uiua: uses ¯ for negative, _ as separator (NOT in number itself)
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+    },
+    j: {
+        separator: ' ',
+        negative: '_',
+        // J: uses _ for negative prefix, also _. for neg infinity, __ for infinity
+        // Supports e/j/r/x suffixes for complex/rational/extended
+        numberPattern: /^_?(\d+\.?\d*|\.\d+)([ejrx][+-]?\d+\.?\d*)?/i
+    },
+    kap: {
+        separator: ' ',
+        negative: '¯',
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/i
+    },
+    tinyapl: {
+        separator: '‿',
+        negative: '¯',
+        // TinyAPL: uses ⏨ for exponent, ᴊ for complex part
+        numberPattern: /^¯?(\d+\.?\d*|\.\d+)(⏨[+-]?\d+)?(ᴊ¯?\d+\.?\d*)?/i
+    }
+};
+
+/**
+ * Parse an array literal from the source language starting at position `start` in `code`.
+ * Returns { elements: string[], end: number } or null if not an array literal.
+ * 
+ * An array literal is 2+ number literals joined by the language's separator.
+ * For space-separated languages, we require at least 2 numbers separated by a single space
+ * (not inside strings, comments, etc.).
+ * 
+ * @param {string} code - Full source code
+ * @param {number} start - Starting index (must point to the start of a number)
+ * @param {string} lang - Source language identifier
+ * @returns {{ elements: string[], end: number } | null}
+ */
+function parseArrayLiteral(code, start, lang) {
+    const config = arrayLiteralConfig[lang];
+    if (!config) return null;
+    
+    const elements = [];
+    let pos = start;
+    
+    // Try to match the first number
+    const firstMatch = code.substring(pos).match(config.numberPattern);
+    if (!firstMatch) return null;
+    
+    elements.push(firstMatch[0]);
+    pos += firstMatch[0].length;
+    
+    // Now try to match separator + number repeatedly
+    while (pos < code.length) {
+        const sep = config.separator;
+        
+        // Check for separator
+        if (code.substring(pos, pos + sep.length) !== sep) break;
+        
+        const afterSep = pos + sep.length;
+        if (afterSep >= code.length) break;
+        
+        // For space-separated languages, a space could just be normal whitespace
+        // between non-array things, so we require the next thing to be a number.
+        // For ligature/underscore-separated languages, the separator IS the indicator.
+        
+        // Try to match a number after the separator
+        const nextMatch = code.substring(afterSep).match(config.numberPattern);
+        if (!nextMatch) {
+            // For Uiua: _ could be followed by a negative ¯ then digits
+            // But ¯ is already handled by the number pattern. If no match, stop.
+            break;
+        }
+        
+        // Verify the match starts at position 0 (right after separator)
+        if (nextMatch.index !== 0) break;
+        
+        elements.push(nextMatch[0]);
+        pos = afterSep + nextMatch[0].length;
+    }
+    
+    // Need at least 2 elements to be an array literal
+    if (elements.length < 2) return null;
+    
+    return { elements, end: pos };
+}
+
+/**
+ * Convert a single number from one language's notation to another.
+ * Primarily handles negative prefix conversion (¯ vs _).
+ * 
+ * @param {string} num - Number literal string in source language
+ * @param {string} fromLang - Source language
+ * @param {string} toLang - Target language
+ * @returns {string} Number in target language notation
+ */
+function convertNumber(num, fromLang, toLang) {
+    const fromConfig = arrayLiteralConfig[fromLang];
+    const toConfig = arrayLiteralConfig[toLang];
+    
+    if (!fromConfig || !toConfig) return num;
+    
+    // If negative prefixes are the same, no conversion needed
+    if (fromConfig.negative === toConfig.negative) return num;
+    
+    // Replace leading negative prefix
+    if (num.startsWith(fromConfig.negative)) {
+        return toConfig.negative + num.substring(fromConfig.negative.length);
+    }
+    
+    return num;
+}
+
+/**
+ * Translate array literals in code from one language to another.
+ * 
+ * Finds sequences of 2+ numbers joined by the source language's array separator
+ * and converts them to the target language's format, including negative prefix changes.
+ * 
+ * @param {string} code - Source code
+ * @param {string} fromLang - Source language
+ * @param {string} toLang - Target language
+ * @returns {string} Code with array literals translated
+ */
+export function translateArrayLiterals(code, fromLang, toLang) {
+    if (fromLang === toLang) return code;
+    
+    const fromConfig = arrayLiteralConfig[fromLang];
+    const toConfig = arrayLiteralConfig[toLang];
+    if (!fromConfig || !toConfig) return code;
+    
+    // If both separator and negative prefix are the same, nothing to do
+    if (fromConfig.separator === toConfig.separator && fromConfig.negative === toConfig.negative) {
+        return code;
+    }
+    
+    const result = [];
+    let i = 0;
+    
+    // Track whether we're inside a string or comment to avoid translating those
+    const stringDelims = getStringDelimiters(fromLang);
+    const commentChars = getCommentStarters(fromLang);
+    
+    while (i < code.length) {
+        // Skip strings
+        const strSkip = skipString(code, i, fromLang, stringDelims);
+        if (strSkip > i) {
+            result.push(code.substring(i, strSkip));
+            i = strSkip;
+            continue;
+        }
+        
+        // Skip comments (to end of line)
+        const commentSkip = skipComment(code, i, fromLang, commentChars);
+        if (commentSkip > i) {
+            result.push(code.substring(i, commentSkip));
+            i = commentSkip;
+            continue;
+        }
+        
+        // Check if this position starts a number (potential array literal start)
+        const ch = code[i];
+        const isNumberStart = (ch >= '0' && ch <= '9') || ch === '.' || ch === fromConfig.negative;
+        
+        if (isNumberStart) {
+            const parsed = parseArrayLiteral(code, i, fromLang);
+            if (parsed) {
+                // Convert each element and join with target separator
+                const converted = parsed.elements
+                    .map(el => convertNumber(el, fromLang, toLang))
+                    .join(toConfig.separator);
+                result.push(converted);
+                i = parsed.end;
+                continue;
+            }
+        }
+        
+        // No array literal here, just copy the character
+        result.push(code[i]);
+        i++;
+    }
+    
+    return result.join('');
+}
+
+/**
+ * Get string delimiters for a language
+ */
+function getStringDelimiters(lang) {
+    switch (lang) {
+        case 'apl': case 'j': case 'kap': return ["'"];
+        case 'bqn': case 'uiua': return ['"'];
+        case 'tinyapl': return ["'", '"'];
+        default: return [];
+    }
+}
+
+/**
+ * Get comment start characters for a language
+ */
+function getCommentStarters(lang) {
+    switch (lang) {
+        case 'apl': case 'kap': case 'tinyapl': return ['⍝'];
+        case 'bqn': case 'uiua': return ['#'];
+        case 'j': return ['NB.'];
+        default: return [];
+    }
+}
+
+/**
+ * Skip past a string literal starting at position i.
+ * Returns new position after the string, or i if not a string.
+ */
+function skipString(code, i, lang, delimiters) {
+    const ch = code[i];
+    if (!delimiters.includes(ch)) return i;
+    
+    // For J, don't skip strings (J uses ' in complex ways)
+    // The J number pattern handles _ correctly on its own
+    
+    const delimiter = ch;
+    let pos = i + 1;
+    
+    // APL-family single-quote strings: doubled '' for escape
+    const useDoubleEscape = delimiter === "'" && lang !== 'bqn';
+    const escapeChar = lang === 'tinyapl' && delimiter === '"' ? '⍘' : '\\';
+    
+    while (pos < code.length) {
+        const c = code[pos];
+        if (c === delimiter) {
+            if (useDoubleEscape && pos + 1 < code.length && code[pos + 1] === delimiter) {
+                pos += 2; // skip doubled escape
+                continue;
+            }
+            pos++; // include closing delimiter
+            return pos;
+        } else if (!useDoubleEscape && c === escapeChar && pos + 1 < code.length) {
+            pos += 2; // skip escape + char
+        } else if (c === '\n') {
+            return pos; // unclosed string ends at newline
+        } else {
+            pos++;
+        }
+    }
+    return pos;
+}
+
+/**
+ * Skip past a comment starting at position i.
+ * Returns new position after the comment (end of line), or i if not a comment.
+ */
+function skipComment(code, i, lang, commentStarters) {
+    for (const starter of commentStarters) {
+        if (code.substring(i, i + starter.length) === starter) {
+            // Comment goes to end of line
+            const lineEnd = code.indexOf('\n', i);
+            return lineEnd === -1 ? code.length : lineEnd;
+        }
+    }
+    return i;
+}
+
 /**
  * Build translation maps from source language to target language
  * Returns { forward: Map<sourceGlyph, targetGlyph>, backward: Map<targetGlyph, sourceGlyph> }
@@ -371,6 +671,7 @@ export function getTranslatablePrimitives(fromLang, toLang) {
 
 export default {
     translatePrimitives,
+    translateArrayLiterals,
     hasTranslation,
     getTranslatablePrimitives,
     clearTranslationCache,

@@ -1688,7 +1688,7 @@
         import { syntaxRules, highlightCode, escapeHtml, getSyntaxClass } from './src/syntax.js?v=26';
         import { ArrayKeyboard, uiuaGlyphNames, bqnGlyphNames, aplGlyphNames, kapGlyphNames, jGlyphNames, tinyaplGlyphNames, bqnGlyphDocs, uiuaGlyphDocs, jGlyphDocs, kapGlyphDocs, aplGlyphDocs, tinyaplGlyphDocs } from './src/keyboard.js?v=26';
         import { createEditorFeaturesManager, toggleComment, commentTokens, autoExpandWidthForCodeAndResult } from './src/editor-features.js?v=2';
-        import { translatePrimitives, clearTranslationCache } from './src/primitive-translate.js?v=2';
+        import { translatePrimitives, translateArrayLiterals, clearTranslationCache } from './src/primitive-translate.js?v=3';
         
         // Glyph documentation by language
         const glyphDocsByLanguage = {
@@ -2537,11 +2537,12 @@
         function switchLanguage(lang) {
             const oldLang = currentLanguage;
             
-            // Translate primitives in the code before switching
+            // Translate primitives and array literals in the code before switching
             if (oldLang !== lang) {
                 const currentCode = getInputText();
                 if (currentCode.trim()) {
-                    const translatedCode = translatePrimitives(currentCode, oldLang, lang);
+                    let translatedCode = translatePrimitives(currentCode, oldLang, lang);
+                    translatedCode = translateArrayLiterals(translatedCode, oldLang, lang);
                     if (translatedCode !== currentCode) {
                         // Update the code input with translated code
                         codeInput.textContent = translatedCode;
