@@ -28,10 +28,11 @@ const dashboardHTML = `<!DOCTYPE html>
     <style>
         @font-face { font-family: 'BQN'; src: url('/fonts/BQN386.ttf') format('truetype'); }
         @font-face { font-family: 'APL'; src: url('/fonts/APL387.ttf') format('truetype'); }
-        @font-face { font-family: 'J'; src: url('/fonts/Apl385.ttf') format('truetype'); }
         @font-face { font-family: 'Uiua'; src: url('/fonts/Uiua386.ttf') format('truetype'); }
         @font-face { font-family: 'Kap'; src: url('/fonts/APL387.ttf') format('truetype'); }
         @font-face { font-family: 'TinyAPL'; src: url('/fonts/APL387.ttf') format('truetype'); }
+        @font-face { font-family: 'JetBrains Mono'; src: url('/fonts/JetBrainsMono-Regular.ttf') format('truetype'); font-weight: 400; }
+        @font-face { font-family: 'JetBrains Mono'; src: url('/fonts/JetBrainsMono-Bold.ttf') format('truetype'); font-weight: 700; }
         
         :root {
             --bg-primary: #000000;

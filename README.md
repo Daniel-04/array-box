@@ -1,4 +1,4 @@
-# <p align="center">ArrayBox</p>
+# <p align="center">⬢ ArrayBox</p>
 
 <p align="center">
     <a href="https://github.com/codereport/array-box/issues" alt="contributions welcome">

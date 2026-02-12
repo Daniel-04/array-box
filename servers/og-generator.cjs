@@ -333,7 +333,7 @@ const FONTS = {
     bqn: path.join(FONT_DIR, 'BQN386.ttf'),
     uiua: path.join(FONT_DIR, 'Uiua386.ttf'),
     apl: path.join(FONT_DIR, 'Apl385.ttf'),
-    j: path.join(FONT_DIR, 'Apl385.ttf'),
+    j: path.join(FONT_DIR, 'JetBrainsMono-Regular.ttf'),
     kap: path.join(FONT_DIR, 'APL387.ttf'),
     tinyapl: path.join(FONT_DIR, 'TinyAPL386.ttf'),
 };
