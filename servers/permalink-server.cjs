@@ -18,8 +18,13 @@ const OG_DIR = path.join(__dirname, '..', 'storage', 'og');
 const INDEX_FILE = path.join(__dirname, '..', 'index.html');
 const CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
 
-// Base URL for generating absolute URLs (override with BASE_URL env var)
-const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`;
+// Base URL for generating absolute URLs in OG meta tags
+// This must be the public-facing URL where social media crawlers can reach this server.
+// Override with BASE_URL env var or --base-url command line arg.
+const baseUrlArg = process.argv.find(a => a.startsWith('--base-url='));
+const BASE_URL = (baseUrlArg ? baseUrlArg.split('=')[1] : null)
+    || process.env.BASE_URL 
+    || `http://localhost:${PORT}`;
 
 // Load permalinks from file
 function loadPermalinks() {
@@ -76,14 +81,16 @@ function incrementCode(code) {
 let permalinks = loadPermalinks();
 
 // Generate HTML page with OG meta tags for a permalink
-function generateOGHtml(shortCode, data) {
+// reqBaseUrl: the public-facing base URL derived from the request, or falls back to BASE_URL
+function generateOGHtml(shortCode, data, reqBaseUrl) {
+    const effectiveBaseUrl = reqBaseUrl || BASE_URL;
     const langName = getLangDisplayName(data.lang);
     const title = `ArrayBox · ${langName}`;
     const description = data.code.length > 100 
         ? data.code.slice(0, 97) + '...' 
         : data.code;
-    const imageUrl = `${BASE_URL}/og/${shortCode}.png`;
-    const pageUrl = `${BASE_URL}/p/${shortCode}`;
+    const imageUrl = `${effectiveBaseUrl}/og/${shortCode}.png`;
+    const pageUrl = `${effectiveBaseUrl}/p/${shortCode}`;
     
     // Read the base index.html and inject OG tags
     let html;
@@ -122,6 +129,10 @@ function generateOGHtml(shortCode, data) {
     <meta name="twitter:image" content="${imageUrl}">
 `;
     
+    // Strip any existing OG/Twitter meta tags from the base HTML (so dynamic ones take precedence)
+    html = html.replace(/<meta\s+property="og:[^"]*"\s+content="[^"]*"\s*\/?>/g, '');
+    html = html.replace(/<meta\s+name="twitter:[^"]*"\s+content="[^"]*"\s*\/?>/g, '');
+    
     // Inject OG tags after <head>
     html = html.replace('<head>', '<head>' + ogTags);
     
@@ -145,6 +156,29 @@ function escapeHtml(str) {
         .replace(/>/g, '&gt;')
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#039;');
+}
+
+// Derive the public-facing base URL from request headers
+// This handles requests proxied through the API gateway / tunnel
+function getBaseUrlFromRequest(req) {
+    // Check for forwarded headers (set by tunnels like Cloudflare, ngrok)
+    const forwardedProto = req.headers['x-forwarded-proto'] || req.headers['x-forwarded-scheme'];
+    const forwardedHost = req.headers['x-forwarded-host'] || req.headers['x-original-host'];
+    
+    if (forwardedHost) {
+        const proto = forwardedProto || 'https';
+        return `${proto}://${forwardedHost}`;
+    }
+    
+    // Check the Host header (works when proxied through API gateway)
+    const host = req.headers.host;
+    if (host && !host.startsWith('localhost') && !host.startsWith('127.0.0.1')) {
+        // External host — assume HTTPS
+        return `https://${host}`;
+    }
+    
+    // Fall back to configured BASE_URL
+    return null;
 }
 
 const server = http.createServer((req, res) => {
@@ -217,7 +251,8 @@ const server = http.createServer((req, res) => {
         
         // Serve HTML page with OG tags
         if (data) {
-            const html = generateOGHtml(code, data);
+            const reqBaseUrl = getBaseUrlFromRequest(req);
+            const html = generateOGHtml(code, data, reqBaseUrl);
             res.writeHead(200, { 'Content-Type': 'text/html' });
             res.end(html);
         } else {

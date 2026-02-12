@@ -62,6 +62,8 @@ function proxyRequest(req, res, targetPort, targetPath) {
     req.on('end', () => {
         body = Buffer.concat(body);
         
+        // Forward the original host so upstream can generate correct absolute URLs (e.g., OG tags)
+        const originalHost = req.headers.host;
         const options = {
             hostname: 'localhost',
             port: targetPort,
@@ -69,7 +71,9 @@ function proxyRequest(req, res, targetPort, targetPath) {
             method: req.method,
             headers: {
                 ...req.headers,
-                host: `localhost:${targetPort}`
+                host: `localhost:${targetPort}`,
+                'x-forwarded-host': originalHost,
+                'x-forwarded-proto': req.headers['x-forwarded-proto'] || 'https'
             }
         };
         
