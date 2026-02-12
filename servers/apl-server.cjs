@@ -113,7 +113,7 @@ async function executeAPLCodeSandbox(code) {
         if (e.message === 'SANDBOX_UNAVAILABLE' || e.message === 'DYALOG_NOT_FOUND') {
             // Fall back to direct execution
             sandboxMode = false;
-            return { success: true, output: await executeAPLCodeDirect(code) };
+            return await executeAPLCodeDirect(code);
         }
         throw e;
     }
@@ -180,8 +180,13 @@ function executeAPLCodeDirect(code) {
             }
             
             // Dyalog outputs:
-            // - Result to stdout
-            // - Input echo and errors to stderr
+            // - Result to stdout (in batch mode runtime errors like "ERROR 206: ..." also go to stdout)
+            // - Input echo and some errors to stderr
+            
+            // Match classic APL error names or Dyalog numeric errors (e.g. "ERROR 206: Undefined name")
+            const aplErrorInOutput = (text) =>
+                /(VALUE|DOMAIN|RANK|LENGTH|SYNTAX|INDEX|NONCE|LIMIT|DEFN|STACK|FILE|SYSTEM|INTERRUPT)\s+ERROR/.test(text) ||
+                /ERROR\s+\d+:\s*/.test(text);
             
             // Check if there's a real error in stderr (not just display errors or input echo)
             const cleanError = stderr
@@ -201,7 +206,7 @@ function executeAPLCodeDirect(code) {
                 .trim();
             
             if (cleanError) {
-                resolve(cleanError);
+                resolve({ success: false, output: cleanError });
             } else {
                 // Return the stdout, filtering out ]boxing command output and input echo
                 const cleanOutput = stdout
@@ -221,7 +226,9 @@ function executeAPLCodeDirect(code) {
                     .join('\n')
                     .replace(/^\n+/, '')  // Remove leading blank lines only
                     .trimEnd();           // Only trim trailing whitespace to preserve column alignment
-                resolve(cleanOutput);
+                // Runtime errors (e.g. ERROR 206: Undefined name) often appear on stdout in batch mode
+                const isError = aplErrorInOutput(cleanOutput);
+                resolve({ success: !isError, output: cleanOutput });
             }
         });
 

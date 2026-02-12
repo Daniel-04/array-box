@@ -225,6 +225,11 @@ function stripAplComment(line) {
     return line;
 }
 const APL_ERROR_REGEX = /(VALUE|DOMAIN|RANK|LENGTH|SYNTAX|INDEX|NONCE|LIMIT|DEFN|STACK|FILE|SYSTEM|INTERRUPT) ERROR/;
+// Dyalog numeric errors (e.g. "ERROR 206: Undefined name: test") often appear in stdout
+const APL_ERROR_NUMERIC_REGEX = /ERROR\s+\d+:\s*/;
+function isAplErrorOutput(text) {
+    return APL_ERROR_REGEX.test(text) || APL_ERROR_NUMERIC_REGEX.test(text);
+}
 
 function createAplMarkers() {
     const id = Math.random().toString(36).slice(2);
@@ -592,7 +597,7 @@ async function executeWithWarmContainer(language, code, options = {}) {
             output += data.toString();
             checkAplMarkers();
             
-            if (language === 'apl' && APL_ERROR_REGEX.test(output) && !errorCheckTimeout && !resolved) {
+            if (language === 'apl' && isAplErrorOutput(output) && !errorCheckTimeout && !resolved) {
                 errorCheckTimeout = setTimeout(() => {
                     resolveAplError();
                 }, 100);
@@ -658,8 +663,9 @@ async function executeWithWarmContainer(language, code, options = {}) {
                     
                     result = lines.join('\n').trim();
                     
+                    // Result may be an error message (e.g. "ERROR 206: Undefined name") from stdout
                     resolve({
-                        success: true,
+                        success: !isAplErrorOutput(result),
                         output: result,
                         warm: true
                     });
