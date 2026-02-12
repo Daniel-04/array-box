@@ -2117,70 +2117,35 @@
                 evaluate: async (code) => {
                     const startTime = performance.now();
                     
-                    // Try WASM first if available
-                    if (window.jWasm && window.jWasm.isReady()) {
-                        try {
-                            const result = await window.jWasm.eval(code);
-                            const duration = Math.round(performance.now() - startTime);
-                            
-                            // Log to server manager (fire and forget)
-                            fetch(`${ArrayBoxConfig.getServiceUrl('log')}/log`, {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    language: 'j',
-                                    code: code,
-                                    success: result.success,
-                                    duration: duration
-                                })
-                            }).catch(() => {});
-                            
-                            return result;
-                        } catch (error) {
-                            console.warn('[J] WASM execution failed, trying server fallback:', error);
-                        }
+                    if (!window.jWasm || !window.jWasm.isReady()) {
+                        const error = window.jWasm ? window.jWasm.getError() : null;
+                        return {
+                            success: false,
+                            output: error ? `J WASM failed to load: ${error.message || 'Unknown error'}` : 'J WASM is still loading...'
+                        };
                     }
                     
-                    // Fall back to server-based execution
                     try {
-                        // Connect to J server
-                        const response = await fetch(`${ArrayBoxConfig.getServiceUrl('j')}/eval`, {
+                        const result = await window.jWasm.eval(code);
+                        const duration = Math.round(performance.now() - startTime);
+                        
+                        // Log to server manager (fire and forget)
+                        fetch(`${ArrayBoxConfig.getServiceUrl('log')}/log`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                            },
-                            body: JSON.stringify({ code: code })
-                        });
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                language: 'j',
+                                code: code,
+                                success: result.success,
+                                duration: duration
+                            })
+                        }).catch(() => {});
                         
-                        if (!response.ok) {
-                            throw new Error(`Server error: ${response.status}`);
-                        }
-                        
-                        const data = await response.json();
-                        return { 
-                            success: data.success !== false, 
-                            output: data.output || data.result || data.error || '' 
-                        };
+                        return result;
                     } catch (error) {
-                        if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
-                            // If both WASM and server failed, show helpful message
-                            if (window.jWasm) {
-                                return window.jWasm.isReady() ? {
-                                    success: false,
-                                    output: error.message || String(error)
-                                } : {
-                                    success: false,
-                                    output: `J WASM is loading or unavailable, and cannot connect to J server.\n\nWASM error: ${window.jWasm.getError()?.message || 'Unknown'}\n\nServer: ${ArrayBoxConfig.getServiceUrl('j')}`
-                                };
-                            }
-                            return { 
-                                success: false, 
-                                output: `Cannot connect to J server at ${ArrayBoxConfig.getServiceUrl('j')}. Please make sure the backend is running.` 
-                            };
-                        }
-                        return { 
-                            success: false, 
-                            output: error.message || String(error) 
+                        return {
+                            success: false,
+                            output: error.message || String(error)
                         };
                     }
                 }

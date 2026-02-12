@@ -15,7 +15,7 @@
 const ArrayBoxConfig = {
     // Set this to your tunnel URL when deploying to GitHub Pages
     // Leave as null for local development
-    BACKEND_URL: 'https://penetration-dedicated-several-choice.trycloudflare.com',
+    BACKEND_URL: null, //'https://penetration-dedicated-several-choice.trycloudflare.com',
     
     // Example configurations:
     // BACKEND_URL: 'https://arraybox.your-domain.com',     // Custom domain with Cloudflare Tunnel
@@ -42,8 +42,6 @@ const ArrayBoxConfig = {
             // So we return /api which becomes /api/image/vertical
             const routes = {
                 apl: `${backendUrl}/api/apl`,
-                j: `${backendUrl}/api/j`,
-                kap: `${backendUrl}/api/kap`,
                 log: `${backendUrl}/api/log`,
                 permalink: `${backendUrl}/api`,  // Becomes /api/p when /p is appended
                 image: `${backendUrl}/api`        // Becomes /api/image when /image/vertical is appended
@@ -55,7 +53,6 @@ const ArrayBoxConfig = {
         const localPorts = {
             apl: 'http://localhost:8081',
             log: 'http://localhost:8082',
-            kap: 'http://localhost:8083',
             permalink: 'http://localhost:8084',
             image: 'http://localhost:8084'
         };

@@ -78,10 +78,10 @@ node servers/server-manager.cjs
 
 ## Docker Sandbox Mode (Recommended for Shared Use)
 
-For secure code execution, you can run the backend servers in Docker containers with strict isolation:
+For secure APL code execution, you can run the APL server in a Docker container with strict isolation:
 
 ```bash
-# Build the sandbox images (one-time setup)
+# Build the APL sandbox image (one-time setup)
 cd docker && ./build.sh
 
 # Run with sandbox mode enabled
@@ -95,6 +95,7 @@ node servers/server-manager.cjs --sandbox
 - Unprivileged user
 - 10-second execution timeout
 - Process limits
+- Application-level sandboxing via Safe3.dyalog (token whitelisting)
 
 ## Using as a Library
 
@@ -204,9 +205,9 @@ array-box/
 │   ├── dashboard-server.cjs   # Real-time usage statistics dashboard
 │   ├── api-gateway.cjs        # Reverse proxy for remote deployment
 │   ├── og-generator.cjs       # Open Graph preview image generator
-│   ├── sandbox.cjs            # Docker sandbox execution runner
+│   ├── sandbox.cjs            # Docker sandbox execution runner (APL)
 │   └── stats.cjs              # Usage stats persistence
-├── docker/                    # Dockerfiles for sandboxed execution
+├── docker/                    # Dockerfile for sandboxed APL execution
 ├── scripts/                   # Build, update, and doc scraping scripts
 ├── storage/                   # Permalinks and OG image storage
 ├── config.js                  # Backend URL configuration (local vs remote)

@@ -1,11 +1,9 @@
 #!/bin/bash
 # Build Docker sandbox images for Array Box
-# Usage: ./build.sh [options] [language]
+# Usage: ./build.sh [options]
 # Examples:
-#   ./build.sh           # Build all Docker images
-#   ./build.sh j         # Build only J image
-#   ./build.sh kap       # Build only Kap image
-#   ./build.sh --wasm    # Build Docker images + WASM modules
+#   ./build.sh           # Build APL Docker image
+#   ./build.sh --wasm    # Build Docker image + WASM modules
 #   ./build.sh --all     # Build everything (Docker + WASM)
 #   ./build.sh --check   # Check dependencies without building
 
@@ -224,7 +222,7 @@ while [[ $# -gt 0 ]]; do
             shift
             ;;
         -h|--help)
-            echo "Usage: ./build.sh [options] [language]"
+            echo "Usage: ./build.sh [options]"
             echo ""
             echo "Options:"
             echo "  --wasm    Also build/download WASM modules (Uiua, TinyAPL)"
@@ -232,12 +230,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --check   Check dependencies without building"
             echo "  -h        Show this help"
             echo ""
-            echo "Languages: kap, apl"
-            echo ""
             echo "Examples:"
-            echo "  ./build.sh           # Build all Docker images"
-            echo "  ./build.sh kap       # Build only Kap image"
-            echo "  ./build.sh --wasm    # Build Docker images + WASM modules"
+            echo "  ./build.sh           # Build APL Docker image"
+            echo "  ./build.sh --wasm    # Build Docker image + WASM modules"
             echo "  ./build.sh --check   # Check what dependencies are installed"
             exit 0
             ;;
@@ -377,14 +372,7 @@ if docker info > /dev/null 2>&1; then
         # Build specific image
         build_image "$LANG_ARG"
     else
-        # Build all images
-        echo "Building all sandbox images..."
-        echo ""
-        
-        # Kap requires JVM
-        build_image "kap"
-        
-        # APL - requires Dyalog to be mounted, includes Safe3 for security
+        # Build APL sandbox image
         build_image "apl"
         
         echo "=========================================="
@@ -398,7 +386,7 @@ if docker info > /dev/null 2>&1; then
         echo "=========================================="
         
         echo ""
-        echo "✓ All sandbox images built successfully!"
+        echo "✓ APL sandbox image built successfully!"
     fi
 fi
 

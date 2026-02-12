@@ -18,14 +18,12 @@ const path = require('path');
 // Configuration
 const CONFIG = {
     // Resource limits
-    memoryLimit: '256m',      // Maximum memory (increased for faster JVM)
-    cpuLimit: '1.0',          // CPU cores (increased for faster startup)
+    memoryLimit: '256m',      // Maximum memory
+    cpuLimit: '1.0',          // CPU cores
     timeout: 10000,           // Execution timeout in ms
     
     // Container images (will be built on first use)
     images: {
-        j: 'arraybox-sandbox-j',
-        kap: 'arraybox-sandbox-kap',
         apl: 'arraybox-sandbox-apl'
     },
     
@@ -273,9 +271,7 @@ function filterAplErrorOutput(stdout, stderr, code, markers = null) {
 async function startWarmContainer(language, options = {}) {
     const imageName = CONFIG.images[language];
     
-    // User IDs for different base images
-    const uidMap = { j: 1000, apl: 1000, kap: 1001 };
-    const uid = uidMap[language] || 1000;
+    const uid = 1000;
     
     const dockerArgs = [
         'run',
@@ -289,38 +285,17 @@ async function startWarmContainer(language, options = {}) {
         `--cpus=${CONFIG.cpuLimit}`,
         '--security-opt=no-new-privileges',
         '--pids-limit=64',
+        '--cap-drop=ALL',
     ];
     
-    if (language !== 'kap') {
-        dockerArgs.push('--cap-drop=ALL');
+    // APL-specific options
+    const dyalogPath = options.dyalogPath || findDyalogPath();
+    if (dyalogPath) {
+        dockerArgs.push('-v', `${dyalogPath}:/opt/dyalog:ro`);
     }
-    
-    if (language === 'apl') {
-        const dyalogPath = options.dyalogPath || findDyalogPath();
-        if (dyalogPath) {
-            dockerArgs.push('-v', `${dyalogPath}:/opt/dyalog:ro`);
-        }
-        dockerArgs.push('--tmpfs', `/home/sandbox:rw,exec,uid=${uid},gid=${uid},size=16m`);
-    }
-    
-    if (language === 'kap') {
-        dockerArgs.push('--tmpfs', `/home/sandbox:rw,exec,uid=${uid},gid=${uid},size=16m`);
-    }
-    
-    // Override entrypoint to keep container running with a shell-like interface
-    if (language === 'j') {
-        dockerArgs.push('--entrypoint', '/home/sandbox/j9.6/bin/jconsole');
-    } else if (language === 'kap') {
-        dockerArgs.push('--entrypoint', '/opt/kap/bin/kap-jvm-text');
-        dockerArgs.push(imageName);
-        dockerArgs.push('--tty', '--no-lineeditor');
-    } else if (language === 'apl') {
-        dockerArgs.push('--entrypoint', '/opt/dyalog/mapl');
-    }
-    
-    if (language !== 'kap') {
-        dockerArgs.push(imageName);
-    }
+    dockerArgs.push('--tmpfs', `/home/sandbox:rw,exec,uid=${uid},gid=${uid},size=16m`);
+    dockerArgs.push('--entrypoint', '/opt/dyalog/mapl');
+    dockerArgs.push(imageName);
     
     const container = spawn('docker', dockerArgs, {
         stdio: ['pipe', 'pipe', 'pipe']
@@ -404,7 +379,7 @@ async function getWarmContainer(language, options = {}) {
         // Timeout
         setTimeout(() => {
             finish();
-        }, language === 'kap' ? 8000 : 3000);  // Kap JVM needs more time
+        }, 3000);
     });
     
     console.log(`[Sandbox] Warm container for ${language} ready`);
@@ -623,133 +598,8 @@ async function executeWithWarmContainer(language, code, options = {}) {
                 }, 100);
             }
             
-            // Check for end marker
-            if (!resolved && language !== 'apl' && output.includes(END_MARKER)) {
-                resolved = true;
-                clearTimers();
-                // Remove everything after (and including) the end marker
-                let result = output.split(END_MARKER)[0].trim();
-                
-                // Include stderr (error messages) in the output, but filter out Dyalog banner
-                if (stderrOutput.trim()) {
-                    let errorLines = stderrOutput.split('\n').filter(line => {
-                        const trimmed = line.trim();
-                        // Filter out Dyalog APL banner lines
-                        if (trimmed.startsWith('Dyalog APL')) return false;
-                        if (trimmed.startsWith('Serial number:')) return false;
-                        if (trimmed.startsWith('Copyright')) return false;
-                        if (trimmed.startsWith('+---')) return false;
-                        if (trimmed.startsWith('|')) return false;
-                        if (trimmed.startsWith(']boxing')) return false;
-                        if (trimmed.startsWith('Was ')) return false;
-                        if (trimmed === 'clear ws') return false;
-                        if (trimmed === ')CLEAR') return false;
-                        if (trimmed === '') return false;
-                        return true;
-                    });
-                    let errorOutput = errorLines.join('\n').trim();
-                    if (errorOutput) {
-                        result = result ? result + '\n' + errorOutput : errorOutput;
-                    }
-                }
-                
-                // Language-specific cleanup
-                if (language === 'kap') {
-                    let lines = result.split('\n');
-                    // Remove empty prompts, end marker echo, and stray quotes
-                    lines = lines.filter(line => {
-                        const trimmed = line.trim();
-                        if (trimmed === '⊢') return false;
-                        if (trimmed.includes(END_MARKER)) return false;
-                        if (trimmed === '"' || trimmed === '""') return false;  // Stray quotes from marker
-                        return true;
-                    });
-                    // Remove ⊢ prefix from results
-                    result = lines.map(line => line.startsWith('⊢ ') ? line.substring(2) : line).join('\n').trim();
-                    // Remove trailing quote if present
-                    if (result.endsWith('\n"')) {
-                        result = result.slice(0, -2).trim();
-                    }
-                    
-                    // Check for Kap errors
-                    const isKapError = result.includes('Error at:') || 
-                                      result.includes('Error:') ||
-                                      stderrOutput.includes('Error');
-                    if (isKapError) {
-                        resolve({
-                            success: false,
-                            output: result || stderrOutput.trim(),
-                            warm: true
-                        });
-                        cleanup();
-                        return;
-                    }
-                } else if (language === 'apl') {
-                    // Filter echoed input from the END (preserves result if it matches input)
-                    let lines = result.split('\n');
-                    // Use the wrapped code lines for filtering (not raw code, to avoid filtering results)
-                    const codeLines = aplCodeLines || new Set(code.split('\n').map(l => l.trim()).filter(l => l));
-                    
-                    // First pass: filter indented lines and system responses
-                    lines = lines.filter(line => {
-                        const trimmed = line.trim();
-                        if (line.startsWith(' ')) return false;  // Indented = echoed
-                        if (trimmed === '') return false;
-                        if (trimmed === 'clear ws') return false;
-                        if (trimmed === ')SIC') return false;
-                        return true;
-                    });
-                    
-                    // Second pass: remove trailing lines that match user input (echoed)
-                    while (lines.length > 0) {
-                        const lastLine = lines[lines.length - 1].trim();
-                        if (codeLines.has(lastLine)) {
-                            lines.pop();
-                        } else {
-                            break;
-                        }
-                    }
-                    
-                    result = lines.join('\n').trim();
-                } else if (language === 'j') {
-                    // Remove NB. comments
-                    result = result.replace(/\s*NB\..*$/gm, '').trim();
-                    
-                    // Remove echoed input lines
-                    // J's jconsole echoes each input line with leading whitespace
-                    const codeLines = new Set(code.split('\n').map(l => l.trim()).filter(l => l));
-                    let lines = result.split('\n');
-                    lines = lines.filter(line => {
-                        const trimmed = line.trim();
-                        if (trimmed === '') return false;
-                        // J echoes input lines with leading spaces - remove them
-                        if (codeLines.has(trimmed)) return false;
-                        // Also remove the echo/clear commands we injected
-                        if (trimmed.startsWith("echo '") || trimmed === "clear''") return false;
-                        return true;
-                    });
-                    result = lines.join('\n').trim();
-                    
-                    // Check for J errors (format: |error type)
-                    const J_ERROR_REGEX = /^\|(?:domain|syntax|value|index|rank|length|limit|control|stack|nonce|spelling|open|locative|interface|assertion|parse|locale) error/im;
-                    if (J_ERROR_REGEX.test(result) || J_ERROR_REGEX.test(stderrOutput)) {
-                        resolve({
-                            success: false,
-                            output: result || stderrOutput.trim(),
-                            warm: true
-                        });
-                        cleanup();
-                        return;
-                    }
-                }
-                
-                resolve({
-                    success: true,
-                    output: result,
-                    warm: true
-                });
-                cleanup();
-            } else if (!resolved && language === 'apl' && aplMarkers && aplSawStart) {
+            // Check for APL marker-based completion
+            if (!resolved && language === 'apl' && aplMarkers && aplSawStart) {
                 const combined = `${output}\n${stderrOutput}`;
                 if (combined.includes(aplMarkers.end)) {
                     resolved = true;
@@ -824,17 +674,9 @@ async function executeWithWarmContainer(language, code, options = {}) {
         container.stdout.on('data', onData);
         container.stderr.on('data', onStderr);
         
-        // Build input with code, end marker, then state clearing
-        // State is cleared after each request, ready for the next one
+        // Build input with code and state clearing
         let input;
-        if (language === 'j') {
-            // clear'' removes all user-defined names (run after to clear state)
-            input = `${code}\necho '${END_MARKER}'\nclear''\n`;
-        } else if (language === 'kap') {
-            // Kap has no workspace clear command - state may persist
-            // Container recycling every 500 requests provides isolation
-            input = `${code}\n⊢"${END_MARKER}"\n`;
-        } else if (language === 'apl') {
+        if (language === 'apl') {
             aplMarkers = createAplMarkers();
             // Use Safe3.Exec for secure execution
             // Safe3 provides:
@@ -937,9 +779,7 @@ function executeInSandbox(language, code, options = {}) {
         const imageName = CONFIG.images[language];
         const timeout = options.timeout || CONFIG.timeout;
         
-        // User IDs for different base images (Debian=1000, Ubuntu=1001)
-        const uidMap = { j: 1000, apl: 1000, kap: 1001 };
-        const uid = uidMap[language] || 1000;
+        const uid = 1000;
         
         // Build Docker run command with security restrictions
         const dockerArgs = [
@@ -953,31 +793,19 @@ function executeInSandbox(language, code, options = {}) {
             `--memory=${CONFIG.memoryLimit}`,    // Memory limit
             `--cpus=${CONFIG.cpuLimit}`,         // CPU limit
             '--security-opt=no-new-privileges',  // No privilege escalation
-            '--pids-limit=64',                   // Limit number of processes (JVM needs threads)
+            '--pids-limit=64',                   // Limit number of processes
+            '--cap-drop=ALL',
         ];
         
-        // Skip cap-drop for JVM-based languages (Kap) - it slows startup significantly
-        if (language !== 'kap') {
-            dockerArgs.push('--cap-drop=ALL');
+        // Mount Dyalog from host
+        const dyalogPath = options.dyalogPath || findDyalogPath();
+        if (dyalogPath) {
+            dockerArgs.push('-v', `${dyalogPath}:/opt/dyalog:ro`);
+        } else {
+            return reject(new Error('DYALOG_NOT_FOUND'));
         }
-        
-        // Language-specific options
-        if (language === 'apl') {
-            // Mount Dyalog from host - find the dyalog executable path
-            const dyalogPath = options.dyalogPath || findDyalogPath();
-            if (dyalogPath) {
-                dockerArgs.push('-v', `${dyalogPath}:/opt/dyalog:ro`);
-            } else {
-                return reject(new Error('DYALOG_NOT_FOUND'));
-            }
-            // APL needs writable home directory for .dyalog config
-            dockerArgs.push('--tmpfs', `/home/sandbox:rw,exec,uid=${uid},gid=${uid},size=16m`);
-        }
-        
-        if (language === 'kap') {
-            // Kap needs writable home directory for .kap config
-            dockerArgs.push('--tmpfs', `/home/sandbox:rw,exec,uid=${uid},gid=${uid},size=16m`);
-        }
+        // APL needs writable home directory for .dyalog config
+        dockerArgs.push('--tmpfs', `/home/sandbox:rw,exec,uid=${uid},gid=${uid},size=16m`);
         
         dockerArgs.push(imageName);
         
@@ -1022,45 +850,7 @@ function executeInSandbox(language, code, options = {}) {
                 let output = stdout.trim();
                 const error = stderr.trim();
                 
-                // Language-specific output cleaning
-                if (language === 'kap') {
-                    // Kap prefixes results with "⊢ " - remove it
-                    let lines = output.split('\n');
-                    lines = lines.filter(line => line.trim() !== '⊢');
-                    output = lines.map(line => {
-                        if (line.startsWith('⊢ ')) {
-                            return line.substring(2);
-                        }
-                        return line;
-                    }).join('\n').trim();
-                    
-                    // Check for Kap errors
-                    const isError = output.includes('Error at:') || output.includes('Error:');
-                    resolve({
-                        success: !isError,
-                        output: output,
-                        exitCode
-                    });
-                    return;
-                }
-                
-                if (language === 'j') {
-                    // Remove echoed input lines
-                    // J's jconsole echoes each input line with leading whitespace
-                    const codeLines = new Set(code.split('\n').map(l => l.trim()).filter(l => l));
-                    let lines = output.split('\n');
-                    lines = lines.filter(line => {
-                        const trimmed = line.trim();
-                        if (trimmed === '') return false;
-                        // J echoes input lines with leading spaces - remove them
-                        if (codeLines.has(trimmed)) return false;
-                        // Also remove the exit command we injected
-                        if (trimmed === 'exit 0') return false;
-                        return true;
-                    });
-                    output = lines.join('\n').trim();
-                }
-                
+                // APL-specific output cleaning
                 if (language === 'apl') {
                     // Remove Dyalog banner and clean up output
                     let lines = output.split('\n');
@@ -1104,21 +894,14 @@ function executeInSandbox(language, code, options = {}) {
         });
         
         // Send code to container stdin
-        let input = code;
-        if (language === 'j') {
-            input = `${code}\nexit 0\n`;
-        } else if (language === 'apl') {
-            // APL-specific preprocessing for mapl (batch mode)
-            // Use Safe3.Exec for secure execution
-            const escapedCode = escapeAplCode(code);
-            const timeoutSeconds = Math.floor(timeout / 1000);
-            
-            // Load Safe3, configure timeout, enable boxing, execute safely
-            // Wrap in :Trap to catch security errors and still produce output
-            input = `⎕FIX 'file:///opt/Safe3.dyalog'\nSafe3.DefaultTimeout←${timeoutSeconds}\n]boxing on -s=min\n:Trap 0 ⋄ ⎕←Safe3.Exec '${escapedCode}' ⋄ :Else ⋄ ⎕←⎕DMX.EM,': ',⎕DMX.Message ⋄ :EndTrap\n`;
-        } else if (language === 'kap') {
-            input = code + '\n';
-        }
+        // APL-specific preprocessing for mapl (batch mode)
+        // Use Safe3.Exec for secure execution
+        const escapedCode = escapeAplCode(code);
+        const timeoutSeconds = Math.floor(timeout / 1000);
+        
+        // Load Safe3, configure timeout, enable boxing, execute safely
+        // Wrap in :Trap to catch security errors and still produce output
+        let input = `⎕FIX 'file:///opt/Safe3.dyalog'\nSafe3.DefaultTimeout←${timeoutSeconds}\n]boxing on -s=min\n:Trap 0 ⋄ ⎕←Safe3.Exec '${escapedCode}' ⋄ :Else ⋄ ⎕←⎕DMX.EM,': ',⎕DMX.Message ⋄ :EndTrap\n`;
         
         container.stdin.write(input);
         container.stdin.end();
@@ -1204,7 +987,7 @@ async function prewarmContainers() {
     }
     
     console.log('[Sandbox] Pre-warming containers...');
-    const languages = ['j', 'apl', 'kap'];
+    const languages = ['apl'];
     
     for (const lang of languages) {
         try {

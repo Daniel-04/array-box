@@ -6,7 +6,6 @@
  * This makes it easy to expose all services through a single tunnel.
  * 
  * Routes:
- *   /api/j/*     -> J server (8080)
  *   /api/apl/*   -> APL server (8081)
  *   /api/log/*   -> Log server (8082)
  *   /api/p/*     -> Permalink server (8084)
@@ -25,7 +24,6 @@ const IS_PRODUCTION = process.argv.includes('--production');
 
 // Internal service ports (these run locally)
 const SERVICES = {
-    j: { port: 8080, path: '/api/j' },
     apl: { port: 8081, path: '/api/apl' },
     log: { port: 8082, path: '/api/log' },
     permalink: { port: 8084, path: '/api/p' },
@@ -119,13 +117,6 @@ function routeRequest(req, res) {
         return;
     }
     
-    // J server: /api/j/eval -> localhost:8080/eval
-    if (pathname.startsWith('/api/j/')) {
-        const targetPath = pathname.replace('/api/j', '') + (parsedUrl.search || '');
-        proxyRequest(req, res, SERVICES.j.port, targetPath || '/');
-        return;
-    }
-    
     // APL server: /api/apl/eval -> localhost:8081/eval
     if (pathname.startsWith('/api/apl/')) {
         const targetPath = pathname.replace('/api/apl', '') + (parsedUrl.search || '');
@@ -160,7 +151,7 @@ function routeRequest(req, res) {
     res.writeHead(404, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ 
         error: 'Not found',
-        hint: 'Available routes: /api/j/*, /api/apl/*, /api/log/*, /api/p/*, /api/image/*'
+        hint: 'Available routes: /api/apl/*, /api/log/*, /api/p/*, /api/image/*'
     }));
 }
 
@@ -176,7 +167,6 @@ server.listen(GATEWAY_PORT, '0.0.0.0', () => {
 ║  Mode: ${IS_PRODUCTION ? 'Production'.padEnd(53) : 'Development'.padEnd(53)}║
 ╠═══════════════════════════════════════════════════════════════╣
 ║  Routes:                                                      ║
-║    /api/j/*     -> J server (${SERVICES.j.port})                          ║
 ║    /api/apl/*   -> APL server (${SERVICES.apl.port})                        ║
 ║    /api/log/*   -> Log server (${SERVICES.log.port})                        ║
 ║    /api/p/*     -> Permalink server (${SERVICES.permalink.port})                    ║
