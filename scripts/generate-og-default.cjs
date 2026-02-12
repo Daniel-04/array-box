@@ -43,8 +43,12 @@ async function generate() {
     const satoriModule = await import('satori');
     const satori = satoriModule.default;
     
-    // Use TinyAPL font (APL387) for the sample code
-    const fontData = fs.readFileSync(path.join(FONT_DIR, 'TinyAPL386.ttf'));
+    // TinyAPL font for sample code, JetBrains Mono for title/subtitle
+    const tinyaplFont = fs.readFileSync(path.join(FONT_DIR, 'TinyAPL386.ttf'));
+    const jbMonoRegular = fs.readFileSync(path.join(FONT_DIR, 'JetBrainsMono-Regular.ttf'));
+    const jbMonoBold = fs.readFileSync(path.join(FONT_DIR, 'JetBrainsMono-Bold.ttf'));
+    // DejaVu Sans for the ⬢ hexagon glyph (not in JetBrains Mono or APL fonts)
+    const dejaVuFont = fs.readFileSync('/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf');
     
     const WIDTH = 1200;
     const HEIGHT = 630;
@@ -79,8 +83,8 @@ async function generate() {
                     type: 'img',
                     props: {
                         src: l.logo,
-                        width: 48,
-                        height: 48,
+                        width: 64,
+                        height: 64,
                         style: { objectFit: 'contain' },
                     },
                 },
@@ -88,7 +92,8 @@ async function generate() {
                     type: 'div',
                     props: {
                         style: {
-                            fontSize: '16px',
+                            fontSize: '18px',
+                            fontFamily: 'JetBrainsMono',
                             color: COLORS.text,
                             opacity: 0.8,
                         },
@@ -137,24 +142,35 @@ async function generate() {
                     gap: '30px',
                 },
                 children: [
-                    // Title
+                    // Title: ⬢ ArrayBox
                     {
                         type: 'div',
                         props: {
                             style: {
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '20px',
+                                gap: '16px',
                             },
                             children: [
                                 {
-                                    type: 'div',
+                                    type: 'span',
                                     props: {
                                         style: {
-                                            fontSize: '72px',
+                                            fontSize: '44px',
+                                            fontFamily: 'Symbols',
+                                            color: COLORS.fg,
+                                        },
+                                        children: '⬢',
+                                    },
+                                },
+                                {
+                                    type: 'span',
+                                    props: {
+                                        style: {
+                                            fontSize: '52px',
+                                            fontFamily: 'JetBrainsMono',
                                             fontWeight: 700,
                                             color: COLORS.fg,
-                                            letterSpacing: '-1px',
                                         },
                                         children: 'ArrayBox',
                                     },
@@ -167,7 +183,8 @@ async function generate() {
                         type: 'div',
                         props: {
                             style: {
-                                fontSize: '28px',
+                                fontSize: '24px',
+                                fontFamily: 'JetBrainsMono',
                                 color: COLORS.text,
                                 opacity: 0.9,
                                 textAlign: 'center',
@@ -216,7 +233,25 @@ async function generate() {
             fonts: [
                 {
                     name: 'ArrayLang',
-                    data: fontData,
+                    data: tinyaplFont,
+                    weight: 400,
+                    style: 'normal',
+                },
+                {
+                    name: 'JetBrainsMono',
+                    data: jbMonoRegular,
+                    weight: 400,
+                    style: 'normal',
+                },
+                {
+                    name: 'JetBrainsMono',
+                    data: jbMonoBold,
+                    weight: 700,
+                    style: 'normal',
+                },
+                {
+                    name: 'Symbols',
+                    data: dejaVuFont,
                     weight: 400,
                     style: 'normal',
                 },
