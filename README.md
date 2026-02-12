@@ -21,38 +21,60 @@ A code editor and runner for array programming languages: **BQN**, **APL**, **J*
 
 - Syntax highlighting for BQN, APL, J, Uiua, Kap, and TinyAPL
 - Keyboard mappings for typing special characters (BQN: `\` prefix, APL/Kap/TinyAPL: `` ` `` prefix)
-- Visual keyboard overlay with glyph documentation (press `Ctrl+K` or `Ctrl+?`)
-- Code execution with `Enter`
-- Switch languages with `Ctrl+Up/Down`
-- Light and dark themes
+- Visual keyboard overlay with glyph documentation
+- Primitive search combo box with fuzzy matching
+- Code formatting and comment toggling
+- Input history navigation
+- Permalinks for sharing code snippets
+- Copy code as vertical image to clipboard
+- Inline documentation tooltips for glyphs
+- Primitive translation when switching languages
+- Dark theme (Dracula-style palette)
+
+### Keyboard Shortcuts
+
+#### Box Mode
+
+| Shortcut             | Action                           |
+| -------------------- | -------------------------------- |
+| `Enter`              | Evaluate code                    |
+| `Shift+Enter`        | Insert newline                   |
+| `Ctrl+Up/Down`       | Switch language                  |
+| `Ctrl+K`             | Toggle keyboard overlay          |
+| `Ctrl+H`             | Toggle help screen               |
+| `Ctrl+B`             | Show fonts                       |
+| `Ctrl+Space`         | Open primitive search            |
+| `Ctrl+L`             | Create permalink (copy URL)      |
+| `Ctrl+I`             | Copy vertical image to clipboard |
+| `Ctrl+F`             | Format code (no evaluation)      |
+| `Ctrl+/`             | Toggle comment                   |
+| `Ctrl+Shift+Up/Down` | Cycle through input history      |
+| `F1`                 | Show docs for glyph at cursor    |
+
+#### Keyboard Mode
+
+| Shortcut    | Action              |
+| ----------- | ------------------- |
+| `S` or type | Search primitives   |
+| `Up/Down`   | Navigate keys       |
+| `Shift`     | Cycle through docs  |
+| `F1`        | Open full docs link |
 
 ## Running the Demo
 
 ```bash
-# Start the server manager (handles APL, Kap backends + web dashboard)
+# Start the server manager (handles APL backend + dashboard + permalinks)
 node servers/server-manager.cjs
 
 # Open index.html in a browser
 ```
 
 **Note:** 
-- **BQN**, **Uiua**, **TinyAPL**, and **J** run entirely in the browser (no server required)
+- **BQN**, **Uiua**, **J**, **Kap**, and **TinyAPL** run entirely in the browser (no server required)
   - J uses WASM for client-side execution
-- **APL** and **Kap** require local installations and are managed by the server manager
-
-## Real-time Dashboard
-
-The server manager includes a web-based dashboard that shows usage statistics in real-time:
-- Total visitors, code evaluations, and shareable links
-- Requests by language with success/failure breakdown
-- Activity graph (configurable: 24h, 1 week, 1 month, 1 year, all time)
-- Language breakdown pie chart
-
-**Access the dashboard:**
-- From your local machine: `http://localhost:8085`
-- From another device on your network: `http://<your-ip>:8085`
-
-The dashboard automatically updates as users interact with Array Box.
+  - Kap uses Kotlin/JS for client-side execution
+  - TinyAPL and Uiua use WASM for client-side execution
+- **APL** requires a local Dyalog installation and is managed by the server manager
 
 ## Docker Sandbox Mode (Recommended for Shared Use)
 
@@ -74,24 +96,15 @@ node servers/server-manager.cjs --sandbox
 - 10-second execution timeout
 - Process limits
 
-**Performance note:** Sandbox mode has ~1-3 second overhead per request due to container startup. This is especially noticeable for Kap (JVM cold start). For faster local development, run without `--sandbox`:
-
-```bash
-# Fast mode (no sandboxing) - for personal/local use only
-node servers/server-manager.cjs
-```
-
-**Note:** Without `--sandbox`, code runs directly on your system. This is fine for personal use but not recommended if exposing the service to others.
-
 ## Using as a Library
 
-Array Box can be used as a reusable library in your own projects.
+ArrayBox can be used as a reusable library in your own projects.
 
 ### Installation
 
 ```bash
 # Via npm (when published)
-npm install array-box
+npm install array-box (it isn't published yet)
 
 # Or as a git submodule
 git submodule add https://github.com/codereport/array-box
@@ -150,14 +163,18 @@ element.innerHTML = html;
 - `syntaxRules` - Token classifications for each language
 - `highlightCode(text, language)` - Returns HTML with syntax spans
 - `escapeHtml(text)` - Escape HTML special characters
+- `getSyntaxClass(token)` - Get CSS class for a syntax token
 
 **`array-box/keyboard`**
 - `ArrayKeyboard` - Visual keyboard overlay component
 - `bqnGlyphNames`, `aplGlyphNames`, `jGlyphNames`, `uiuaGlyphNames`, `kapGlyphNames`, `tinyaplGlyphNames` - Glyph name mappings
 - `bqnGlyphDocs`, `aplGlyphDocs`, `jGlyphDocs`, `uiuaGlyphDocs`, `kapGlyphDocs`, `tinyaplGlyphDocs` - Glyph documentation
 
+**`array-box/bqn-docs`**, **`array-box/uiua-docs`**, **`array-box/j-docs`**
+- Glyph documentation and hover content for each language
+
 **`array-box/theme.css`**
-- CSS variables for light/dark themes
+- CSS variables for the dark theme
 - Syntax highlighting classes (`.syntax-function`, `.syntax-monadic`, etc.)
 - Font-face declarations for array language fonts
 
@@ -166,25 +183,35 @@ element.innerHTML = html;
 ```
 array-box/
 ├── src/
-│   ├── keymap.js      # ES module - keyboard mappings
-│   ├── syntax.js      # ES module - syntax highlighting
-│   ├── keyboard.js    # ES module - visual keyboard overlay
-│   ├── theme.css      # CSS variables and syntax classes
-│   ├── *-docs.js      # Documentation for each language (bqn, apl, j, uiua, kap, tinyapl)
-│   └── ...
-├── fonts/             # Array language fonts (BQN, APL, Uiua, TinyAPL, Kap)
-├── assets/            # Language logos
-├── wasm/              # WASM builds
-│   ├── tinyapl/       # TinyAPL WASM build
-│   ├── uiua/          # Uiua WASM build
-│   └── j/             # J WASM build (client-side)
-├── servers/           # Backend server files
-│   ├── server-manager.cjs  # Server manager (APL, Kap)
-│   ├── apl-server.cjs      # APL language server
-│   └── kap-server.cjs      # Kap language server
-├── scripts/           # Documentation scraping scripts
-├── index.html         # Demo site (imports from src/)
-└── package.json       # npm package configuration
+│   ├── keymap.js              # ES module - keyboard mappings
+│   ├── syntax.js              # ES module - syntax highlighting
+│   ├── keyboard.js            # ES module - visual keyboard overlay
+│   ├── editor-features.js     # Code formatting, comments, history
+│   ├── primitive-translate.js # Cross-language primitive translation
+│   ├── theme.css              # CSS variables and syntax classes
+│   └── *-docs.js              # Glyph docs (bqn, apl, j, uiua, kap, tinyapl)
+├── fonts/                     # Array language fonts (BQN, APL, Uiua, TinyAPL, Kap)
+├── assets/                    # Language logos
+├── wasm/
+│   ├── tinyapl/               # TinyAPL WASM build
+│   ├── kap/                   # Kap Kotlin/JS build
+│   ├── j/                     # J WASM build
+│   └── uiua_wasm.*            # Uiua WASM build
+├── servers/
+│   ├── server-manager.cjs     # Main orchestrator (starts APL, permalink, dashboard)
+│   ├── apl-server.cjs         # APL language server (Dyalog)
+│   ├── permalink-server.cjs   # Permalink and OG meta server
+│   ├── dashboard-server.cjs   # Real-time usage statistics dashboard
+│   ├── api-gateway.cjs        # Reverse proxy for remote deployment
+│   ├── og-generator.cjs       # Open Graph preview image generator
+│   ├── sandbox.cjs            # Docker sandbox execution runner
+│   └── stats.cjs              # Usage stats persistence
+├── docker/                    # Dockerfiles for sandboxed execution
+├── scripts/                   # Build, update, and doc scraping scripts
+├── storage/                   # Permalinks and OG image storage
+├── config.js                  # Backend URL configuration (local vs remote)
+├── index.html                 # Demo site (imports from src/)
+└── package.json               # npm package configuration
 ```
 
 ## License
