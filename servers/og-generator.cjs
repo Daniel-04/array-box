@@ -208,7 +208,8 @@ function tokenizeLine(line, lang) {
 }
 
 // Create colored text spans for Satori, handling newlines
-function createColoredTextElements(text, lang) {
+// compact: when true (for APL train trees), use gap:0 and tight styling so box-drawing chars connect
+function createColoredTextElements(text, lang, compact = false) {
     const lines = text.split('\n');
     
     // Always wrap each line in a flex div (even single lines)
@@ -234,10 +235,13 @@ function createColoredTextElements(text, lang) {
                 },
             });
         }
+        const lineStyle = compact
+            ? { display: 'flex', gap: 0 }
+            : { display: 'flex' };
         return {
             type: 'div',
             props: {
-                style: { display: 'flex' },
+                style: lineStyle,
                 children: lineElements,
             },
         };
@@ -417,7 +421,9 @@ async function generateOGImage(code, lang, result = null, resultHtml = null) {
     const gap = 20;
     
     // TinyAPL uses tighter line-height (matching .output.tinyapl CSS)
-    const resultLineHeight = lang === 'tinyapl' ? 0.85 : 1.2;
+    // Dyalog APL result box uses 1.0 to match in-browser .output.apl; train trees get letterSpacing too
+    const isTreeResult = lang === 'apl' && displayResult && isAplTrainTree(displayResult);
+    const resultLineHeight = lang === 'tinyapl' ? 0.85 : lang === 'apl' ? 1.0 : 1.2;
     
     // Header dimensions (logo 80px + gap + text)
     const headerHeight = 80;
@@ -596,6 +602,17 @@ async function generateOGImage(code, lang, result = null, resultHtml = null) {
             },
         };
     } else if (displayResult) {
+        const resultInnerStyle = {
+            fontSize: `${resultFontSize}px`,
+            color: COLORS.fg,
+            fontFamily: 'ArrayLang',
+            lineHeight: resultLineHeight,
+            whiteSpace: 'pre',
+            textAlign: 'left',  // Left-align to preserve box-drawing structure
+        };
+        if (isTreeResult) {
+            resultInnerStyle.letterSpacing = '-0.5px';
+        }
         rightSide = {
             type: 'div',
             props: {
@@ -611,14 +628,7 @@ async function generateOGImage(code, lang, result = null, resultHtml = null) {
                 children: {
                     type: 'div',
                     props: {
-                        style: {
-                            fontSize: `${resultFontSize}px`,
-                            color: COLORS.fg,
-                            fontFamily: 'ArrayLang',
-                            lineHeight: resultLineHeight,
-                            whiteSpace: 'pre',
-                            textAlign: 'left',  // Left-align to preserve box-drawing structure
-                        },
+                        style: resultInnerStyle,
                         children: displayResult,
                     },
                 },
@@ -733,7 +743,9 @@ async function generateVerticalImage(code, lang, result = null, resultHtml = nul
     const gap = 20;
     
     // TinyAPL uses tighter line-height (matching .output.tinyapl CSS)
-    const resultLineHeight = lang === 'tinyapl' ? 0.85 : 1.2;
+    // Dyalog APL result box uses 1.0 to match in-browser .output.apl; train trees get letterSpacing too
+    const isTreeResult = lang === 'apl' && displayResult && isAplTrainTree(displayResult);
+    const resultLineHeight = lang === 'tinyapl' ? 0.85 : lang === 'apl' ? 1.0 : 1.2;
     
     // Header dimensions - logo 60px, text ~28px fits within logo height
     const logoSize = 60;
@@ -873,7 +885,7 @@ async function generateVerticalImage(code, lang, result = null, resultHtml = nul
         // APL train tree: use syntax-colored glyphs (same as in-browser); otherwise plain lines
         const useColoredResult = lang === 'apl' && isAplTrainTree(displayResult);
         const resultLineElements = useColoredResult
-            ? createColoredTextElements(displayResult, 'apl')
+            ? createColoredTextElements(displayResult, 'apl', true)
             : displayResult.split('\n').map((line, idx) => ({
                 type: 'div',
                 props: {
@@ -908,6 +920,8 @@ async function generateVerticalImage(code, lang, result = null, resultHtml = nul
                             display: 'flex',
                             flexDirection: 'column',
                             alignItems: 'flex-start',
+                            gap: isTreeResult ? 0 : undefined,
+                            letterSpacing: isTreeResult ? '-0.5px' : undefined,
                         },
                         children: resultLineElements,
                     },
